@@ -1,0 +1,23 @@
+{
+  "name": "my-counter",
+  "bsc-flags": [
+    "-bs-super-errors"
+  ],
+  "bs-dependencies": [
+    "@rescript/react",
+    "@ryyppy/rescript-promise"
+  ],
+  "reason": {
+    "react-jsx": 3
+  },
+  "sources": [
+    {
+      "dir": "src/frontend/src",
+      "subdirs": true
+    }
+  ],
+  "package-specs": {
+    "module": "es6",
+    "in-source": true
+  }
+}

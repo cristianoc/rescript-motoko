@@ -1,7 +1,6 @@
 const path = require("path");
 const webpack = require("webpack");
 const HtmlWebpackPlugin = require('html-webpack-plugin');
-const TerserPlugin = require("terser-webpack-plugin");
 const dfxJson = require("./dfx.json");
 
 // List of all aliases for canisters. This creates the module alias for
@@ -36,17 +35,13 @@ function generateWebpackConfigForCanister(name, info) {
   }
 
   return {
-    mode: "production",
+    mode: "development",
     entry: {
       // The frontend.entrypoint points to the HTML file for this build, so we need
-      // to replace the extension to `.js`.
-      index: path.join(__dirname, info.frontend.entrypoint).replace(/\.html$/, ".js"),
+      // to replace the extension to `.jsx`.
+      index: path.join(__dirname, info.frontend.entrypoint).replace(/\.html$/, ".jsx"),
     },
     devtool: "source-map",
-    optimization: {
-      minimize: true,
-      minimizer: [new TerserPlugin()],
-    },
     resolve: {
       alias: aliases,
       extensions: [".js", ".ts", ".jsx", ".tsx"],
@@ -62,18 +57,11 @@ function generateWebpackConfigForCanister(name, info) {
       filename: "[name].js",
       path: path.join(__dirname, "dist", name),
     },
-
-    // Depending in the language or framework you are using for
-    // front-end development, add module loaders to the default
-    // webpack configuration. For example, if you are using React
-    // modules and CSS as described in the "Adding a stylesheet"
-    // tutorial, uncomment the following lines:
-    // module: {
-    //  rules: [
-    //    { test: /\.(ts|tsx|jsx)$/, loader: "ts-loader" },
-    //    { test: /\.css$/, use: ['style-loader','css-loader'] }
-    //  ]
-    // },
+    module: {
+      rules: [
+        { test: /\.(js|ts)x?$/, loader: "ts-loader" }
+      ]
+    },
     plugins: [
       new HtmlWebpackPlugin({
         template: path.join(__dirname, info.frontend.entrypoint),

@@ -1,19 +1,19 @@
 {
   "canisters": {
-    "my_counter": {
-      "main": "src/my_counter/main.mo",
+    "backend": {
+      "main": "src/backend/main.mo",
       "type": "motoko"
     },
-    "my_counter_assets": {
+    "frontend": {
       "dependencies": [
-        "my_counter"
+        "backend"
       ],
       "frontend": {
-        "entrypoint": "src/my_counter_assets/src/index.html"
+        "entrypoint": "src/frontend/src/index.html"
       },
       "source": [
-        "src/my_counter_assets/assets",
-        "dist/my_counter_assets/"
+        "src/frontend/assets",
+        "dist/frontend/"
       ],
       "type": "assets"
     }
