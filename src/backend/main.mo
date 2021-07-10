@@ -6,14 +6,16 @@ actor Main {
       #Node : (Tree, Tree)
   };
 
-  let t3 = #Node(#Leaf(1), #Node(#Leaf(2), #Leaf(3)));
+  let initialTree = #Node(#Leaf(1), #Node(#Leaf(2), #Leaf(3)));
 
-  stable var currTree : Tree = t3;
+  stable var currTree : Tree = initialTree;
   stable var counter : Nat = 0;
 
   public query func get() : async Tree { currTree };
 
   public func set(t:Tree) : async () { currTree := t };
+
+  public func reset() : async () { currTree := initialTree };
 
   func reverse_(t:Tree) : Tree {
     switch(t){
@@ -30,6 +32,4 @@ actor Main {
     counter := counter + 1;
     currTree := #Node(#Leaf(counter),currTree);
   };
-
-  public query func someTree(): async Tree { t3 };
 };

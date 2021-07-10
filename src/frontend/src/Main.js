@@ -37,14 +37,6 @@ function Main$main(Props) {
     Curry._1(service.get, undefined).then(onNewTree);
     
   };
-  var onClickReverse = function (param) {
-    Curry._1(service.reverseInPlace, undefined);
-    
-  };
-  var onClickExtend = function (param) {
-    Curry._1(service.extend, undefined);
-    
-  };
   React.useEffect((function () {
           var intervalId = setInterval(onTick, 1000);
           return (function (param) {
@@ -52,13 +44,20 @@ function Main$main(Props) {
                     
                   });
         }), []);
-  return React.createElement("div", undefined, React.createElement("section", undefined, "State: " + state), React.createElement("section", undefined, React.createElement("button", {
-                      id: "clickMeBtn",
-                      onClick: onClickReverse
-                    }, "Reverse"), React.createElement("button", {
-                      id: "clickMeBtn",
-                      onClick: onClickExtend
-                    }, "Extend")));
+  var button = function (name, cb) {
+    return React.createElement("button", {
+                className: "clickMeBtn",
+                onClick: (function (param) {
+                    Curry._1(cb, undefined);
+                    
+                  })
+              }, name);
+  };
+  return React.createElement("div", {
+              className: "top"
+            }, React.createElement("div", {
+                  className: "container"
+                }, state), React.createElement("section", undefined, button("Extend", service.extend), button("Reverse", service.reverseInPlace), button("Reset", service.reset)));
 }
 
 var main = Main$main;

@@ -24,8 +24,8 @@ module Actor = {
     extend: (. unit) => Js.Promise.t<unit>,
     get: (. unit) => Js.Promise.t<Tree.raw>,
     set: (. Tree.raw) => Js.Promise.t<unit>,
-    someTree: (. unit) => Js.Promise.t<Tree.raw>,
     reverseInPlace: (. unit) => Js.Promise.t<unit>,
+    reset: (. unit) => Js.Promise.t<unit>,
   }
 }
 
@@ -34,15 +34,15 @@ module Service = {
     extend: unit => Js.Promise.t<unit>,
     get: unit => Js.Promise.t<Tree.t>,
     set: Tree.t => Js.Promise.t<unit>,
-    someTree: unit => Js.Promise.t<Tree.t>,
     reverseInPlace: unit => Js.Promise.t<unit>,
+    reset: unit => Js.Promise.t<unit>,
   }
 
   let fromActor = (actor: Actor.t): t => {
     extend: () => actor.extend(.),
     get: () => actor.get(.)->Promise.thenResolve(raw => raw->Tree.fromCandid),
     set: t => actor.set(. t->Tree.toCandid),
-    someTree: () => actor.someTree(.)->Promise.then(raw => raw->Tree.fromCandid->Promise.resolve),
     reverseInPlace: () => actor.reverseInPlace(.),
+    reset: () => actor.reset(.),
   }
 }

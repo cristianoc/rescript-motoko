@@ -49,13 +49,11 @@ function fromActor(actor) {
           set: (function (t) {
               return actor.set(toCandid(t));
             }),
-          someTree: (function (param) {
-              return actor.someTree().then(function (raw) {
-                          return Promise.resolve(fromCandid(raw));
-                        });
-            }),
           reverseInPlace: (function (param) {
               return actor.reverseInPlace();
+            }),
+          reset: (function (param) {
+              return actor.reset();
             })
         };
 }

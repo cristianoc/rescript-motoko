@@ -1,3 +1,14 @@
+.container {
+    display: flex;
+    justify-content: center;
+}
+
+.top {
+    display: flex;
+    flex-direction: column;
+    row-gap: 1ex;
+}
+
 body {
     font-family: sans-serif;
     font-size: 1.5rem;
@@ -12,23 +23,13 @@ img {
 section {
     display: flex;
     flex-flow: row wrap;
-    max-width: 40vw;
     margin: auto;
     align-items: baseline;
+    column-gap: 1ex;
 }
 
-#clickMeBtn {
+.clickMeBtn {
     padding: 5px 20px;
     margin: 10px auto;
     float: right;
-}
-
-#greeting {
-    margin: 10px auto;
-    padding: 10px 60px;
-    border: 1px solid #222;
-}
-
-#greeting:empty {
-    display: none;
 }

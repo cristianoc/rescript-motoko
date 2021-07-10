@@ -27,21 +27,24 @@ let main = () => {
   let onTick = () => {
     service.get()->Promise.thenResolve(onNewTree)->ignore
   }
-  let onClickReverse = _ => {
-    service.reverseInPlace()->ignore
-  }
-  let onClickExtend = _ => {
-    service.extend()->ignore
-  }
   React.useEffect0(() => {
     let intervalId = Js.Global.setInterval(onTick, 1000)
     Some(() => intervalId->Js.Global.clearInterval)
   })
-  <div>
-    <section> {React.string("State: " ++ state)} </section>
+  let button = (name, cb) =>
+    <button
+      className="clickMeBtn"
+      onClick={_ => {
+        cb()->ignore
+      }}>
+      {React.string(name)}
+    </button>
+  <div className="top">
+    <div className="container"> {React.string(state)} </div>
     <section>
-      <button id="clickMeBtn" onClick=onClickReverse> {React.string("Reverse")} </button>
-      <button id="clickMeBtn" onClick=onClickExtend> {React.string("Extend")} </button>
+      {button("Extend", service.extend)}
+      {button("Reverse", service.reverseInPlace)}
+      {button("Reset", service.reset)}
     </section>
   </div>
 }
