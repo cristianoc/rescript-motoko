@@ -57,6 +57,12 @@ function generateWebpackConfigForCanister(name, info) {
       filename: "[name].js",
       path: path.join(__dirname, "dist", name),
     },
+    devServer: {
+      contentBase: path.join(__dirname, "src", "frontend", "assets"),
+      proxy: {
+        "/api": "http://localhost:8000",
+      },
+    },
     module: {
       rules: [
         { test: /\.(js|ts)x?$/, loader: "ts-loader" }
