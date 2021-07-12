@@ -34,8 +34,8 @@ type loadingOrSaving = Loading | Saving
 
 let loadingOrSaving = ref(None)
 
-let doSave = ref(() => ())
-let doLoad = ref(() => ())
+let doSave = ref(() => Promise.resolve())
+let doLoad = ref(() => Promise.resolve())
 
 /* Keydown event handler translates a key press */
 let keydown = evt => {
@@ -53,7 +53,6 @@ let keydown = evt => {
       loadingOrSaving := Some(Saving)
       Js.log("saving...")
       doSave.contents()
-      Backend.service.reverse()
       ->Promise.thenResolve(() => {
         Js.log("saved")
         loadingOrSaving := None
@@ -67,8 +66,7 @@ let keydown = evt => {
       loadingOrSaving := Some(Loading)
       Js.log("loading...")
       doLoad.contents()
-      Backend.service.get()
-      ->Promise.thenResolve(_ => {
+      ->Promise.thenResolve(() => {
         Js.log("loaded")
         loadingOrSaving := None
       })

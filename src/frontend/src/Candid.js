@@ -43,6 +43,9 @@ function fromActor(actor) {
           extend: (function (param) {
               return actor.extend();
             }),
+          loadGameState: (function (param) {
+              return actor.loadGameState();
+            }),
           get: (function (param) {
               return actor.get().then(fromCandid);
             }),
@@ -54,6 +57,9 @@ function fromActor(actor) {
             }),
           reset: (function (param) {
               return actor.reset();
+            }),
+          saveGameState: (function (s) {
+              return actor.saveGameState(s);
             })
         };
 }

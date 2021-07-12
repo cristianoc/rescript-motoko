@@ -23,26 +23,32 @@ module Actor = {
   type t = {
     extend: (. unit) => Js.Promise.t<unit>,
     get: (. unit) => Js.Promise.t<Tree.raw>,
+    loadGameState: (. unit) => Js.Promise.t<string>,
     set: (. Tree.raw) => Js.Promise.t<unit>,
     reverse: (. unit) => Js.Promise.t<unit>,
     reset: (. unit) => Js.Promise.t<unit>,
+    saveGameState: (. string) => Js.Promise.t<unit>,
   }
 }
 
 module Service = {
   type t = {
     extend: unit => Js.Promise.t<unit>,
+    loadGameState: unit => Js.Promise.t<string>,
     get: unit => Js.Promise.t<Tree.t>,
     set: Tree.t => Js.Promise.t<unit>,
     reverse: unit => Js.Promise.t<unit>,
     reset: unit => Js.Promise.t<unit>,
+    saveGameState: string => Js.Promise.t<unit>,
   }
 
   let fromActor = (actor: Actor.t): t => {
     extend: () => actor.extend(.),
     get: () => actor.get(.)->Promise.thenResolve(raw => raw->Tree.fromCandid),
+    loadGameState: () => actor.loadGameState(.),
     set: t => actor.set(. t->Tree.toCandid),
     reverse: () => actor.reverse(.),
     reset: () => actor.reset(.),
+    saveGameState: s => actor.saveGameState(. s),
   }
 }

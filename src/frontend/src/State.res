@@ -49,13 +49,13 @@ let updateScore = (state, i) => state.score = state.score + i
 
 let current = ref(new(~level=1))
 
-let saved = ref(current.contents)
-
-Keys.doSave :=
+Keys.doLoad :=
   (
     () => {
-      saved := current.contents->Obj.magic->Js.Json.stringify->Js.Json.parseExn->Obj.magic
-      Js.log(current.contents)
+      Backend.service.loadGameState()->Promise.then(json => {
+        current := json->Js.Json.parseExn->Obj.magic
+        Promise.resolve()
+      })
     }
   )
-Keys.doLoad := (() => current := saved.contents)
+Keys.doSave := (() => Backend.service.saveGameState(current.contents->Obj.magic->Js.Json.stringify))

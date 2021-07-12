@@ -10,6 +10,11 @@ actor Main {
 
   stable var currTree : Tree = initialTree;
   stable var counter : Nat = 0;
+  stable var gameState : Text = "";
+
+  public query func loadGameState() : async Text { gameState };
+
+  public func saveGameState(s:Text) : async () { gameState := s };
 
   public query func get() : async Tree { currTree };
 

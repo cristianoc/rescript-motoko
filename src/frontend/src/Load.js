@@ -61,4 +61,4 @@ export {
   getCanvasSizeScaled ,
   
 }
-/* Keys Not a pure module */
+/* No side effect */
