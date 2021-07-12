@@ -10,7 +10,8 @@ type keys = {
   mutable right2: bool,
   mutable up2: bool,
   mutable down2: bool,
-  mutable bbox: int,
+  mutable bbox: bool,
+  mutable paused: bool,
 }
 
 // pressedKeys instantiates the keys
@@ -23,7 +24,8 @@ let pressedKeys = {
   right2: false,
   up2: false,
   down2: false,
-  bbox: 0,
+  bbox: false,
+  paused: false,
 }
 
 /* Keydown event handler translates a key press */
@@ -31,14 +33,15 @@ let keydown = evt => {
   let evt = Html.keyboardEventToJsObj(evt)
   let () = switch evt["keyCode"] {
   | 32 | 38 => pressedKeys.up1 = true
-  | 87 => pressedKeys.up2 = true
+  | 87 /* KeyW */ => pressedKeys.up2 = true
   | 39 => pressedKeys.right1 = true
-  | 68 => pressedKeys.right2 = true
+  | 68 /* KeyD */ => pressedKeys.right2 = true
   | 37 => pressedKeys.left1 = true
-  | 65 => pressedKeys.left2 = true
+  | 65 /* KeyA */ => pressedKeys.left2 = true
   | 40 => pressedKeys.down1 = true
-  | 83 => pressedKeys.down2 = true
-  | 66 => pressedKeys.bbox = @doesNotRaise mod(pressedKeys.bbox + 1, 2)
+  | 83 /* KeyS */ => pressedKeys.down2 = true
+  | 66 /* KeyB */ => pressedKeys.bbox = !pressedKeys.bbox
+  | 80 /* KeyP */ => pressedKeys.paused = !pressedKeys.paused
   | _ => ()
   }
   true
@@ -62,7 +65,9 @@ let keyup = evt => {
 }
 
 // Returns whether the bounding box should be drawn
-let checkBboxEnabled = () => pressedKeys.bbox == 1
+let checkBboxEnabled = () => pressedKeys.bbox
+
+let checkPaused = () => pressedKeys.paused
 
 /* Converts a keypress to a list of control keys, allowing more than one key
  * to be processed each frame. */

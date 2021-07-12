@@ -61,7 +61,11 @@ let scoreAndCoins = (score, coins) => {
 // Displays the fps.
 let fps = fps_val => {
   let fps_str = int_of_float(fps_val) |> string_of_int
-  Load.getContext().fillText(. fps_str, 169., 18.)
+  Load.getContext().fillText(. fps_str, 165., 18.)
+}
+
+let paused = () => {
+  Load.getContext().fillText(. "Paused", 142., 90.)
 }
 
 let blackScreen = texts => {

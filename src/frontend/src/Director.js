@@ -531,6 +531,13 @@ function updateLoop(player1, player2, level, objects) {
   var updateHelper = function (objects, parts) {
     var match = state.status;
     var exit = 0;
+    if (Keys.checkPaused(undefined)) {
+      Draw.paused(undefined);
+      requestAnimationFrame(function (param) {
+            return updateHelper(collidObjs.contents, particles.contents);
+          });
+      return ;
+    }
     if (match) {
       var finishTime = match.finishTime;
       if (performance.now() - finishTime > Config.delayWhenFinished) {
