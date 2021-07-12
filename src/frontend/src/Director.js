@@ -440,8 +440,8 @@ function checkCollisions(obj, state, allCollids) {
   if (match.TAG === /* Block */3) {
     return /* [] */0;
   }
-  var broad = broadPhase(allCollids, state.viewport);
-  return narrowPhase(obj, broad, state);
+  var visibleCollids = broadPhase(allCollids, state.viewport);
+  return narrowPhase(obj, visibleCollids, state);
 }
 
 function updateObject0(allCollids, obj, state) {
