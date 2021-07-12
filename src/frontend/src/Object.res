@@ -76,7 +76,7 @@ let newId = () => {
   idCounter.contents
 }
 
-let make = (~hasGravity=true, ~speed=1.0, ~dir=Left, objTyp, spriteParams, px, py) => {
+let make = (~hasGravity=true, ~speed=1.0, ~dir=Left, ~objTyp, ~spriteParams, px, py) => {
   let newObj = {
     objTyp: objTyp,
     sprite: spriteParams->Sprite.makeFromParams,
@@ -273,8 +273,8 @@ let evolveEnemy = (player_dir, typ, spr: Sprite.t, obj) =>
     let newObj = make(
       ~speed=3.,
       ~dir=obj.dir,
-      Enemy(GKoopaShell),
-      Sprite.makeEnemy(GKoopaShell, obj.dir),
+      ~objTyp=Enemy(GKoopaShell),
+      ~spriteParams=Sprite.makeEnemy(GKoopaShell, obj.dir),
       obj.px,
       obj.py,
     )
@@ -284,8 +284,8 @@ let evolveEnemy = (player_dir, typ, spr: Sprite.t, obj) =>
     let newObj = make(
       ~speed=3.,
       ~dir=obj.dir,
-      Enemy(RKoopaShell),
-      Sprite.makeEnemy(RKoopaShell, obj.dir),
+      ~objTyp=Enemy(RKoopaShell),
+      ~spriteParams=Sprite.makeEnemy(RKoopaShell, obj.dir),
       obj.px,
       obj.py,
     )
@@ -330,8 +330,8 @@ let evolveBlock = obj => {
   let newObj = make(
     ~hasGravity=false,
     ~dir=obj.dir,
-    Block(QBlockUsed),
-    Sprite.makeBlock(QBlockUsed),
+    ~objTyp=Block(QBlockUsed),
+    ~spriteParams=Sprite.makeBlock(QBlockUsed),
     obj.px,
     obj.py,
   )
@@ -343,8 +343,8 @@ let spawnAbove = (player_dir, obj, itemTyp) => {
   let item = make(
     ~hasGravity=itemTyp != Coin,
     ~dir=Left,
-    Item(itemTyp),
-    Sprite.makeItem(itemTyp),
+    ~objTyp=Item(itemTyp),
+    ~spriteParams=Sprite.makeParams(itemTyp),
     obj.px,
     obj.py,
   )

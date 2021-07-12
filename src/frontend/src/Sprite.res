@@ -263,7 +263,7 @@ let makeEnemy = (typ, dir) =>
   }
 
 // Set sprites for items: coin, fireflower, mushroom, star
-let makeItem = x =>
+let makeParams = x =>
   /* 16x16 grid with 0x0 offset */
   switch x {
   | Coin =>
