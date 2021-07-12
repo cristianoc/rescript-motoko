@@ -48,3 +48,14 @@ let new = (~level) => {
 let updateScore = (state, i) => state.score = state.score + i
 
 let current = ref(new(~level=1))
+
+let saved = ref(current.contents)
+
+Keys.doSave :=
+  (
+    () => {
+      saved := current.contents
+      Js.log(current.contents)
+    }
+  )
+Keys.doLoad := (() => current := saved.contents)

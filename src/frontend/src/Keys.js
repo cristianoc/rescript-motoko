@@ -22,6 +22,18 @@ var loadingOrSaving = {
   contents: undefined
 };
 
+var doSave = {
+  contents: (function (param) {
+      
+    })
+};
+
+var doLoad = {
+  contents: (function (param) {
+      
+    })
+};
+
 function keydown(evt) {
   var match = evt.keyCode;
   switch (match) {
@@ -54,6 +66,7 @@ function keydown(evt) {
         if (pressedKeys.paused && loadingOrSaving.contents === undefined) {
           loadingOrSaving.contents = /* Loading */0;
           console.log("loading...");
+          Curry._1(doLoad.contents, undefined);
           Curry._1(Backend.service.get, undefined).then(function (param) {
                 console.log("loaded");
                 loadingOrSaving.contents = undefined;
@@ -68,6 +81,7 @@ function keydown(evt) {
         if (pressedKeys.paused && loadingOrSaving.contents === undefined) {
           loadingOrSaving.contents = /* Saving */1;
           console.log("saving...");
+          Curry._1(doSave.contents, undefined);
           Curry._1(Backend.service.reverse, undefined).then(function (param) {
                 console.log("saved");
                 loadingOrSaving.contents = undefined;
@@ -260,6 +274,8 @@ function translateKeys(playerNum) {
 export {
   pressedKeys ,
   loadingOrSaving ,
+  doSave ,
+  doLoad ,
   keydown ,
   keyup ,
   checkBboxEnabled ,

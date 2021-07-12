@@ -33,7 +33,7 @@ function convertCoinToObj(param) {
   return $$Object.make(false, undefined, undefined, {
               TAG: /* Item */2,
               _0: /* Coin */1
-            }, Sprite.makeItem(/* Coin */1), param[1], param[2]);
+            }, Sprite.makeParams(/* Coin */1), param[1], param[2]);
 }
 
 function addCoins(objects, x, y0, level) {

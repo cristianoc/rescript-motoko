@@ -330,7 +330,7 @@ function spawnAbove(player_dir, obj, itemTyp) {
   var item = make(itemTyp !== /* Coin */1, undefined, /* Left */0, {
         TAG: /* Item */2,
         _0: itemTyp
-      }, Sprite.makeItem(itemTyp), obj.px, obj.py);
+      }, Sprite.makeParams(itemTyp), obj.px, obj.py);
   item.py = item.py - item.sprite.params.frameSize[1];
   item.dir = player_dir ? /* Left */0 : /* Right */1;
   setVelToSpeed(item);

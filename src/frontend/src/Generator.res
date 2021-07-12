@@ -27,7 +27,13 @@ let trimEdge = (x, y, ~level) => {
 }
 
 let convertCoinToObj = ((_, x, y)) => {
-  let obj = Object.make(~hasGravity=false, Item(Coin), Sprite.makeItem(Coin), x, y)
+  let obj = Object.make(
+    ~hasGravity=false,
+    ~objTyp=Item(Coin),
+    ~spriteParams=Sprite.makeParams(Coin),
+    x,
+    y,
+  )
   obj
 }
 
@@ -39,7 +45,12 @@ let addCoins = (objects, x, y0, ~level) => {
 }
 
 let convertEnemyToObj = ((enemyTyp, x, y)) => {
-  let obj = Object.make(Enemy(enemyTyp), Sprite.makeEnemy(enemyTyp, Left), x, y)
+  let obj = Object.make(
+    ~objTyp=Enemy(enemyTyp),
+    ~spriteParams=Sprite.makeEnemy(enemyTyp, Left),
+    x,
+    y,
+  )
   obj->Object.setVelToSpeed
   obj
 }
@@ -62,7 +73,7 @@ let addBlock = (objects, blockTyp, xBlock, yBlock, ~level) => {
   let x = xBlock *. 16.
   let y = yBlock *. 16.
   if !(objects.contents->memPos(x, y)) && trimEdge(x, y, ~level) {
-    let obj = Object.make(Block(blockTyp), Sprite.makeBlock(blockTyp), x, y)
+    let obj = Object.make(~objTyp=Block(blockTyp), ~spriteParams=Sprite.makeBlock(blockTyp), x, y)
     objects := list{obj, ...objects.contents}
     objects->addCoins(x, y, ~level)
     objects->addEnemyOnBlock(x, y, ~level)
@@ -209,8 +220,8 @@ let rec generateBlocks = (objects, cbx: float, cby: float, ~level) =>
 // collision with player.
 let generatePanel = (~level): Object.t => {
   let obj = Object.make(
-    Block(Panel),
-    Sprite.makeBlock(Panel),
+    ~objTyp=Block(Panel),
+    ~spriteParams=Sprite.makeBlock(Panel),
     Config.blockw(~level) *. 16. -. 256.,
     Config.blockh(~level) *. 16. *. 2. /. 3.,
   )
@@ -218,7 +229,7 @@ let generatePanel = (~level): Object.t => {
 }
 
 let convertBlockToObj = ((blockTyp, x, y)) => {
-  let obj = Object.make(Block(blockTyp), Sprite.makeBlock(blockTyp), x, y)
+  let obj = Object.make(~objTyp=Block(blockTyp), ~spriteParams=Sprite.makeBlock(blockTyp), x, y)
   obj
 }
 
@@ -262,8 +273,8 @@ let generateHelper = (~level): list<Object.t> => {
 
 let newPlayer = playerNum =>
   Object.make(
-    Player(SmallM, playerNum),
-    Sprite.makePlayer(SmallM, Standing, Left, ~playerNum),
+    ~objTyp=Player(SmallM, playerNum),
+    ~spriteParams=Sprite.makePlayer(SmallM, Standing, Left, ~playerNum),
     100.,
     224.,
   )

@@ -360,7 +360,7 @@ function makeEnemy(typ, dir) {
   }
 }
 
-function makeItem(x) {
+function makeParams(x) {
   if (x) {
     return setupSprite([
                 3,
@@ -594,7 +594,7 @@ export {
   makeSmallPlayer ,
   makeBigPlayer ,
   makeEnemy ,
-  makeItem ,
+  makeParams ,
   brickParams ,
   qBlockParams ,
   qBlockUsedParams ,
