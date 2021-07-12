@@ -2,8 +2,6 @@ open Belt
 
 let collidObjs = ref(list{}) // List of next iteration collidable objects
 
-let particles = ref(list{}) // List of next iteration particles
-
 let lastTime = ref(0.) // Used for calculating fps
 let initialTime = ref(0.) // Used for calculating fps
 
@@ -329,7 +327,7 @@ let updateObject = (obj: Object.t, ~state) =>
     } else {
       list{}
     }
-    particles := \"@"(newParts, particles.contents)
+    state.particles = \"@"(newParts, state.particles)
   }
 
 // Primary update function to update and persist a particle
@@ -339,16 +337,16 @@ let updateParticle = (state: State.t, part) => {
   and y = part.py -. state.viewport.py
   Draw.render(part.params.sprite, x, y)
   if !part.kill {
-    particles := list{part, ...particles.contents}
+    state.particles = list{part, ...state.particles}
   }
 }
 
-let rec updateHelper = (~parts, ~state: State.t) =>
+let rec updateHelper = (~state: State.t) => {
   switch state.status {
   | _ if Keys.checkPaused() =>
     Draw.paused()
     state.objects = collidObjs.contents
-    Html.requestAnimationFrame(_ => updateHelper(~parts=particles.contents, ~state))
+    Html.requestAnimationFrame(_ => updateHelper(~state))
 
   | Finished({levelResult, finishTime})
     if Html.performance.now(.) -. finishTime > Config.delayWhenFinished =>
@@ -360,17 +358,18 @@ let rec updateHelper = (~parts, ~state: State.t) =>
         timeToStart->int_of_float->string_of_int,
       )
       state.objects = collidObjs.contents
-      Html.requestAnimationFrame(_ => updateHelper(~parts=particles.contents, ~state))
+      Html.requestAnimationFrame(_ => updateHelper(~state))
     } else {
       let level = levelResult == Won ? state.level + 1 : state.level
       let state = State.new(~level)
-      updateHelper(~parts, ~state)
+      updateHelper(~state)
     }
 
   | Playing | Finished(_) =>
     let fps = calcFps()
     collidObjs := list{}
-    particles := list{}
+    let oldParticles = state.particles
+    state.particles = list{}
     Draw.clearCanvas()
     /* Parallax background */
     let vposXInt = int_of_float(state.viewport.px /. 5.)
@@ -390,16 +389,17 @@ let rec updateHelper = (~parts, ~state: State.t) =>
     }
     Viewport.update(state.viewport, state.player1.px, state.player1.py)
     state.objects->List.forEach(obj => obj->updateObject(~state))
-    parts->List.forEach(part => updateParticle(state, part))
+    oldParticles->List.forEach(part => updateParticle(state, part))
     Draw.fps(fps)
     Draw.scoreAndCoins(state.score, state.coins)
     state.objects = collidObjs.contents
-    Html.requestAnimationFrame(_ => updateHelper(~parts=particles.contents, ~state))
+    Html.requestAnimationFrame(_ => updateHelper(~state))
   }
+}
 
 // updateLoop is constantly being called to check for collisions and to
 // update each of the objects in the game.
 let updateLoop = (~level) => {
   let state = State.new(~level)
-  updateHelper(~parts=list{}, ~state)
+  updateHelper(~state)
 }

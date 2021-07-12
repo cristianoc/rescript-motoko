@@ -16,10 +16,6 @@ var collidObjs = {
   contents: /* [] */0
 };
 
-var particles = {
-  contents: /* [] */0
-};
-
 var lastTime = {
   contents: 0
 };
@@ -491,7 +487,7 @@ function updateObject(obj, state) {
     };
   }
   var newParts = obj.kill ? $$Object.kill(obj) : /* [] */0;
-  particles.contents = Pervasives.$at(newParts, particles.contents);
+  state.particles = Pervasives.$at(newParts, state.particles);
   
 }
 
@@ -501,16 +497,16 @@ function updateParticle(state, part) {
   var y = part.py - state.viewport.py;
   Draw.render(part.params.sprite, x, y);
   if (!part.kill) {
-    particles.contents = {
+    state.particles = {
       hd: part,
-      tl: particles.contents
+      tl: state.particles
     };
     return ;
   }
   
 }
 
-function updateHelper(parts, _state) {
+function updateHelper(_state) {
   while(true) {
     var state = _state;
     var match = state.status;
@@ -520,7 +516,7 @@ function updateHelper(parts, _state) {
       state.objects = collidObjs.contents;
       requestAnimationFrame((function(state){
           return function (param) {
-            return updateHelper(particles.contents, state);
+            return updateHelper(state);
           }
           }(state)));
       return ;
@@ -535,14 +531,13 @@ function updateHelper(parts, _state) {
           state.objects = collidObjs.contents;
           requestAnimationFrame((function(state){
               return function (param) {
-                return updateHelper(particles.contents, state);
+                return updateHelper(state);
               }
               }(state)));
           return ;
         }
         var level = levelResult === /* Won */0 ? state.level + 1 | 0 : state.level;
-        var state$1 = State.$$new(level);
-        _state = state$1;
+        _state = State.$$new(level);
         continue ;
       }
       exit = 1;
@@ -552,7 +547,8 @@ function updateHelper(parts, _state) {
     if (exit === 1) {
       var fps = calcFps(undefined);
       collidObjs.contents = /* [] */0;
-      particles.contents = /* [] */0;
+      var oldParticles = state.particles;
+      state.particles = /* [] */0;
       Draw.clearCanvas(undefined);
       var vposXInt = state.viewport.px / 5 | 0;
       var bgdWidth = state.bgd.params.frameSize[0] | 0;
@@ -589,7 +585,7 @@ function updateHelper(parts, _state) {
             return updateObject(obj, state);
           }
           }(state)));
-      Belt_List.forEach(parts, (function(state){
+      Belt_List.forEach(oldParticles, (function(state){
           return function (part) {
             return updateParticle(state, part);
           }
@@ -599,7 +595,7 @@ function updateHelper(parts, _state) {
       state.objects = collidObjs.contents;
       requestAnimationFrame((function(state){
           return function (param) {
-            return updateHelper(particles.contents, state);
+            return updateHelper(state);
           }
           }(state)));
       return ;
@@ -609,13 +605,11 @@ function updateHelper(parts, _state) {
 }
 
 function updateLoop(level) {
-  var state = State.$$new(level);
-  return updateHelper(/* [] */0, state);
+  return updateHelper(State.$$new(level));
 }
 
 export {
   collidObjs ,
-  particles ,
   lastTime ,
   initialTime ,
   calcFps ,
