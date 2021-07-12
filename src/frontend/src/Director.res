@@ -279,7 +279,7 @@ let checkCollisions = (obj, state, objects) =>
 
 // primary update method for objects,
 // checking the collision, updating the object, and drawing to the canvas
-let updateObject0 = (obj: Object.t, ~state, ~objects, ~level) => {
+let updateObject0 = (obj: Object.t, ~state) => {
   /* TODO: optimize. Draw static elements only once */
   let spr = obj.sprite
   obj.invuln = if obj.invuln > 0 {
@@ -289,9 +289,9 @@ let updateObject0 = (obj: Object.t, ~state, ~objects, ~level) => {
   }
   if (!obj.kill || obj->Object.isPlayer) && obj->viewportFilter(state) {
     obj.grounded = false
-    obj->Object.processObj(~level)
+    obj->Object.processObj(~level=state.level)
     // Run collision detection if moving object
-    let evolved = obj->checkCollisions(state, objects)
+    let evolved = obj->checkCollisions(state, state.objects)
     // Render and update animation
     let vptAdjXy = Viewport.fromCoord(state.viewport, obj.px, obj.py)
     Draw.render(spr, vptAdjXy.x, vptAdjXy.y)
@@ -311,16 +311,16 @@ let updateObject0 = (obj: Object.t, ~state, ~objects, ~level) => {
 // as a wrapper method. This method is necessary to differentiate between
 // the player collidable and the remaining collidables, as special operations
 // such as viewport centering only occur with the player
-let updateObject = (obj: Object.t, ~state, ~objects, ~level) =>
+let updateObject = (obj: Object.t, ~state) =>
   switch obj.objTyp {
   | Player(_, n) =>
     let keys = Keys.translateKeys(n)
     obj.crouch = false
     Object.updatePlayer(obj, n, keys)
-    let evolved = obj->updateObject0(~state, ~objects, ~level)
+    let evolved = obj->updateObject0(~state)
     collidObjs := \"@"(evolved, collidObjs.contents)
   | _ =>
-    let evolved = obj->updateObject0(~state, ~objects, ~level)
+    let evolved = obj->updateObject0(~state)
     if !obj.kill {
       collidObjs := list{obj, ...\"@"(evolved, collidObjs.contents)}
     }
@@ -343,64 +343,63 @@ let updateParticle = (state: State.t, part) => {
   }
 }
 
+let rec updateHelper = (~parts, ~state: State.t) =>
+  switch state.status {
+  | _ if Keys.checkPaused() =>
+    Draw.paused()
+    state.objects = collidObjs.contents
+    Html.requestAnimationFrame(_ => updateHelper(~parts=particles.contents, ~state))
+
+  | Finished({levelResult, finishTime})
+    if Html.performance.now(.) -. finishTime > Config.delayWhenFinished =>
+    let timeToStart = Config.restartAfter -. (Html.performance.now(.) -. finishTime) /. 1000.
+    if timeToStart > 0. {
+      Draw.levelFinished(
+        levelResult,
+        state.level->string_of_int,
+        timeToStart->int_of_float->string_of_int,
+      )
+      state.objects = collidObjs.contents
+      Html.requestAnimationFrame(_ => updateHelper(~parts=particles.contents, ~state))
+    } else {
+      let level = levelResult == Won ? state.level + 1 : state.level
+      let state = State.new(~level)
+      updateHelper(~parts, ~state)
+    }
+
+  | Playing | Finished(_) =>
+    let fps = calcFps()
+    collidObjs := list{}
+    particles := list{}
+    Draw.clearCanvas()
+    /* Parallax background */
+    let vposXInt = int_of_float(state.viewport.px /. 5.)
+    let bgdWidth = int_of_float(fst(state.bgd.params.frameSize))
+    Draw.drawBgd(state.bgd, @doesNotRaise float_of_int(mod(vposXInt, bgdWidth)))
+    let objects = state.objects
+    state.objects = list{state.player2, ...state.objects}
+    state.player1->updateObject(~state)
+    state.objects = list{state.player1, ...state.objects}
+    state.player2->updateObject(~state)
+    state.objects = objects
+    if state.player1.kill == true {
+      switch state.status {
+      | Finished({levelResult: Lost}) => ()
+      | _ => state.status = Finished({levelResult: Lost, finishTime: Html.performance.now(.)})
+      }
+    }
+    Viewport.update(state.viewport, state.player1.px, state.player1.py)
+    state.objects->List.forEach(obj => obj->updateObject(~state))
+    parts->List.forEach(part => updateParticle(state, part))
+    Draw.fps(fps)
+    Draw.scoreAndCoins(state.score, state.coins)
+    state.objects = collidObjs.contents
+    Html.requestAnimationFrame(_ => updateHelper(~parts=particles.contents, ~state))
+  }
+
 // updateLoop is constantly being called to check for collisions and to
 // update each of the objects in the game.
-let rec updateLoop = (~player1: Object.t, ~player2, ~level, ~objects) => {
-  let viewport = Viewport.make(Load.getCanvasSizeScaled(), Config.mapDim(~level))
-  Viewport.update(viewport, player1.px, player1.py)
-  let state = State.new(~level, ~viewport)
-
-  let rec updateHelper = (~objects, ~parts) =>
-    switch state.status {
-    | _ if Keys.checkPaused() =>
-      Draw.paused()
-      Html.requestAnimationFrame(_ =>
-        updateHelper(~objects=collidObjs.contents, ~parts=particles.contents)
-      )
-
-    | Finished({levelResult, finishTime})
-      if Html.performance.now(.) -. finishTime > Config.delayWhenFinished =>
-      let timeToStart = Config.restartAfter -. (Html.performance.now(.) -. finishTime) /. 1000.
-      if timeToStart > 0. {
-        Draw.levelFinished(
-          levelResult,
-          state.level->string_of_int,
-          timeToStart->int_of_float->string_of_int,
-        )
-        Html.requestAnimationFrame(_ =>
-          updateHelper(~objects=collidObjs.contents, ~parts=particles.contents)
-        )
-      } else {
-        let level = levelResult == Won ? level + 1 : level
-        let (player1, player2, objects) = Generator.generate(~level)
-        updateLoop(~level, ~objects, ~player1, ~player2)
-      }
-
-    | Playing | Finished(_) =>
-      let fps = calcFps()
-      collidObjs := list{}
-      particles := list{}
-      Draw.clearCanvas()
-      /* Parallax background */
-      let vposXInt = int_of_float(state.viewport.px /. 5.)
-      let bgdWidth = int_of_float(fst(state.bgd.params.frameSize))
-      Draw.drawBgd(state.bgd, @doesNotRaise float_of_int(mod(vposXInt, bgdWidth)))
-      player1->updateObject(~state, ~objects=list{player2, ...objects}, ~level)
-      player2->updateObject(~state, ~objects=list{player1, ...objects}, ~level)
-      if player1.kill == true {
-        switch state.status {
-        | Finished({levelResult: Lost}) => ()
-        | _ => state.status = Finished({levelResult: Lost, finishTime: Html.performance.now(.)})
-        }
-      }
-      Viewport.update(state.viewport, player1.px, player1.py)
-      objects->List.forEach(obj => obj->updateObject(~state, ~objects, ~level))
-      parts->List.forEach(part => updateParticle(state, part))
-      Draw.fps(fps)
-      Draw.scoreAndCoins(state.score, state.coins)
-      Html.requestAnimationFrame(_ =>
-        updateHelper(~objects=collidObjs.contents, ~parts=particles.contents)
-      )
-    }
-  updateHelper(~objects, ~parts=list{})
+let updateLoop = (~level) => {
+  let state = State.new(~level)
+  updateHelper(~parts=list{}, ~state)
 }

@@ -12,21 +12,34 @@ type status =
 type t = {
   bgd: Sprite.t,
   mutable coins: int,
-  mutable level: int,
+  level: int,
   mutable multiplier: int,
+  mutable objects: list<Object.t>,
+  player1: Object.t,
+  player2: Object.t,
   mutable score: int,
   mutable status: status,
   viewport: Viewport.t,
 }
 
-let new = (~level, ~viewport) => {
-  bgd: Sprite.makeBgd(),
-  coins: 0,
-  level: level,
-  multiplier: 1,
-  score: 0,
-  status: Playing,
-  viewport: viewport,
+let new = (~level) => {
+  let player1 = One->Generator.newPlayer
+  let player2 = Two->Generator.newPlayer
+  let viewport = Viewport.make(~level)
+  viewport->Viewport.update(player1.px, player1.py)
+  let objects = Generator.generate(~level)
+  {
+    bgd: Sprite.makeBgd(),
+    coins: 0,
+    level: level,
+    multiplier: 1,
+    objects: objects,
+    player1: player1,
+    player2: player2,
+    score: 0,
+    status: Playing,
+    viewport: viewport,
+  }
 }
 
 // Add [i] to the score in [state]

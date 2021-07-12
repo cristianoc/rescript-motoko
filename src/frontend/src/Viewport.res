@@ -7,17 +7,21 @@ type t = {
   m_dim: Actors.xy,
 }
 
-let make = ((vx, vy), (mx, my)) => {
-  px: 0.,
-  py: 0.,
-  v_dim: {
-    x: vx,
-    y: vy,
-  },
-  m_dim: {
-    x: mx,
-    y: my,
-  },
+let make = (~level) => {
+  let (vx, vy) = Load.getCanvasSizeScaled()
+  let (mx, my) = Config.mapDim(~level)
+  {
+    px: 0.,
+    py: 0.,
+    v_dim: {
+      x: vx,
+      y: vy,
+    },
+    m_dim: {
+      x: mx,
+      y: my,
+    },
+  }
 }
 
 // Calculate the viewport origin coordinate given the centering coordinate
