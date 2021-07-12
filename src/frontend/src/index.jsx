@@ -1,5 +1,3 @@
-import ReactDOM from "react-dom";
-import { main as Main } from "./Main";
-import React from 'react';
+import * as Mareo from './Mareo.js';
 
-ReactDOM.render(< Main />, document.getElementById("index"));
+Mareo.start()
