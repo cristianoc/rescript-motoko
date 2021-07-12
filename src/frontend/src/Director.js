@@ -504,8 +504,7 @@ function updateParticle(state, part) {
 
 function updateLoop(_param) {
   while(true) {
-    var state = State.current.contents;
-    var match = state.status;
+    var match = State.current.contents.status;
     var exit = 0;
     if (Keys.checkPaused(undefined)) {
       Draw.paused(undefined);
@@ -520,13 +519,13 @@ function updateLoop(_param) {
         var levelResult = match.levelResult;
         var timeToStart = Config.restartAfter - (performance.now() - finishTime) / 1000;
         if (timeToStart > 0) {
-          Draw.levelFinished(levelResult, String(state.level), String(timeToStart | 0));
+          Draw.levelFinished(levelResult, String(State.current.contents.level), String(timeToStart | 0));
           requestAnimationFrame(function (param) {
                 return updateLoop(undefined);
               });
           return ;
         }
-        var level = levelResult === /* Won */0 ? state.level + 1 | 0 : state.level;
+        var level = levelResult === /* Won */0 ? State.current.contents.level + 1 | 0 : State.current.contents.level;
         State.current.contents = State.$$new(level);
         _param = undefined;
         continue ;
@@ -537,51 +536,49 @@ function updateLoop(_param) {
     }
     if (exit === 1) {
       var fps = calcFps(undefined);
-      var oldObjects = state.objects;
-      state.objects = /* [] */0;
-      var oldParticles = state.particles;
-      state.particles = /* [] */0;
+      var oldObjects = State.current.contents.objects;
+      State.current.contents.objects = /* [] */0;
+      var oldParticles = State.current.contents.particles;
+      State.current.contents.particles = /* [] */0;
       Draw.clearCanvas(undefined);
-      var vposXInt = state.viewport.px / 5 | 0;
-      var bgdWidth = state.bgd.params.frameSize[0] | 0;
-      Draw.drawBgd(state.bgd, Caml_int32.mod_(vposXInt, bgdWidth));
+      var vposXInt = State.current.contents.viewport.px / 5 | 0;
+      var bgdWidth = State.current.contents.bgd.params.frameSize[0] | 0;
+      Draw.drawBgd(State.current.contents.bgd, Caml_int32.mod_(vposXInt, bgdWidth));
       updateObject(Keys.checkTwoPlayers(undefined) ? ({
-                hd: state.player2,
+                hd: State.current.contents.player2,
                 tl: oldObjects
-              }) : oldObjects, state.player1, state);
+              }) : oldObjects, State.current.contents.player1, State.current.contents);
       if (Keys.checkTwoPlayers(undefined)) {
         updateObject({
-              hd: state.player1,
+              hd: State.current.contents.player1,
               tl: oldObjects
-            }, state.player2, state);
+            }, State.current.contents.player2, State.current.contents);
       }
-      if (state.player1.kill === true) {
-        var match$1 = state.status;
+      if (State.current.contents.player1.kill === true) {
+        var match$1 = State.current.contents.status;
         var exit$1 = 0;
         if (!(match$1 && match$1.levelResult)) {
           exit$1 = 2;
         }
         if (exit$1 === 2) {
-          state.status = /* Finished */{
+          State.current.contents.status = /* Finished */{
             levelResult: /* Lost */1,
             finishTime: performance.now()
           };
         }
         
       }
-      Viewport.update(state.viewport, state.player1.px, state.player1.py);
-      Belt_List.forEach(oldObjects, (function(state,oldObjects){
+      Viewport.update(State.current.contents.viewport, State.current.contents.player1.px, State.current.contents.player1.py);
+      Belt_List.forEach(oldObjects, (function(oldObjects){
           return function (obj) {
-            return updateObject(oldObjects, obj, state);
+            return updateObject(oldObjects, obj, State.current.contents);
           }
-          }(state,oldObjects)));
-      Belt_List.forEach(oldParticles, (function(state){
-          return function (part) {
-            return updateParticle(state, part);
-          }
-          }(state)));
+          }(oldObjects)));
+      Belt_List.forEach(oldParticles, (function (part) {
+              return updateParticle(State.current.contents, part);
+            }));
       Draw.fps(fps);
-      Draw.scoreAndCoins(state.score, state.coins);
+      Draw.scoreAndCoins(State.current.contents.score, State.current.contents.coins);
       requestAnimationFrame(function (param) {
             return updateLoop(undefined);
           });

@@ -342,8 +342,7 @@ let updateParticle = (state: State.t, part) => {
 // updateLoop is constantly being called to check for collisions and to
 // update each of the objects in the game.
 let rec updateLoop = () => {
-  let state = State.current.contents
-  switch state.status {
+  switch State.current.contents.status {
   | _ if Keys.checkPaused() =>
     Draw.paused()
     Html.requestAnimationFrame(_ => updateLoop())
@@ -354,45 +353,61 @@ let rec updateLoop = () => {
     if timeToStart > 0. {
       Draw.levelFinished(
         levelResult,
-        state.level->string_of_int,
+        State.current.contents.level->string_of_int,
         timeToStart->int_of_float->string_of_int,
       )
       Html.requestAnimationFrame(_ => updateLoop())
     } else {
-      let level = levelResult == Won ? state.level + 1 : state.level
+      let level =
+        levelResult == Won ? State.current.contents.level + 1 : State.current.contents.level
       State.current := State.new(~level)
       updateLoop()
     }
 
   | Playing | Finished(_) =>
     let fps = calcFps()
-    let oldObjects = state.objects
-    state.objects = list{}
-    let oldParticles = state.particles
-    state.particles = list{}
+    let oldObjects = State.current.contents.objects
+    State.current.contents.objects = list{}
+    let oldParticles = State.current.contents.particles
+    State.current.contents.particles = list{}
     Draw.clearCanvas()
     /* Parallax background */
-    let vposXInt = int_of_float(state.viewport.px /. 5.)
-    let bgdWidth = int_of_float(fst(state.bgd.params.frameSize))
-    Draw.drawBgd(state.bgd, @doesNotRaise float_of_int(mod(vposXInt, bgdWidth)))
-    state.player1->updateObject(
-      ~allCollids=Keys.checkTwoPlayers() ? list{state.player2, ...oldObjects} : oldObjects,
-      ~state,
+    let vposXInt = int_of_float(State.current.contents.viewport.px /. 5.)
+    let bgdWidth = int_of_float(fst(State.current.contents.bgd.params.frameSize))
+    Draw.drawBgd(State.current.contents.bgd, @doesNotRaise float_of_int(mod(vposXInt, bgdWidth)))
+    State.current.contents.player1->updateObject(
+      ~allCollids=Keys.checkTwoPlayers()
+        ? list{State.current.contents.player2, ...oldObjects}
+        : oldObjects,
+      ~state=State.current.contents,
     )
     if Keys.checkTwoPlayers() {
-      state.player2->updateObject(~allCollids=list{state.player1, ...oldObjects}, ~state)
+      State.current.contents.player2->updateObject(
+        ~allCollids=list{State.current.contents.player1, ...oldObjects},
+        ~state=State.current.contents,
+      )
     }
-    if state.player1.kill == true {
-      switch state.status {
+    if State.current.contents.player1.kill == true {
+      switch State.current.contents.status {
       | Finished({levelResult: Lost}) => ()
-      | _ => state.status = Finished({levelResult: Lost, finishTime: Html.performance.now(.)})
+      | _ =>
+        State.current.contents.status = Finished({
+          levelResult: Lost,
+          finishTime: Html.performance.now(.),
+        })
       }
     }
-    Viewport.update(state.viewport, state.player1.px, state.player1.py)
-    oldObjects->List.forEach(obj => obj->updateObject(~allCollids=oldObjects, ~state))
-    oldParticles->List.forEach(part => updateParticle(state, part))
+    Viewport.update(
+      State.current.contents.viewport,
+      State.current.contents.player1.px,
+      State.current.contents.player1.py,
+    )
+    oldObjects->List.forEach(obj =>
+      obj->updateObject(~allCollids=oldObjects, ~state=State.current.contents)
+    )
+    oldParticles->List.forEach(part => updateParticle(State.current.contents, part))
     Draw.fps(fps)
-    Draw.scoreAndCoins(state.score, state.coins)
+    Draw.scoreAndCoins(State.current.contents.score, State.current.contents.coins)
     Html.requestAnimationFrame(_ => updateLoop())
   }
 }
