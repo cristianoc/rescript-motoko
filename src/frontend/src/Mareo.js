@@ -3,7 +3,6 @@
 import * as Config from "./Config.js";
 import * as Backend from "./Backend.js";
 import * as Director from "./Director.js";
-import * as Generator from "./Generator.js";
 import * as Belt_Array from "rescript/lib/es6/belt_Array.js";
 
 function preload(param) {
@@ -17,8 +16,7 @@ function preload(param) {
                 img.addEventListener("load", (function (param) {
                         loadCount.contents = loadCount.contents + 1 | 0;
                         if (loadCount.contents === numImages) {
-                          var match = Generator.generate(1);
-                          Director.updateLoop(match[0], match[1], 1, match[2]);
+                          Director.updateLoop(1);
                         }
                         return true;
                       }), true);

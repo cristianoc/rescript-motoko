@@ -15,8 +15,7 @@ let preload = () => {
         loadCount := loadCount.contents + 1
         if loadCount.contents == numImages {
           let level = 1
-          let (player1, player2, objects) = Generator.generate(~level)
-          Director.updateLoop(~level, ~objects, ~player1, ~player2)
+          Director.updateLoop(~level)
         }
         true
       },

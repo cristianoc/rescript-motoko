@@ -2,7 +2,6 @@
 
 import * as Draw from "./Draw.js";
 import * as Keys from "./Keys.js";
-import * as Load from "./Load.js";
 import * as State from "./State.js";
 import * as Config from "./Config.js";
 import * as $$Object from "./Object.js";
@@ -10,7 +9,6 @@ import * as Sprite from "./Sprite.js";
 import * as Particle from "./Particle.js";
 import * as Viewport from "./Viewport.js";
 import * as Belt_List from "rescript/lib/es6/belt_List.js";
-import * as Generator from "./Generator.js";
 import * as Caml_int32 from "rescript/lib/es6/caml_int32.js";
 import * as Pervasives from "rescript/lib/es6/pervasives.js";
 
@@ -454,15 +452,15 @@ function checkCollisions(obj, state, objects) {
   return narrowPhase(obj, broad, state);
 }
 
-function updateObject0(obj, state, objects, level) {
+function updateObject0(obj, state) {
   var spr = obj.sprite;
   obj.invuln = obj.invuln > 0 ? obj.invuln - 1 | 0 : 0;
   if (!((!obj.kill || $$Object.isPlayer(obj)) && viewportFilter(obj, state))) {
     return /* [] */0;
   }
   obj.grounded = false;
-  $$Object.processObj(obj, level);
-  var evolved = checkCollisions(obj, state, objects);
+  $$Object.processObj(obj, state.level);
+  var evolved = checkCollisions(obj, state, state.objects);
   var vptAdjXy = Viewport.fromCoord(state.viewport, obj.px, obj.py);
   Draw.render(spr, vptAdjXy.x, vptAdjXy.y);
   if (Keys.checkBboxEnabled(undefined)) {
@@ -474,18 +472,18 @@ function updateObject0(obj, state, objects, level) {
   return evolved;
 }
 
-function updateObject(obj, state, objects, level) {
+function updateObject(obj, state) {
   var match = obj.objTyp;
   if (match.TAG === /* Player */0) {
     var n = match._1;
     var keys = Keys.translateKeys(n);
     obj.crouch = false;
     $$Object.updatePlayer(obj, n, keys);
-    var evolved = updateObject0(obj, state, objects, level);
+    var evolved = updateObject0(obj, state);
     collidObjs.contents = Pervasives.$at(evolved, collidObjs.contents);
     return ;
   }
-  var evolved$1 = updateObject0(obj, state, objects, level);
+  var evolved$1 = updateObject0(obj, state);
   if (!obj.kill) {
     collidObjs.contents = {
       hd: obj,
@@ -512,18 +510,19 @@ function updateParticle(state, part) {
   
 }
 
-function updateLoop(player1, player2, level, objects) {
-  var viewport = Viewport.make(Load.getCanvasSizeScaled(undefined), Config.mapDim(level));
-  Viewport.update(viewport, player1.px, player1.py);
-  var state = State.$$new(level, viewport);
-  var updateHelper = function (objects, parts) {
+function updateHelper(parts, _state) {
+  while(true) {
+    var state = _state;
     var match = state.status;
     var exit = 0;
     if (Keys.checkPaused(undefined)) {
       Draw.paused(undefined);
-      requestAnimationFrame(function (param) {
-            return updateHelper(collidObjs.contents, particles.contents);
-          });
+      state.objects = collidObjs.contents;
+      requestAnimationFrame((function(state){
+          return function (param) {
+            return updateHelper(particles.contents, state);
+          }
+          }(state)));
       return ;
     }
     if (match) {
@@ -533,14 +532,18 @@ function updateLoop(player1, player2, level, objects) {
         var timeToStart = Config.restartAfter - (performance.now() - finishTime) / 1000;
         if (timeToStart > 0) {
           Draw.levelFinished(levelResult, String(state.level), String(timeToStart | 0));
-          requestAnimationFrame(function (param) {
-                return updateHelper(collidObjs.contents, particles.contents);
-              });
+          state.objects = collidObjs.contents;
+          requestAnimationFrame((function(state){
+              return function (param) {
+                return updateHelper(particles.contents, state);
+              }
+              }(state)));
           return ;
         }
-        var level$1 = levelResult === /* Won */0 ? level + 1 | 0 : level;
-        var match$1 = Generator.generate(level$1);
-        return updateLoop(match$1[0], match$1[1], level$1, match$1[2]);
+        var level = levelResult === /* Won */0 ? state.level + 1 | 0 : state.level;
+        var state$1 = State.$$new(level);
+        _state = state$1;
+        continue ;
       }
       exit = 1;
     } else {
@@ -554,18 +557,22 @@ function updateLoop(player1, player2, level, objects) {
       var vposXInt = state.viewport.px / 5 | 0;
       var bgdWidth = state.bgd.params.frameSize[0] | 0;
       Draw.drawBgd(state.bgd, Caml_int32.mod_(vposXInt, bgdWidth));
-      updateObject(player1, state, {
-            hd: player2,
-            tl: objects
-          }, level);
-      updateObject(player2, state, {
-            hd: player1,
-            tl: objects
-          }, level);
-      if (player1.kill === true) {
-        var match$2 = state.status;
+      var objects = state.objects;
+      state.objects = {
+        hd: state.player2,
+        tl: state.objects
+      };
+      updateObject(state.player1, state);
+      state.objects = {
+        hd: state.player1,
+        tl: state.objects
+      };
+      updateObject(state.player2, state);
+      state.objects = objects;
+      if (state.player1.kill === true) {
+        var match$1 = state.status;
         var exit$1 = 0;
-        if (!(match$2 && match$2.levelResult)) {
+        if (!(match$1 && match$1.levelResult)) {
           exit$1 = 2;
         }
         if (exit$1 === 2) {
@@ -576,23 +583,34 @@ function updateLoop(player1, player2, level, objects) {
         }
         
       }
-      Viewport.update(state.viewport, player1.px, player1.py);
-      Belt_List.forEach(objects, (function (obj) {
-              return updateObject(obj, state, objects, level);
-            }));
-      Belt_List.forEach(parts, (function (part) {
-              return updateParticle(state, part);
-            }));
+      Viewport.update(state.viewport, state.player1.px, state.player1.py);
+      Belt_List.forEach(state.objects, (function(state){
+          return function (obj) {
+            return updateObject(obj, state);
+          }
+          }(state)));
+      Belt_List.forEach(parts, (function(state){
+          return function (part) {
+            return updateParticle(state, part);
+          }
+          }(state)));
       Draw.fps(fps);
       Draw.scoreAndCoins(state.score, state.coins);
-      requestAnimationFrame(function (param) {
-            return updateHelper(collidObjs.contents, particles.contents);
-          });
+      state.objects = collidObjs.contents;
+      requestAnimationFrame((function(state){
+          return function (param) {
+            return updateHelper(particles.contents, state);
+          }
+          }(state)));
       return ;
     }
     
   };
-  return updateHelper(objects, /* [] */0);
+}
+
+function updateLoop(level) {
+  var state = State.$$new(level);
+  return updateHelper(/* [] */0, state);
 }
 
 export {
@@ -612,6 +630,7 @@ export {
   updateObject0 ,
   updateObject ,
   updateParticle ,
+  updateHelper ,
   updateLoop ,
   
 }

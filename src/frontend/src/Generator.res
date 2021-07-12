@@ -260,30 +260,26 @@ let generateHelper = (~level): list<Object.t> => {
   list{panel, ...objects.contents}
 }
 
-// Main function called to procedurally generate the level map. w and h args
-// are in pixel form. Converts to block form to call generateHelper. Spawns
-// the list of objects received from generateHelper to display on canvas.
-let generate = (~level): (Object.t, Object.t, list<Object.t>) => {
-  Random.init(Config.randomSeed(~level))
-  let initial = Html.performance.now(.)
-  let objects = generateHelper(~level)
-  let player1 = Object.make(
-    Player(SmallM, One),
-    Sprite.makePlayer(SmallM, Standing, Left, ~playerNum=One),
+let newPlayer = playerNum =>
+  Object.make(
+    Player(SmallM, playerNum),
+    Sprite.makePlayer(SmallM, Standing, Left, ~playerNum),
     100.,
     224.,
   )
-  let player2 = Object.make(
-    Player(SmallM, Two),
-    Sprite.makePlayer(SmallM, Standing, Left, ~playerNum=Two),
-    120.,
-    224.,
-  )
+
+// Main function called to procedurally generate the level map. w and h args
+// are in pixel form. Converts to block form to call generateHelper. Spawns
+// the list of objects received from generateHelper to display on canvas.
+let generate = (~level): list<Object.t> => {
+  Random.init(Config.randomSeed(~level))
+  let initial = Html.performance.now(.)
+  let objects = generateHelper(~level)
   let elapsed = Html.performance.now(.) -. initial
   Js.log3(
     "generated",
     objects |> List.length,
     "objects in " ++ (Js.Float.toString(elapsed) ++ " milliseconds"),
   )
-  (player1, player2, objects)
+  objects
 }
