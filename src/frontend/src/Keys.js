@@ -14,7 +14,8 @@ var pressedKeys = {
   up2: false,
   down2: false,
   bbox: false,
-  paused: false
+  paused: false,
+  twoPlayers: false
 };
 
 var loadingOrSaving = {
@@ -36,6 +37,9 @@ function keydown(evt) {
         break;
     case 40 :
         pressedKeys.down1 = true;
+        break;
+    case 50 :
+        pressedKeys.twoPlayers = !pressedKeys.twoPlayers;
         break;
     case 65 :
         pressedKeys.left2 = true;
@@ -86,7 +90,6 @@ function keydown(evt) {
     case 47 :
     case 48 :
     case 49 :
-    case 50 :
     case 51 :
     case 52 :
     case 53 :
@@ -183,6 +186,10 @@ function checkPaused(param) {
   return pressedKeys.paused;
 }
 
+function checkTwoPlayers(param) {
+  return pressedKeys.twoPlayers;
+}
+
 function translateKeys(playerNum) {
   var ctrls1_0 = [
     pressedKeys.left1,
@@ -257,6 +264,7 @@ export {
   keyup ,
   checkBboxEnabled ,
   checkPaused ,
+  checkTwoPlayers ,
   translateKeys ,
   
 }
