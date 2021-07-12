@@ -226,11 +226,11 @@ let broadPhase = (~allCollids, viewport) => allCollids->List.keep(o => o->viewpo
 // narrowPhase of collision is used in order to continuously loop through
 // each of the collidable objects to constantly check if collisions are
 // occurring.
-let narrowPhase = (obj, cs, state) => {
-  let rec narrowHelper = (obj: Object.t, cs, state, acc) =>
-    switch cs {
+let narrowPhase = (obj, ~visibleCollids, state) => {
+  let rec narrowHelper = (obj: Object.t, ~visibleCollids, ~acc) =>
+    switch visibleCollids {
     | list{} => acc
-    | list{h, ...t} =>
+    | list{h, ...nextVisibleCollids} =>
       let newObjs = if !Object.equals(obj, h) {
         switch Object.checkCollision(obj, h) {
         | None => (None, None)
@@ -250,9 +250,9 @@ let narrowPhase = (obj, cs, state) => {
       | (Some(o1), Some(o2)) => list{o1, o2, ...acc}
       | (None, None) => acc
       }
-      narrowHelper(obj, t, state, acc)
+      narrowHelper(obj, ~visibleCollids=nextVisibleCollids, ~acc)
     }
-  narrowHelper(obj, cs, state, list{})
+  narrowHelper(obj, ~visibleCollids, ~acc=list{})
 }
 
 // This is an optimization setp to determine which objects require narrow phase
@@ -269,8 +269,8 @@ let checkCollisions = (obj, state: State.t, ~allCollids) =>
   switch obj.Object.objTyp {
   | Block(_) => list{}
   | _ =>
-    let broad = broadPhase(~allCollids, state.viewport)
-    narrowPhase(obj, broad, state)
+    let visibleCollids = broadPhase(~allCollids, state.viewport)
+    obj->narrowPhase(visibleCollids, state)
   }
 
 // primary update method for objects,
