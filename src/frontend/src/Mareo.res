@@ -14,8 +14,7 @@ let preload = () => {
       _ => {
         loadCount := loadCount.contents + 1
         if loadCount.contents == numImages {
-          let level = 1
-          Director.updateLoop(~level)
+          Director.updateLoop()
         }
         true
       },
