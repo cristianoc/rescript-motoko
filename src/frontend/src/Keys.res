@@ -28,6 +28,10 @@ let pressedKeys = {
   paused: false,
 }
 
+type loadingOrSaving = Loading | Saving
+
+let loadingOrSaving = ref(None)
+
 /* Keydown event handler translates a key press */
 let keydown = evt => {
   let evt = Html.keyboardEventToJsObj(evt)
@@ -39,7 +43,30 @@ let keydown = evt => {
   | 37 => pressedKeys.left1 = true
   | 65 /* KeyA */ => pressedKeys.left2 = true
   | 40 => pressedKeys.down1 = true
-  | 83 /* KeyS */ => pressedKeys.down2 = true
+  | 83 /* KeyS */ =>
+    if pressedKeys.paused && loadingOrSaving.contents == None {
+      loadingOrSaving := Some(Saving)
+      Js.log("saving...")
+      Backend.service.reverse()
+      ->Promise.thenResolve(() => {
+        Js.log("saved")
+        loadingOrSaving := None
+      })
+      ->ignore
+    } else {
+      pressedKeys.down2 = true
+    }
+  | 76 /* KeyL */ =>
+    if pressedKeys.paused && loadingOrSaving.contents == None {
+      loadingOrSaving := Some(Loading)
+      Js.log("loading...")
+      Backend.service.get()
+      ->Promise.thenResolve(_ => {
+        Js.log("loaded")
+        loadingOrSaving := None
+      })
+      ->ignore
+    }
   | 66 /* KeyB */ => pressedKeys.bbox = !pressedKeys.bbox
   | 80 /* KeyP */ => pressedKeys.paused = !pressedKeys.paused
   | _ => ()

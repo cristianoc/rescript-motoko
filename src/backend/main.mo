@@ -24,7 +24,7 @@ actor Main {
     };
   };
 
-  public func reverseInPlace() : async () {
+  public func reverse() : async () {
     currTree := reverse_(currTree)
   };
 
