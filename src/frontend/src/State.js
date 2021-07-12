@@ -40,7 +40,7 @@ var saved = {
 };
 
 Keys.doSave.contents = (function (param) {
-    saved.contents = current.contents;
+    saved.contents = JSON.parse(JSON.stringify(current.contents));
     console.log(current.contents);
     
   });

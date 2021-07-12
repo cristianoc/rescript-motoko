@@ -54,7 +54,7 @@ let saved = ref(current.contents)
 Keys.doSave :=
   (
     () => {
-      saved := current.contents
+      saved := current.contents->Obj.magic->Js.Json.stringify->Js.Json.parseExn->Obj.magic
       Js.log(current.contents)
     }
   )
