@@ -17,10 +17,6 @@ var pressedKeys = {
   twoPlayers: false
 };
 
-var loadingOrSaving = {
-  contents: undefined
-};
-
 var doSave = {
   contents: (function (param) {
       return Promise.resolve(undefined);
@@ -62,31 +58,23 @@ function keydown(evt) {
         pressedKeys.right2 = true;
         break;
     case 76 :
-        if (pressedKeys.paused && loadingOrSaving.contents === undefined) {
-          loadingOrSaving.contents = /* Loading */0;
-          console.log("loading...");
-          Curry._1(doLoad.contents, undefined).then(function (param) {
-                console.log("loaded");
-                loadingOrSaving.contents = undefined;
-                
-              });
-        }
+        console.log("loading...");
+        Curry._1(doLoad.contents, undefined).then(function (param) {
+              console.log("loaded");
+              pressedKeys.paused = false;
+              
+            });
         break;
     case 80 :
         pressedKeys.paused = !pressedKeys.paused;
         break;
     case 83 :
-        if (pressedKeys.paused && loadingOrSaving.contents === undefined) {
-          loadingOrSaving.contents = /* Saving */1;
-          console.log("saving...");
-          Curry._1(doSave.contents, undefined).then(function (param) {
-                console.log("saved");
-                loadingOrSaving.contents = undefined;
-                
-              });
-        } else {
-          pressedKeys.down2 = true;
-        }
+        console.log("saving...");
+        pressedKeys.paused = false;
+        Curry._1(doSave.contents, undefined).then(function (param) {
+              console.log("saved");
+              
+            });
         break;
     case 33 :
     case 34 :
@@ -135,6 +123,9 @@ function keydown(evt) {
     case 87 :
         pressedKeys.up2 = true;
         break;
+    case 88 :
+        pressedKeys.down2 = true;
+        break;
     default:
       
   }
@@ -144,18 +135,16 @@ function keydown(evt) {
 function keyup(evt) {
   var match = evt.keyCode;
   if (match >= 68) {
-    if (match !== 83) {
-      if (match !== 87) {
-        if (match >= 69) {
-          
-        } else {
-          pressedKeys.right2 = false;
-        }
+    if (match === 88 || match === 87) {
+      if (match >= 88) {
+        pressedKeys.down2 = false;
       } else {
         pressedKeys.up2 = false;
       }
+    } else if (match >= 69) {
+      
     } else {
-      pressedKeys.down2 = false;
+      pressedKeys.right2 = false;
     }
   } else if (match >= 41) {
     if (match !== 65) {
@@ -270,7 +259,6 @@ function translateKeys(playerNum) {
 
 export {
   pressedKeys ,
-  loadingOrSaving ,
   doSave ,
   doLoad ,
   keydown ,

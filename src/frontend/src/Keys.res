@@ -32,8 +32,6 @@ let pressedKeys = {
 
 type loadingOrSaving = Loading | Saving
 
-let loadingOrSaving = ref(None)
-
 let doSave = ref(() => Promise.resolve())
 let doLoad = ref(() => Promise.resolve())
 
@@ -48,30 +46,23 @@ let keydown = evt => {
   | 37 => pressedKeys.left1 = true
   | 65 /* KeyA */ => pressedKeys.left2 = true
   | 40 => pressedKeys.down1 = true
+  | 88 /* KeyX */ => pressedKeys.down2 = true
   | 83 /* KeyS */ =>
-    if pressedKeys.paused && loadingOrSaving.contents == None {
-      loadingOrSaving := Some(Saving)
-      Js.log("saving...")
-      doSave.contents()
-      ->Promise.thenResolve(() => {
-        Js.log("saved")
-        loadingOrSaving := None
-      })
-      ->ignore
-    } else {
-      pressedKeys.down2 = true
-    }
+    Js.log("saving...")
+    pressedKeys.paused = false
+    doSave.contents()
+    ->Promise.thenResolve(() => {
+      Js.log("saved")
+    })
+    ->ignore
   | 76 /* KeyL */ =>
-    if pressedKeys.paused && loadingOrSaving.contents == None {
-      loadingOrSaving := Some(Loading)
-      Js.log("loading...")
-      doLoad.contents()
-      ->Promise.thenResolve(() => {
-        Js.log("loaded")
-        loadingOrSaving := None
-      })
-      ->ignore
-    }
+    Js.log("loading...")
+    doLoad.contents()
+    ->Promise.thenResolve(() => {
+      Js.log("loaded")
+      pressedKeys.paused = false
+    })
+    ->ignore
   | 66 /* KeyB */ => pressedKeys.bbox = !pressedKeys.bbox
   | 80 /* KeyP */ => pressedKeys.paused = !pressedKeys.paused
   | 50 /* Digit2 */ => pressedKeys.twoPlayers = !pressedKeys.twoPlayers
@@ -91,7 +82,7 @@ let keyup = evt => {
   | 37 => pressedKeys.left1 = false
   | 65 => pressedKeys.left2 = false
   | 40 => pressedKeys.down1 = false
-  | 83 => pressedKeys.down2 = false
+  | 88 => pressedKeys.down2 = false
   | _ => ()
   }
   true
