@@ -65,7 +65,15 @@ let fps = fps_val => {
 }
 
 let paused = () => {
-  Load.getContext().fillText(. "Paused", 142., 90.)
+  switch Keys.loadingOrSaving.contents {
+  | None => Load.getContext().fillText(. "Paused", 142., 90.)
+  | Some(Saving) =>
+    clearCanvas()
+    Load.getContext().fillText(. "Saving...", 40., 90.)
+  | Some(Loading) =>
+    clearCanvas()
+    Load.getContext().fillText(. "Loading...", 40., 90.)
+  }
 }
 
 let blackScreen = texts => {

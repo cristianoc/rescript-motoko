@@ -49,8 +49,8 @@ function fromActor(actor) {
           set: (function (t) {
               return actor.set(toCandid(t));
             }),
-          reverseInPlace: (function (param) {
-              return actor.reverseInPlace();
+          reverse: (function (param) {
+              return actor.reverse();
             }),
           reset: (function (param) {
               return actor.reset();
