@@ -1,7 +1,5 @@
 open Belt
 
-let collidObjs = ref(list{}) // List of next iteration collidable objects
-
 let lastTime = ref(0.) // Used for calculating fps
 let initialTime = ref(0.) // Used for calculating fps
 
@@ -316,11 +314,11 @@ let updateObject = (~allCollids, obj: Object.t, ~state) =>
     obj.crouch = false
     Object.updatePlayer(obj, n, keys)
     let evolved = obj->updateObject0(~allCollids, ~state)
-    collidObjs := \"@"(evolved, collidObjs.contents)
+    state.objects = \"@"(evolved, state.objects)
   | _ =>
     let evolved = obj->updateObject0(~allCollids, ~state)
     if !obj.kill {
-      collidObjs := list{obj, ...\"@"(evolved, collidObjs.contents)}
+      state.objects = list{obj, ...\"@"(evolved, state.objects)}
     }
     let newParts = if obj.kill {
       Object.kill(obj)
@@ -345,7 +343,6 @@ let rec updateHelper = (~state: State.t) => {
   switch state.status {
   | _ if Keys.checkPaused() =>
     Draw.paused()
-    state.objects = collidObjs.contents
     Html.requestAnimationFrame(_ => updateHelper(~state))
 
   | Finished({levelResult, finishTime})
@@ -357,7 +354,6 @@ let rec updateHelper = (~state: State.t) => {
         state.level->string_of_int,
         timeToStart->int_of_float->string_of_int,
       )
-      state.objects = collidObjs.contents
       Html.requestAnimationFrame(_ => updateHelper(~state))
     } else {
       let level = levelResult == Won ? state.level + 1 : state.level
@@ -368,7 +364,7 @@ let rec updateHelper = (~state: State.t) => {
   | Playing | Finished(_) =>
     let fps = calcFps()
     let oldObjects = state.objects
-    collidObjs := list{}
+    state.objects = list{}
     let oldParticles = state.particles
     state.particles = list{}
     Draw.clearCanvas()
@@ -389,7 +385,6 @@ let rec updateHelper = (~state: State.t) => {
     oldParticles->List.forEach(part => updateParticle(state, part))
     Draw.fps(fps)
     Draw.scoreAndCoins(state.score, state.coins)
-    state.objects = collidObjs.contents
     Html.requestAnimationFrame(_ => updateHelper(~state))
   }
 }

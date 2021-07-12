@@ -12,10 +12,6 @@ import * as Belt_List from "rescript/lib/es6/belt_List.js";
 import * as Caml_int32 from "rescript/lib/es6/caml_int32.js";
 import * as Pervasives from "rescript/lib/es6/pervasives.js";
 
-var collidObjs = {
-  contents: /* [] */0
-};
-
 var lastTime = {
   contents: 0
 };
@@ -476,14 +472,14 @@ function updateObject(allCollids, obj, state) {
     obj.crouch = false;
     $$Object.updatePlayer(obj, n, keys);
     var evolved = updateObject0(allCollids, obj, state);
-    collidObjs.contents = Pervasives.$at(evolved, collidObjs.contents);
+    state.objects = Pervasives.$at(evolved, state.objects);
     return ;
   }
   var evolved$1 = updateObject0(allCollids, obj, state);
   if (!obj.kill) {
-    collidObjs.contents = {
+    state.objects = {
       hd: obj,
-      tl: Pervasives.$at(evolved$1, collidObjs.contents)
+      tl: Pervasives.$at(evolved$1, state.objects)
     };
   }
   var newParts = obj.kill ? $$Object.kill(obj) : /* [] */0;
@@ -513,7 +509,6 @@ function updateHelper(_state) {
     var exit = 0;
     if (Keys.checkPaused(undefined)) {
       Draw.paused(undefined);
-      state.objects = collidObjs.contents;
       requestAnimationFrame((function(state){
           return function (param) {
             return updateHelper(state);
@@ -528,7 +523,6 @@ function updateHelper(_state) {
         var timeToStart = Config.restartAfter - (performance.now() - finishTime) / 1000;
         if (timeToStart > 0) {
           Draw.levelFinished(levelResult, String(state.level), String(timeToStart | 0));
-          state.objects = collidObjs.contents;
           requestAnimationFrame((function(state){
               return function (param) {
                 return updateHelper(state);
@@ -547,7 +541,7 @@ function updateHelper(_state) {
     if (exit === 1) {
       var fps = calcFps(undefined);
       var oldObjects = state.objects;
-      collidObjs.contents = /* [] */0;
+      state.objects = /* [] */0;
       var oldParticles = state.particles;
       state.particles = /* [] */0;
       Draw.clearCanvas(undefined);
@@ -589,7 +583,6 @@ function updateHelper(_state) {
           }(state)));
       Draw.fps(fps);
       Draw.scoreAndCoins(state.score, state.coins);
-      state.objects = collidObjs.contents;
       requestAnimationFrame((function(state){
           return function (param) {
             return updateHelper(state);
@@ -606,7 +599,6 @@ function updateLoop(level) {
 }
 
 export {
-  collidObjs ,
   lastTime ,
   initialTime ,
   calcFps ,
