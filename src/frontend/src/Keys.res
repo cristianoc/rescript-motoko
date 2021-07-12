@@ -12,6 +12,7 @@ type keys = {
   mutable down2: bool,
   mutable bbox: bool,
   mutable paused: bool,
+  mutable twoPlayers: bool,
 }
 
 // pressedKeys instantiates the keys
@@ -26,6 +27,7 @@ let pressedKeys = {
   down2: false,
   bbox: false,
   paused: false,
+  twoPlayers: false,
 }
 
 type loadingOrSaving = Loading | Saving
@@ -69,6 +71,7 @@ let keydown = evt => {
     }
   | 66 /* KeyB */ => pressedKeys.bbox = !pressedKeys.bbox
   | 80 /* KeyP */ => pressedKeys.paused = !pressedKeys.paused
+  | 50 /* Digit2 */ => pressedKeys.twoPlayers = !pressedKeys.twoPlayers
   | _ => ()
   }
   true
@@ -95,6 +98,8 @@ let keyup = evt => {
 let checkBboxEnabled = () => pressedKeys.bbox
 
 let checkPaused = () => pressedKeys.paused
+
+let checkTwoPlayers = () => pressedKeys.twoPlayers
 
 /* Converts a keypress to a list of control keys, allowing more than one key
  * to be processed each frame. */

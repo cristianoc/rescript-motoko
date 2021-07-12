@@ -226,7 +226,7 @@ let broadPhase = (~allCollids, viewport) => allCollids->List.keep(o => o->viewpo
 // narrowPhase of collision is used in order to continuously loop through
 // each of the collidable objects to constantly check if collisions are
 // occurring.
-let narrowPhase = (obj, ~visibleCollids, state) => {
+let narrowPhase = (obj, ~state, ~visibleCollids) => {
   let rec narrowHelper = (obj: Object.t, ~visibleCollids, ~acc) =>
     switch visibleCollids {
     | list{} => acc
@@ -270,7 +270,7 @@ let checkCollisions = (obj, state: State.t, ~allCollids) =>
   | Block(_) => list{}
   | _ =>
     let visibleCollids = broadPhase(~allCollids, state.viewport)
-    obj->narrowPhase(visibleCollids, state)
+    obj->narrowPhase(~state, ~visibleCollids)
   }
 
 // primary update method for objects,
@@ -372,8 +372,13 @@ let rec updateHelper = (~state: State.t) => {
     let vposXInt = int_of_float(state.viewport.px /. 5.)
     let bgdWidth = int_of_float(fst(state.bgd.params.frameSize))
     Draw.drawBgd(state.bgd, @doesNotRaise float_of_int(mod(vposXInt, bgdWidth)))
-    state.player1->updateObject(~allCollids=list{state.player2, ...oldObjects}, ~state)
-    state.player2->updateObject(~allCollids=list{state.player1, ...oldObjects}, ~state)
+    state.player1->updateObject(
+      ~allCollids=Keys.checkTwoPlayers() ? list{state.player2, ...oldObjects} : oldObjects,
+      ~state,
+    )
+    if Keys.checkTwoPlayers() {
+      state.player2->updateObject(~allCollids=list{state.player1, ...oldObjects}, ~state)
+    }
     if state.player1.kill == true {
       switch state.status {
       | Finished({levelResult: Lost}) => ()

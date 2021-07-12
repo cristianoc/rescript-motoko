@@ -385,16 +385,16 @@ function broadPhase(allCollids, viewport) {
               }));
 }
 
-function narrowPhase(obj, cs, state) {
-  var _cs = cs;
+function narrowPhase(obj, state, visibleCollids) {
+  var _visibleCollids = visibleCollids;
   var _acc = /* [] */0;
   while(true) {
     var acc = _acc;
-    var cs$1 = _cs;
-    if (!cs$1) {
+    var visibleCollids$1 = _visibleCollids;
+    if (!visibleCollids$1) {
       return acc;
     }
-    var h = cs$1.hd;
+    var h = visibleCollids$1.hd;
     var newObjs;
     if ($$Object.equals(obj, h)) {
       newObjs = [
@@ -430,7 +430,7 @@ function narrowPhase(obj, cs, state) {
           }) : acc;
     }
     _acc = acc$1;
-    _cs = cs$1.tl;
+    _visibleCollids = visibleCollids$1.tl;
     continue ;
   };
 }
@@ -441,7 +441,7 @@ function checkCollisions(obj, state, allCollids) {
     return /* [] */0;
   }
   var visibleCollids = broadPhase(allCollids, state.viewport);
-  return narrowPhase(obj, visibleCollids, state);
+  return narrowPhase(obj, state, visibleCollids);
 }
 
 function updateObject0(allCollids, obj, state) {
@@ -548,14 +548,16 @@ function updateHelper(_state) {
       var vposXInt = state.viewport.px / 5 | 0;
       var bgdWidth = state.bgd.params.frameSize[0] | 0;
       Draw.drawBgd(state.bgd, Caml_int32.mod_(vposXInt, bgdWidth));
-      updateObject({
-            hd: state.player2,
-            tl: oldObjects
-          }, state.player1, state);
-      updateObject({
-            hd: state.player1,
-            tl: oldObjects
-          }, state.player2, state);
+      updateObject(Keys.checkTwoPlayers(undefined) ? ({
+                hd: state.player2,
+                tl: oldObjects
+              }) : oldObjects, state.player1, state);
+      if (Keys.checkTwoPlayers(undefined)) {
+        updateObject({
+              hd: state.player1,
+              tl: oldObjects
+            }, state.player2, state);
+      }
       if (state.player1.kill === true) {
         var match$1 = state.status;
         var exit$1 = 0;
