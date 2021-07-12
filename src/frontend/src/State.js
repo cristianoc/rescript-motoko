@@ -16,6 +16,7 @@ function $$new(level) {
           level: level,
           multiplier: 1,
           objects: objects,
+          particles: /* [] */0,
           player1: player1,
           player2: player2,
           score: 0,
