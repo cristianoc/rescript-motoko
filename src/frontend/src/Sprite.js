@@ -3,7 +3,7 @@
 import * as Caml_obj from "rescript/lib/es6/caml_obj.js";
 import * as Caml_int32 from "rescript/lib/es6/caml_int32.js";
 
-function setupSprite(bboxOffsetOpt, bboxSizeOpt, frameSizeOpt, maxTicksOpt, maxFramesOpt, srcOffset, imgSrc) {
+function spriteParams(bboxOffsetOpt, bboxSizeOpt, frameSizeOpt, maxTicksOpt, maxFramesOpt, srcOffset, imgSrc) {
   var bboxOffset = bboxOffsetOpt !== undefined ? bboxOffsetOpt : [
       0,
       0
@@ -35,12 +35,12 @@ function setupSprite(bboxOffsetOpt, bboxSizeOpt, frameSizeOpt, maxTicksOpt, maxF
         };
 }
 
-function makeSmallPlayer(typ, dir, playerNum) {
+function smallPlayerParams(typ, dir, playerNum) {
   var png = playerNum ? "mario2-small.png" : "mario-small.png";
   if (dir) {
     switch (typ) {
       case /* Standing */0 :
-          return setupSprite([
+          return spriteParams([
                       1,
                       1
                     ], [
@@ -51,7 +51,7 @@ function makeSmallPlayer(typ, dir, playerNum) {
                       32
                     ], png);
       case /* Jumping */1 :
-          return setupSprite([
+          return spriteParams([
                       2,
                       1
                     ], [
@@ -62,7 +62,7 @@ function makeSmallPlayer(typ, dir, playerNum) {
                       48
                     ], png);
       case /* Running */2 :
-          return setupSprite([
+          return spriteParams([
                       2,
                       1
                     ], [
@@ -73,7 +73,7 @@ function makeSmallPlayer(typ, dir, playerNum) {
                       32
                     ], png);
       case /* Crouching */3 :
-          return setupSprite([
+          return spriteParams([
                       1,
                       5
                     ], [
@@ -88,7 +88,7 @@ function makeSmallPlayer(typ, dir, playerNum) {
   } else {
     switch (typ) {
       case /* Standing */0 :
-          return setupSprite([
+          return spriteParams([
                       3,
                       1
                     ], [
@@ -99,7 +99,7 @@ function makeSmallPlayer(typ, dir, playerNum) {
                       0
                     ], png);
       case /* Jumping */1 :
-          return setupSprite([
+          return spriteParams([
                       2,
                       1
                     ], [
@@ -110,7 +110,7 @@ function makeSmallPlayer(typ, dir, playerNum) {
                       16
                     ], png);
       case /* Running */2 :
-          return setupSprite([
+          return spriteParams([
                       2,
                       1
                     ], [
@@ -121,7 +121,7 @@ function makeSmallPlayer(typ, dir, playerNum) {
                       0
                     ], png);
       case /* Crouching */3 :
-          return setupSprite([
+          return spriteParams([
                       1,
                       5
                     ], [
@@ -136,12 +136,12 @@ function makeSmallPlayer(typ, dir, playerNum) {
   }
 }
 
-function makeBigPlayer(typ, dir, playerNum) {
+function bigPlayerParams(typ, dir, playerNum) {
   var png = playerNum ? "mario2-big.png" : "mario-big.png";
   if (dir) {
     switch (typ) {
       case /* Standing */0 :
-          return setupSprite([
+          return spriteParams([
                       1,
                       1
                     ], [
@@ -155,7 +155,7 @@ function makeBigPlayer(typ, dir, playerNum) {
                       69
                     ], png);
       case /* Jumping */1 :
-          return setupSprite([
+          return spriteParams([
                       2,
                       1
                     ], [
@@ -169,7 +169,7 @@ function makeBigPlayer(typ, dir, playerNum) {
                       70
                     ], png);
       case /* Running */2 :
-          return setupSprite([
+          return spriteParams([
                       2,
                       1
                     ], [
@@ -183,7 +183,7 @@ function makeBigPlayer(typ, dir, playerNum) {
                       101
                     ], png);
       case /* Crouching */3 :
-          return setupSprite([
+          return spriteParams([
                       2,
                       10
                     ], [
@@ -201,7 +201,7 @@ function makeBigPlayer(typ, dir, playerNum) {
   } else {
     switch (typ) {
       case /* Standing */0 :
-          return setupSprite([
+          return spriteParams([
                       2,
                       1
                     ], [
@@ -215,7 +215,7 @@ function makeBigPlayer(typ, dir, playerNum) {
                       5
                     ], png);
       case /* Jumping */1 :
-          return setupSprite([
+          return spriteParams([
                       2,
                       1
                     ], [
@@ -229,7 +229,7 @@ function makeBigPlayer(typ, dir, playerNum) {
                       6
                     ], png);
       case /* Running */2 :
-          return setupSprite([
+          return spriteParams([
                       2,
                       1
                     ], [
@@ -243,7 +243,7 @@ function makeBigPlayer(typ, dir, playerNum) {
                       37
                     ], png);
       case /* Crouching */3 :
-          return setupSprite([
+          return spriteParams([
                       2,
                       10
                     ], [
@@ -261,10 +261,10 @@ function makeBigPlayer(typ, dir, playerNum) {
   }
 }
 
-function makeEnemy(typ, dir) {
+function enemyParams(typ, dir) {
   switch (typ) {
     case /* Goomba */0 :
-        return setupSprite([
+        return spriteParams([
                     1,
                     1
                   ], [
@@ -276,7 +276,7 @@ function makeEnemy(typ, dir) {
                   ], "enemies.png");
     case /* GKoopa */1 :
         if (dir) {
-          return setupSprite([
+          return spriteParams([
                       1,
                       10
                     ], [
@@ -290,7 +290,7 @@ function makeEnemy(typ, dir) {
                       69
                     ], "enemies.png");
         } else {
-          return setupSprite([
+          return spriteParams([
                       4,
                       10
                     ], [
@@ -306,7 +306,7 @@ function makeEnemy(typ, dir) {
         }
     case /* RKoopa */2 :
         if (dir) {
-          return setupSprite([
+          return spriteParams([
                       1,
                       10
                     ], [
@@ -320,7 +320,7 @@ function makeEnemy(typ, dir) {
                       5
                     ], "enemies.png");
         } else {
-          return setupSprite([
+          return spriteParams([
                       4,
                       10
                     ], [
@@ -335,7 +335,7 @@ function makeEnemy(typ, dir) {
                     ], "enemies.png");
         }
     case /* GKoopaShell */3 :
-        return setupSprite([
+        return spriteParams([
                     2,
                     2
                   ], [
@@ -346,7 +346,7 @@ function makeEnemy(typ, dir) {
                     96
                   ], "enemies.png");
     case /* RKoopaShell */4 :
-        return setupSprite([
+        return spriteParams([
                     2,
                     2
                   ], [
@@ -362,7 +362,7 @@ function makeEnemy(typ, dir) {
 
 function makeParams(x) {
   if (x) {
-    return setupSprite([
+    return spriteParams([
                 3,
                 0
               ], [
@@ -373,7 +373,7 @@ function makeParams(x) {
                 80
               ], "items.png");
   } else {
-    return setupSprite([
+    return spriteParams([
                 2,
                 0
               ], [
@@ -386,32 +386,32 @@ function makeParams(x) {
   }
 }
 
-var brickParams = setupSprite(undefined, undefined, undefined, 10, 5, [
+var brickParams = spriteParams(undefined, undefined, undefined, 10, 5, [
       0,
       0
     ], "blocks.png");
 
-var qBlockParams = setupSprite(undefined, undefined, undefined, 15, 4, [
+var qBlockParams = spriteParams(undefined, undefined, undefined, 15, 4, [
       0,
       16
     ], "blocks.png");
 
-var qBlockUsedParams = setupSprite(undefined, undefined, undefined, undefined, undefined, [
+var qBlockUsedParams = spriteParams(undefined, undefined, undefined, undefined, undefined, [
       0,
       32
     ], "blocks.png");
 
-var unBBlockParams = setupSprite(undefined, undefined, undefined, undefined, undefined, [
+var unBBlockParams = spriteParams(undefined, undefined, undefined, undefined, undefined, [
       0,
       48
     ], "blocks.png");
 
-var cloudParams = setupSprite(undefined, undefined, undefined, undefined, undefined, [
+var cloudParams = spriteParams(undefined, undefined, undefined, undefined, undefined, [
       0,
       64
     ], "blocks.png");
 
-var panelParams = setupSprite(undefined, undefined, [
+var panelParams = spriteParams(undefined, undefined, [
       26,
       26
     ], 15, 3, [
@@ -419,12 +419,12 @@ var panelParams = setupSprite(undefined, undefined, [
       0
     ], "panel.png");
 
-var groundParams = setupSprite(undefined, undefined, undefined, undefined, undefined, [
+var groundParams = spriteParams(undefined, undefined, undefined, undefined, undefined, [
       0,
       32
     ], "ground.png");
 
-function makeBlock(x) {
+function blockParams(x) {
   if (typeof x !== "number") {
     return qBlockParams;
   }
@@ -445,15 +445,15 @@ function makeBlock(x) {
   }
 }
 
-function makeParticle(x) {
+function particleParams(x) {
   switch (x) {
     case /* GoombaSquish */0 :
-        return setupSprite(undefined, undefined, undefined, undefined, undefined, [
+        return spriteParams(undefined, undefined, undefined, undefined, undefined, [
                     0,
                     144
                   ], "enemies.png");
     case /* BrickChunkL */1 :
-        return setupSprite(undefined, undefined, [
+        return spriteParams(undefined, undefined, [
                     8,
                     8
                   ], undefined, undefined, [
@@ -461,7 +461,7 @@ function makeParticle(x) {
                     0
                   ], "chunks.png");
     case /* BrickChunkR */2 :
-        return setupSprite(undefined, undefined, [
+        return spriteParams(undefined, undefined, [
                     8,
                     8
                   ], undefined, undefined, [
@@ -469,7 +469,7 @@ function makeParticle(x) {
                     0
                   ], "chunks.png");
     case /* Score100 */3 :
-        return setupSprite(undefined, undefined, [
+        return spriteParams(undefined, undefined, [
                     12,
                     8
                   ], undefined, undefined, [
@@ -477,7 +477,7 @@ function makeParticle(x) {
                     0
                   ], "score.png");
     case /* Score200 */4 :
-        return setupSprite(undefined, undefined, [
+        return spriteParams(undefined, undefined, [
                     12,
                     9
                   ], undefined, undefined, [
@@ -485,7 +485,7 @@ function makeParticle(x) {
                     9
                   ], "score.png");
     case /* Score400 */5 :
-        return setupSprite(undefined, undefined, [
+        return spriteParams(undefined, undefined, [
                     12,
                     9
                   ], undefined, undefined, [
@@ -493,7 +493,7 @@ function makeParticle(x) {
                     18
                   ], "score.png");
     case /* Score800 */6 :
-        return setupSprite(undefined, undefined, [
+        return spriteParams(undefined, undefined, [
                     12,
                     9
                   ], undefined, undefined, [
@@ -501,7 +501,7 @@ function makeParticle(x) {
                     27
                   ], "score.png");
     case /* Score1000 */7 :
-        return setupSprite(undefined, undefined, [
+        return spriteParams(undefined, undefined, [
                     14,
                     9
                   ], undefined, undefined, [
@@ -509,7 +509,7 @@ function makeParticle(x) {
                     0
                   ], "score.png");
     case /* Score2000 */8 :
-        return setupSprite(undefined, undefined, [
+        return spriteParams(undefined, undefined, [
                     14,
                     9
                   ], undefined, undefined, [
@@ -517,7 +517,7 @@ function makeParticle(x) {
                     9
                   ], "score.png");
     case /* Score4000 */9 :
-        return setupSprite(undefined, undefined, [
+        return spriteParams(undefined, undefined, [
                     14,
                     9
                   ], undefined, undefined, [
@@ -525,7 +525,7 @@ function makeParticle(x) {
                     18
                   ], "score.png");
     case /* Score8000 */10 :
-        return setupSprite(undefined, undefined, [
+        return spriteParams(undefined, undefined, [
                     14,
                     9
                   ], undefined, undefined, [
@@ -536,11 +536,11 @@ function makeParticle(x) {
   }
 }
 
-function makePlayer(plSize, typ, dir, playerNum) {
+function playerParams(plSize, typ, dir, playerNum) {
   if (plSize) {
-    return makeSmallPlayer(typ, dir, playerNum);
+    return smallPlayerParams(typ, dir, playerNum);
   } else {
-    return makeBigPlayer(typ, dir, playerNum);
+    return bigPlayerParams(typ, dir, playerNum);
   }
 }
 
@@ -556,7 +556,7 @@ function makeFromParams(params) {
 }
 
 function makeBgd(param) {
-  return makeFromParams(setupSprite(undefined, undefined, [
+  return makeFromParams(spriteParams(undefined, undefined, [
                   512,
                   256
                 ], undefined, undefined, [
@@ -565,12 +565,12 @@ function makeBgd(param) {
                 ], "bgd-1.png"));
 }
 
-function makeParticle$1(ptyp) {
-  return makeFromParams(makeParticle(ptyp));
+function makeParticle(ptyp) {
+  return makeFromParams(particleParams(ptyp));
 }
 
 function transformEnemy(enemy_typ, spr, dir) {
-  var params = makeEnemy(enemy_typ, dir);
+  var params = enemyParams(enemy_typ, dir);
   var img = document.createElement("img");
   img.src = params.imgSrc;
   spr.params = params;
@@ -590,10 +590,10 @@ function updateAnimation(spr) {
 }
 
 export {
-  setupSprite ,
-  makeSmallPlayer ,
-  makeBigPlayer ,
-  makeEnemy ,
+  spriteParams ,
+  smallPlayerParams ,
+  bigPlayerParams ,
+  enemyParams ,
   makeParams ,
   brickParams ,
   qBlockParams ,
@@ -602,11 +602,12 @@ export {
   cloudParams ,
   panelParams ,
   groundParams ,
-  makeBlock ,
-  makePlayer ,
+  blockParams ,
+  particleParams ,
+  playerParams ,
   makeFromParams ,
   makeBgd ,
-  makeParticle$1 as makeParticle,
+  makeParticle ,
   transformEnemy ,
   updateAnimation ,
   

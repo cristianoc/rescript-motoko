@@ -196,7 +196,7 @@ function updatePlayer(player, playerNum, keys) {
   if (playerTyp === undefined) {
     return ;
   }
-  var newSprite = Sprite.makeFromParams(Sprite.makePlayer(plSize, playerTyp, player.dir, playerNum));
+  var newSprite = Sprite.makeFromParams(Sprite.playerParams(plSize, playerTyp, player.dir, playerNum));
   normalizePos(player, player.sprite.params, newSprite.params);
   player.objTyp = {
     TAG: /* Player */0,
@@ -276,14 +276,14 @@ function evolveEnemy(player_dir, typ, spr, obj) {
         var newObj = make(undefined, 3, obj.dir, {
               TAG: /* Enemy */1,
               _0: /* GKoopaShell */3
-            }, Sprite.makeEnemy(/* GKoopaShell */3, obj.dir), obj.px, obj.py);
+            }, Sprite.enemyParams(/* GKoopaShell */3, obj.dir), obj.px, obj.py);
         normalizePos(newObj, spr.params, newObj.sprite.params);
         return newObj;
     case /* RKoopa */2 :
         return make(undefined, 3, obj.dir, {
                     TAG: /* Enemy */1,
                     _0: /* RKoopaShell */4
-                  }, Sprite.makeEnemy(/* RKoopaShell */4, obj.dir), obj.px, obj.py);
+                  }, Sprite.enemyParams(/* RKoopaShell */4, obj.dir), obj.px, obj.py);
     case /* GKoopaShell */3 :
     case /* RKoopaShell */4 :
         break;
@@ -323,7 +323,7 @@ function evolveBlock(obj) {
   return make(false, undefined, obj.dir, {
               TAG: /* Block */3,
               _0: /* QBlockUsed */0
-            }, Sprite.makeBlock(/* QBlockUsed */0), obj.px, obj.py);
+            }, Sprite.blockParams(/* QBlockUsed */0), obj.px, obj.py);
 }
 
 function spawnAbove(player_dir, obj, itemTyp) {

@@ -47,7 +47,7 @@ let addCoins = (objects, x, y0, ~level) => {
 let convertEnemyToObj = ((enemyTyp, x, y)) => {
   let obj = Object.make(
     ~objTyp=Enemy(enemyTyp),
-    ~spriteParams=Sprite.makeEnemy(enemyTyp, Left),
+    ~spriteParams=Sprite.enemyParams(enemyTyp, Left),
     x,
     y,
   )
@@ -73,7 +73,7 @@ let addBlock = (objects, blockTyp, xBlock, yBlock, ~level) => {
   let x = xBlock *. 16.
   let y = yBlock *. 16.
   if !(objects.contents->memPos(x, y)) && trimEdge(x, y, ~level) {
-    let obj = Object.make(~objTyp=Block(blockTyp), ~spriteParams=Sprite.makeBlock(blockTyp), x, y)
+    let obj = Object.make(~objTyp=Block(blockTyp), ~spriteParams=Sprite.blockParams(blockTyp), x, y)
     objects := list{obj, ...objects.contents}
     objects->addCoins(x, y, ~level)
     objects->addEnemyOnBlock(x, y, ~level)
@@ -221,7 +221,7 @@ let rec generateBlocks = (objects, cbx: float, cby: float, ~level) =>
 let generatePanel = (~level): Object.t => {
   let obj = Object.make(
     ~objTyp=Block(Panel),
-    ~spriteParams=Sprite.makeBlock(Panel),
+    ~spriteParams=Sprite.blockParams(Panel),
     Config.blockw(~level) *. 16. -. 256.,
     Config.blockh(~level) *. 16. *. 2. /. 3.,
   )
@@ -229,7 +229,7 @@ let generatePanel = (~level): Object.t => {
 }
 
 let convertBlockToObj = ((blockTyp, x, y)) => {
-  let obj = Object.make(~objTyp=Block(blockTyp), ~spriteParams=Sprite.makeBlock(blockTyp), x, y)
+  let obj = Object.make(~objTyp=Block(blockTyp), ~spriteParams=Sprite.blockParams(blockTyp), x, y)
   obj
 }
 
@@ -274,7 +274,7 @@ let generateHelper = (~level): list<Object.t> => {
 let newPlayer = playerNum =>
   Object.make(
     ~objTyp=Player(SmallM, playerNum),
-    ~spriteParams=Sprite.makePlayer(SmallM, Standing, Left, ~playerNum),
+    ~spriteParams=Sprite.playerParams(SmallM, Standing, Left, ~playerNum),
     100.,
     224.,
   )

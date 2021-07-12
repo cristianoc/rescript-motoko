@@ -59,7 +59,7 @@ function convertEnemyToObj(param) {
   var obj = $$Object.make(undefined, undefined, undefined, {
         TAG: /* Enemy */1,
         _0: enemyTyp
-      }, Sprite.makeEnemy(enemyTyp, /* Left */0), param[1], param[2]);
+      }, Sprite.enemyParams(enemyTyp, /* Left */0), param[1], param[2]);
   $$Object.setVelToSpeed(obj);
   return obj;
 }
@@ -102,7 +102,7 @@ function addBlock(objects, blockTyp, xBlock, yBlock, level) {
   var obj = $$Object.make(undefined, undefined, undefined, {
         TAG: /* Block */3,
         _0: blockTyp
-      }, Sprite.makeBlock(blockTyp), x, y);
+      }, Sprite.blockParams(blockTyp), x, y);
   objects.contents = {
     hd: obj,
     tl: objects.contents
@@ -275,7 +275,7 @@ function generatePanel(level) {
   return $$Object.make(undefined, undefined, undefined, {
               TAG: /* Block */3,
               _0: /* Panel */4
-            }, Sprite.makeBlock(/* Panel */4), Config.blockw(level) * 16 - 256, Config.blockh(level) * 16 * 2 / 3);
+            }, Sprite.blockParams(/* Panel */4), Config.blockw(level) * 16 - 256, Config.blockh(level) * 16 * 2 / 3);
 }
 
 function convertBlockToObj(param) {
@@ -283,7 +283,7 @@ function convertBlockToObj(param) {
   return $$Object.make(undefined, undefined, undefined, {
               TAG: /* Block */3,
               _0: blockTyp
-            }, Sprite.makeBlock(blockTyp), param[1], param[2]);
+            }, Sprite.blockParams(blockTyp), param[1], param[2]);
 }
 
 function generateGround(objects, _inc, level) {
@@ -341,7 +341,7 @@ function newPlayer(playerNum) {
               TAG: /* Player */0,
               _0: /* SmallM */1,
               _1: playerNum
-            }, Sprite.makePlayer(/* SmallM */1, /* Standing */0, /* Left */0, playerNum), 100, 224);
+            }, Sprite.playerParams(/* SmallM */1, /* Standing */0, /* Left */0, playerNum), 100, 224);
 }
 
 function generate(level) {
