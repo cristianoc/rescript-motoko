@@ -21,7 +21,7 @@ function render(sprite, posx, posy) {
   var match$2 = sprite.params.frameSize;
   var sx = match[0] + sprite.frame * sw;
   var context = Load.getContext(undefined);
-  return context.drawImage(sprite.img, sx, match[1], sw, match$1[1], posx, posy, match$2[0], match$2[1]);
+  return context.drawImage(sprite.params.img, sx, match[1], sw, match$1[1], posx, posy, match$2[0], match$2[1]);
 }
 
 function drawBgd(bgd, off_x) {
