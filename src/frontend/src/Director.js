@@ -3,6 +3,7 @@
 import * as Draw from "./Draw.js";
 import * as Keys from "./Keys.js";
 import * as Load from "./Load.js";
+import * as State from "./State.js";
 import * as Config from "./Config.js";
 import * as $$Object from "./Object.js";
 import * as Sprite from "./Sprite.js";
@@ -45,11 +46,6 @@ function calcFps(param) {
   }
 }
 
-function updateScore(state, i) {
-  state.score = state.score + i | 0;
-  
-}
-
 function playerAttackEnemy(o1, enemyTyp, s2, o2, state) {
   o1.invuln = 10;
   o1.jumping = false;
@@ -66,7 +62,7 @@ function playerAttackEnemy(o1, enemyTyp, s2, o2, state) {
   $$Object.decHealth(o2);
   o1.vy = -Config.dampenJump;
   if (state.multiplier === 8) {
-    updateScore(state, 800);
+    State.updateScore(state, 800);
     o2.score = 800;
     return [
             undefined,
@@ -74,7 +70,7 @@ function playerAttackEnemy(o1, enemyTyp, s2, o2, state) {
           ];
   }
   var score = Math.imul(100, state.multiplier);
-  updateScore(state, score);
+  State.updateScore(state, score);
   o2.score = score;
   state.multiplier = (state.multiplier << 1);
   return [
@@ -83,9 +79,9 @@ function playerAttackEnemy(o1, enemyTyp, s2, o2, state) {
         ];
 }
 
-function enemyAttackPlayer(o1, t2, s2, o2) {
-  if (t2 >= 3) {
-    var r2 = o2.vx === 0 ? $$Object.evolveEnemy(o1.dir, t2, s2, o2) : ($$Object.decHealth(o1), o1.invuln = Config.invuln, undefined);
+function enemyAttackPlayer(o1, enemy, s2, o2) {
+  if (enemy >= 3) {
+    var r2 = o2.vx === 0 ? $$Object.evolveEnemy(o1.dir, enemy, s2, o2) : ($$Object.decHealth(o1), o1.invuln = Config.invuln, undefined);
     return [
             undefined,
             r2
@@ -99,12 +95,12 @@ function enemyAttackPlayer(o1, t2, s2, o2) {
         ];
 }
 
-function collEnemyEnemy(t1, s1, o1, t2, s2, o2, dir) {
-  if (t1 !== 3) {
-    if (t1 < 4) {
-      if (t2 >= 3) {
+function collEnemyEnemy(enemy1, s1, o1, enemy2, s2, o2, dir) {
+  if (enemy1 !== 3) {
+    if (enemy1 < 4) {
+      if (enemy2 >= 3) {
         if (o2.vx === 0) {
-          $$Object.revDir(o1, t1, s1);
+          $$Object.revDir(o1, enemy1, s1);
           return [
                   undefined,
                   undefined
@@ -117,8 +113,8 @@ function collEnemyEnemy(t1, s1, o1, t2, s2, o2, dir) {
                 ];
         }
       } else if (dir >= 2) {
-        $$Object.revDir(o1, t1, s1);
-        $$Object.revDir(o2, t2, s2);
+        $$Object.revDir(o1, enemy1, s1);
+        $$Object.revDir(o2, enemy2, s2);
         return [
                 undefined,
                 undefined
@@ -130,7 +126,7 @@ function collEnemyEnemy(t1, s1, o1, t2, s2, o2, dir) {
               ];
       }
     }
-    if (t2 >= 3) {
+    if (enemy2 >= 3) {
       $$Object.decHealth(o1);
       $$Object.decHealth(o2);
       return [
@@ -139,7 +135,7 @@ function collEnemyEnemy(t1, s1, o1, t2, s2, o2, dir) {
             ];
     }
     
-  } else if (t2 >= 3) {
+  } else if (enemy2 >= 3) {
     $$Object.decHealth(o1);
     $$Object.decHealth(o2);
     return [
@@ -148,7 +144,7 @@ function collEnemyEnemy(t1, s1, o1, t2, s2, o2, dir) {
           ];
   }
   if (o1.vx === 0) {
-    $$Object.revDir(o2, t2, s2);
+    $$Object.revDir(o2, enemy2, s2);
     return [
             undefined,
             undefined
@@ -362,7 +358,7 @@ function processCollision(dir, obj1, obj2, state) {
   if (t2) {
     state.coins = state.coins + 1 | 0;
     $$Object.decHealth(obj2);
-    updateScore(state, 100);
+    State.updateScore(state, 100);
     return [
             undefined,
             undefined
@@ -376,7 +372,7 @@ function processCollision(dir, obj1, obj2, state) {
     }
     obj1.vx = 0;
     obj1.vy = 0;
-    updateScore(state, 1000);
+    State.updateScore(state, 1000);
     obj2.score = 1000;
     return [
             undefined,
@@ -519,15 +515,7 @@ function updateParticle(state, part) {
 function updateLoop(player1, player2, level, objects) {
   var viewport = Viewport.make(Load.getCanvasSizeScaled(undefined), Config.mapDim(level));
   Viewport.update(viewport, player1.px, player1.py);
-  var state = {
-    bgd: Sprite.makeBgd(undefined),
-    coins: 0,
-    level: level,
-    multiplier: 1,
-    score: 0,
-    status: /* Playing */0,
-    viewport: viewport
-  };
+  var state = State.$$new(level, viewport);
   var updateHelper = function (objects, parts) {
     var match = state.status;
     var exit = 0;
@@ -613,7 +601,6 @@ export {
   lastTime ,
   initialTime ,
   calcFps ,
-  updateScore ,
   playerAttackEnemy ,
   enemyAttackPlayer ,
   collEnemyEnemy ,

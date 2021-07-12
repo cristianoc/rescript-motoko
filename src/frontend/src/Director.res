@@ -1,28 +1,5 @@
 open Belt
 
-open Actors
-
-type status =
-  | Playing
-  | Finished({levelResult: levelResult, finishTime: float})
-
-// st represents the state of the game. It includes a background sprite (e.g.,
-// (e.g., hills), a context (used for rendering onto the page), a viewport
-// (used for moving the player's "camera"), a score (which is kept track
-// throughout the game), coins (also kept track through the game),
-// a multiplier (used for when you kill multiple enemies before ever touching
-// the ground, as in the actual Super Mario), and a game_over bool (which
-// is only true when the game is over).
-type state = {
-  bgd: Sprite.t,
-  mutable coins: int,
-  mutable level: int,
-  mutable multiplier: int,
-  mutable score: int,
-  mutable status: status,
-  viewport: Viewport.t,
-}
-
 let collidObjs = ref(list{}) // List of next iteration collidable objects
 
 let particles = ref(list{}) // List of next iteration particles
@@ -44,14 +21,11 @@ let calcFps = () => {
   }
 }
 
-// Add [i] to the score in [state]
-let updateScore = (state, i) => state.score = state.score + i
-
 // playerAttackEnemy is called for a player hitting an enemy from the north.
 // This causes the player to either kill the enemy or move the enemy, in the
 // case that the enemy is a shell. Invulnerability, jumping, and grounded
 // are used for fine tuning the movements.
-let playerAttackEnemy = (o1, enemyTyp, s2, o2, state) => {
+let playerAttackEnemy = (o1, enemyTyp: Actors.enemyTyp, s2, o2, state: State.t) => {
   o1.Object.invuln = 10
   o1.jumping = false
   o1.grounded = true
@@ -65,12 +39,12 @@ let playerAttackEnemy = (o1, enemyTyp, s2, o2, state) => {
     Object.decHealth(o2)
     o1.vy = -.Config.dampenJump
     if state.multiplier == 8 {
-      state->updateScore(800)
+      state->State.updateScore(800)
       o2.score = 800
       (None, Object.evolveEnemy(o1.dir, enemyTyp, s2, o2))
     } else {
       let score = 100 * state.multiplier
-      state->updateScore(score)
+      state->State.updateScore(score)
       o2.score = score
       state.multiplier = state.multiplier * 2
       (None, Object.evolveEnemy(o1.dir, enemyTyp, s2, o2))
@@ -79,11 +53,11 @@ let playerAttackEnemy = (o1, enemyTyp, s2, o2, state) => {
 }
 
 // enemyAttackPlayer is used when an enemy kills a player.
-let enemyAttackPlayer = (o1: Object.t, t2, s2, o2: Object.t) =>
-  switch t2 {
+let enemyAttackPlayer = (o1: Object.t, enemy: Actors.enemyTyp, s2, o2: Object.t) =>
+  switch enemy {
   | GKoopaShell | RKoopaShell =>
     let r2 = if o2.vx == 0. {
-      Object.evolveEnemy(o1.dir, t2, s2, o2)
+      Object.evolveEnemy(o1.dir, enemy, s2, o2)
     } else {
       Object.decHealth(o1)
       o1.invuln = Config.invuln
@@ -99,8 +73,16 @@ let enemyAttackPlayer = (o1: Object.t, t2, s2, o2: Object.t) =>
 // In the case that two enemies collide, they are to reverse directions. However,
 // in the case that one or more of the two enemies is a koopa shell, then
 // the koopa shell kills the other enemy.
-let collEnemyEnemy = (t1, s1, o1, t2, s2, o2, dir) =>
-  switch (t1, t2) {
+let collEnemyEnemy = (
+  enemy1: Actors.enemyTyp,
+  s1,
+  o1,
+  enemy2: Actors.enemyTyp,
+  s2,
+  o2,
+  dir: Actors.dir2d,
+) =>
+  switch (enemy1, enemy2) {
   | (GKoopaShell, GKoopaShell)
   | (GKoopaShell, RKoopaShell)
   | (RKoopaShell, RKoopaShell)
@@ -110,7 +92,7 @@ let collEnemyEnemy = (t1, s1, o1, t2, s2, o2, dir) =>
     (None, None)
   | (RKoopaShell, _) | (GKoopaShell, _) =>
     if o1.vx == 0. {
-      Object.revDir(o2, t2, s2)
+      Object.revDir(o2, enemy2, s2)
       (None, None)
     } else {
       Object.decHealth(o2)
@@ -118,7 +100,7 @@ let collEnemyEnemy = (t1, s1, o1, t2, s2, o2, dir) =>
     }
   | (_, RKoopaShell) | (_, GKoopaShell) =>
     if o2.vx == 0. {
-      Object.revDir(o1, t1, s1)
+      Object.revDir(o1, enemy1, s1)
       (None, None)
     } else {
       Object.decHealth(o1)
@@ -127,8 +109,8 @@ let collEnemyEnemy = (t1, s1, o1, t2, s2, o2, dir) =>
   | (_, _) =>
     switch dir {
     | West | East =>
-      Object.revDir(o1, t1, s1)
-      Object.revDir(o2, t2, s2)
+      Object.revDir(o1, enemy1, s1)
+      Object.revDir(o2, enemy2, s2)
       (None, None)
     | _ => (None, None)
     }
@@ -140,7 +122,7 @@ let collEnemyEnemy = (t1, s1, o1, t2, s2, o2, dir) =>
 // a new item spawned as a result of the first object. None indicates that
 // no new item should be spawned. Transformations to existing objects occur
 // mutably, as many changes are side-effectual.
-let processCollision = (dir: Actors.dir2d, obj1: Object.t, obj2: Object.t, state: state) =>
+let processCollision = (dir: Actors.dir2d, obj1: Object.t, obj2: Object.t, state: State.t) =>
   switch (obj1, obj2, dir) {
   | ({objTyp: Player(_)}, {objTyp: Player(_)}, East | West) =>
     obj2.vx = obj2.vx +. obj1.vx
@@ -162,13 +144,13 @@ let processCollision = (dir: Actors.dir2d, obj1: Object.t, obj2: Object.t, state
       }
       obj1.vx = 0.
       obj1.vy = 0.
-      updateScore(state, 1000)
+      state->State.updateScore(1000)
       obj2.score = 1000
       (None, None)
     | Coin =>
       state.coins = state.coins + 1
       Object.decHealth(obj2)
-      updateScore(state, 100)
+      state->State.updateScore(100)
       (None, None)
     }
   | ({objTyp: Enemy(t1), sprite: s1}, {objTyp: Enemy(t2), sprite: s2}, dir) =>
@@ -237,7 +219,7 @@ let processCollision = (dir: Actors.dir2d, obj1: Object.t, obj2: Object.t, state
   | (_, _, _) => (None, None)
   }
 
-let viewportFilter = (obj: Object.t, state) =>
+let viewportFilter = (obj: Object.t, state: State.t) =>
   Viewport.inViewport(state.viewport, obj.px, obj.py) ||
   (Object.isPlayer(obj) ||
   Viewport.outOfViewportBelow(state.viewport, obj.py))
@@ -351,7 +333,7 @@ let updateObject = (obj: Object.t, ~state, ~objects, ~level) =>
   }
 
 // Primary update function to update and persist a particle
-let updateParticle = (state, part) => {
+let updateParticle = (state: State.t, part) => {
   Particle.process(part)
   let x = part.px -. state.viewport.px
   and y = part.py -. state.viewport.py
@@ -366,15 +348,7 @@ let updateParticle = (state, part) => {
 let rec updateLoop = (~player1: Object.t, ~player2, ~level, ~objects) => {
   let viewport = Viewport.make(Load.getCanvasSizeScaled(), Config.mapDim(~level))
   Viewport.update(viewport, player1.px, player1.py)
-  let state = {
-    bgd: Sprite.makeBgd(),
-    coins: 0,
-    level: level,
-    multiplier: 1,
-    score: 0,
-    status: Playing,
-    viewport: viewport,
-  }
+  let state = State.new(~level, ~viewport)
 
   let rec updateHelper = (~objects, ~parts) =>
     switch state.status {
