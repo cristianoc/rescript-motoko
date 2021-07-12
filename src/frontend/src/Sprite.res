@@ -2,10 +2,61 @@ open Actors
 
 type xy = (float, float)
 
+module Png = {
+  type t =
+    | Bgd1
+    | Blocks
+    | Chunks
+    | Enemies
+    | Ground
+    | Items
+    | MarioSmall
+    | Mario2Small
+    | MarioBig
+    | Mario2Big
+    | Panel
+    | Score
+
+  let create = src => {
+    let img = Html.createImg(Html.document)
+    img.src = src
+    img
+  }
+
+  let bgd1 = create("./sprites/" ++ "bgd-1.png")
+  let blocks = create("./sprites/" ++ "blocks.png")
+  let chunks = create("./sprites/" ++ "chunks.png")
+  let enemies = create("./sprites/" ++ "enemies.png")
+  let ground = create("./sprites/" ++ "ground.png")
+  let items = create("./sprites/" ++ "items.png")
+  let marioSmall = create("./sprites/" ++ "mario-small.png")
+  let mario2Small = create("./sprites/" ++ "mario2-small.png")
+  let marioBig = create("./sprites/" ++ "mario-big.png")
+  let mario2Big = create("./sprites/" ++ "mario2-big.png")
+  let panel = create("./sprites/" ++ "panel.png")
+  let score = create("./sprites/" ++ "score.png")
+
+  let toImg = t =>
+    switch t {
+    | Bgd1 => bgd1
+    | Blocks => blocks
+    | Chunks => chunks
+    | Enemies => enemies
+    | Ground => ground
+    | Items => items
+    | MarioSmall => marioSmall
+    | Mario2Small => mario2Small
+    | MarioBig => marioBig
+    | Mario2Big => mario2Big
+    | Panel => panel
+    | Score => score
+    }
+}
+
 type params = {
   maxFrames: int,
   maxTicks: int,
-  img: Html.imageElement,
+  png: Png.t,
   frameSize: xy,
   srcOffset: xy,
   bboxOffset: xy,
@@ -26,7 +77,7 @@ let spriteParams = (
   ~maxTicks=0,
   ~maxFrames=1,
   ~srcOffset,
-  img,
+  png,
 ) => {
   let bboxSize = if bboxSize == (0., 0.) {
     frameSize
@@ -35,34 +86,14 @@ let spriteParams = (
   }
   let maxFrames = maxFrames < 1 ? 1 : maxFrames
   {
-    img: img,
-    maxFrames: maxFrames,
-    maxTicks: maxTicks,
-    frameSize: frameSize,
-    srcOffset: srcOffset,
     bboxOffset: bboxOffset,
     bboxSize: bboxSize,
+    frameSize: frameSize,
+    maxFrames: maxFrames,
+    maxTicks: maxTicks,
+    png: png,
+    srcOffset: srcOffset,
   }
-}
-
-module Png = {
-  let create = src => {
-    let img = Html.createImg(Html.document)
-    img.src = src
-    img
-  }
-  let marioSmall = create("./sprites/" ++ "mario-small.png")
-  let mario2Small = create("./sprites/" ++ "mario2-small.png")
-  let marioBig = create("./sprites/" ++ "mario-big.png")
-  let mario2Big = create("./sprites/" ++ "mario2-big.png")
-  let enemies = create("./sprites/" ++ "enemies.png")
-  let items = create("./sprites/" ++ "items.png")
-  let blocks = create("./sprites/" ++ "blocks.png")
-  let panel = create("./sprites/" ++ "panel.png")
-  let ground = create("./sprites/" ++ "ground.png")
-  let chunks = create("./sprites/" ++ "chunks.png")
-  let score = create("./sprites/" ++ "score.png")
-  let bgd1 = create("./sprites/" ++ "bgd-1.png")
 }
 
 // The following functions are used in order to define sprite animations
@@ -70,8 +101,8 @@ module Png = {
 // Sets sprite for small mario.
 let smallPlayerParams = (typ, dir, ~playerNum) => {
   let png = switch playerNum {
-  | One => Png.marioSmall
-  | Two => Png.mario2Small
+  | One => Png.MarioSmall
+  | Two => Png.Mario2Small
   }
   switch dir {
   /* 16x16 grid with 0x0 offset */
@@ -127,8 +158,8 @@ let smallPlayerParams = (typ, dir, ~playerNum) => {
 // Sets sprite for big mario
 let bigPlayerParams = (typ, dir, ~playerNum) => {
   let png = switch playerNum {
-  | One => Png.marioBig
-  | Two => Png.mario2Big
+  | One => Png.MarioBig
+  | Two => Png.Mario2Big
   }
   switch dir {
   | Left =>
@@ -213,7 +244,7 @@ let enemyParams = (typ, dir) =>
   switch (typ, dir) {
   | (Goomba, _) =>
     spriteParams(
-      Png.enemies,
+      Png.Enemies,
       ~bbOff=(1., 1.),
       ~bbSz=(14., 14.),
       ~maxFrames=2,
@@ -222,7 +253,7 @@ let enemyParams = (typ, dir) =>
     )
   | (GKoopa, Left) =>
     spriteParams(
-      Png.enemies,
+      Png.Enemies,
       ~bbOff=(4., 10.),
       ~bbSz=(11., 16.),
       ~maxFrames=2,
@@ -232,7 +263,7 @@ let enemyParams = (typ, dir) =>
     )
   | (GKoopa, Right) =>
     spriteParams(
-      Png.enemies,
+      Png.Enemies,
       ~bbOff=(1., 10.),
       ~bbSz=(11., 16.),
       ~maxFrames=2,
@@ -242,7 +273,7 @@ let enemyParams = (typ, dir) =>
     )
   | (RKoopa, Left) =>
     spriteParams(
-      Png.enemies,
+      Png.Enemies,
       ~bbOff=(4., 10.),
       ~bbSz=(11., 16.),
       ~maxFrames=2,
@@ -252,7 +283,7 @@ let enemyParams = (typ, dir) =>
     )
   | (RKoopa, Right) =>
     spriteParams(
-      Png.enemies,
+      Png.Enemies,
       ~bbOff=(1., 10.),
       ~bbSz=(11., 16.),
       ~maxFrames=2,
@@ -262,7 +293,7 @@ let enemyParams = (typ, dir) =>
     )
   | (GKoopaShell, _) =>
     spriteParams(
-      Png.enemies,
+      Png.Enemies,
       ~bbOff=(2., 2.),
       ~bbSz=(12., 13.),
       ~maxFrames=4,
@@ -271,7 +302,7 @@ let enemyParams = (typ, dir) =>
     )
   | (RKoopaShell, _) =>
     spriteParams(
-      Png.enemies,
+      Png.Enemies,
       ~bbOff=(2., 2.),
       ~bbSz=(12., 13.),
       ~maxFrames=4,
@@ -286,35 +317,35 @@ let makeParams = x =>
   switch x {
   | Coin =>
     spriteParams(
-      Png.items,
+      Png.Items,
       ~bbOff=(3., 0.),
       ~bbSz=(12., 16.),
       ~maxFrames=3,
       ~maxTicks=15,
       ~srcOffset=(0., 80.),
     )
-  | Mushroom => spriteParams(Png.items, ~bbOff=(2., 0.), ~bbSz=(12., 16.), ~srcOffset=(0., 0.))
+  | Mushroom => spriteParams(Png.Items, ~bbOff=(2., 0.), ~bbSz=(12., 16.), ~srcOffset=(0., 0.))
   }
 
-let brickParams = spriteParams(Png.blocks, ~maxFrames=5, ~maxTicks=10, ~srcOffset=(0., 0.))
+let brickParams = spriteParams(Png.Blocks, ~maxFrames=5, ~maxTicks=10, ~srcOffset=(0., 0.))
 
-let qBlockParams = spriteParams(Png.blocks, ~maxFrames=4, ~maxTicks=15, ~srcOffset=(0., 16.))
+let qBlockParams = spriteParams(Png.Blocks, ~maxFrames=4, ~maxTicks=15, ~srcOffset=(0., 16.))
 
-let qBlockUsedParams = spriteParams(Png.blocks, ~srcOffset=(0., 32.))
+let qBlockUsedParams = spriteParams(Png.Blocks, ~srcOffset=(0., 32.))
 
-let unBBlockParams = spriteParams(Png.blocks, ~srcOffset=(0., 48.))
+let unBBlockParams = spriteParams(Png.Blocks, ~srcOffset=(0., 48.))
 
-let cloudParams = spriteParams(Png.blocks, ~srcOffset=(0., 64.))
+let cloudParams = spriteParams(Png.Blocks, ~srcOffset=(0., 64.))
 
 let panelParams = spriteParams(
-  Png.panel,
+  Png.Panel,
   ~maxFrames=3,
   ~maxTicks=15,
   ~frameSize=(26., 26.),
   ~srcOffset=(0., 0.),
 )
 
-let groundParams = spriteParams(Png.ground, ~srcOffset=(0., 32.))
+let groundParams = spriteParams(Png.Ground, ~srcOffset=(0., 32.))
 
 // Set sprites for blocks: brick, question block, unbreakable block, cloud block
 // panel block, ground block.*/
@@ -334,17 +365,17 @@ let blockParams = x =>
 // of brick), score text.
 let particleParams = x =>
   switch x {
-  | GoombaSquish => spriteParams(Png.enemies, ~srcOffset=(0., 144.))
-  | BrickChunkL => spriteParams(Png.chunks, ~frameSize=(8., 8.), ~srcOffset=(0., 0.))
-  | BrickChunkR => spriteParams(Png.chunks, ~frameSize=(8., 8.), ~srcOffset=(8., 0.))
-  | Score100 => spriteParams(Png.score, ~frameSize=(12., 8.), ~srcOffset=(0., 0.))
-  | Score200 => spriteParams(Png.score, ~frameSize=(12., 9.), ~srcOffset=(0., 9.))
-  | Score400 => spriteParams(Png.score, ~frameSize=(12., 9.), ~srcOffset=(0., 18.))
-  | Score800 => spriteParams(Png.score, ~frameSize=(12., 9.), ~srcOffset=(0., 27.))
-  | Score1000 => spriteParams(Png.score, ~frameSize=(14., 9.), ~srcOffset=(13., 0.))
-  | Score2000 => spriteParams(Png.score, ~frameSize=(14., 9.), ~srcOffset=(13., 9.))
-  | Score4000 => spriteParams(Png.score, ~frameSize=(14., 9.), ~srcOffset=(13., 18.))
-  | Score8000 => spriteParams(Png.score, ~frameSize=(14., 9.), ~srcOffset=(13., 27.))
+  | GoombaSquish => spriteParams(Png.Enemies, ~srcOffset=(0., 144.))
+  | BrickChunkL => spriteParams(Png.Chunks, ~frameSize=(8., 8.), ~srcOffset=(0., 0.))
+  | BrickChunkR => spriteParams(Png.Chunks, ~frameSize=(8., 8.), ~srcOffset=(8., 0.))
+  | Score100 => spriteParams(Png.Score, ~frameSize=(12., 8.), ~srcOffset=(0., 0.))
+  | Score200 => spriteParams(Png.Score, ~frameSize=(12., 9.), ~srcOffset=(0., 9.))
+  | Score400 => spriteParams(Png.Score, ~frameSize=(12., 9.), ~srcOffset=(0., 18.))
+  | Score800 => spriteParams(Png.Score, ~frameSize=(12., 9.), ~srcOffset=(0., 27.))
+  | Score1000 => spriteParams(Png.Score, ~frameSize=(14., 9.), ~srcOffset=(13., 0.))
+  | Score2000 => spriteParams(Png.Score, ~frameSize=(14., 9.), ~srcOffset=(13., 9.))
+  | Score4000 => spriteParams(Png.Score, ~frameSize=(14., 9.), ~srcOffset=(13., 18.))
+  | Score8000 => spriteParams(Png.Score, ~frameSize=(14., 9.), ~srcOffset=(13., 27.))
   }
 
 // Call to set sprite for either big or small mario.
@@ -361,7 +392,7 @@ let makeFromParams = params => {
 
 // Make a background
 let makeBgd = () => {
-  let params = spriteParams(Png.bgd1, ~frameSize=(512., 256.), ~srcOffset=(0., 0.))
+  let params = spriteParams(Png.Bgd1, ~frameSize=(512., 256.), ~srcOffset=(0., 0.))
   makeFromParams(params)
 }
 

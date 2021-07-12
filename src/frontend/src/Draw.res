@@ -17,7 +17,7 @@ let render = (sprite, posx, posy) => {
   let (dw, dh) = sprite.params.frameSize
   let sx = sx +. float_of_int(sprite.frame) *. sw
   let context = Load.getContext()
-  context.drawImage(. sprite.params.img, sx, sy, sw, sh, dx, dy, dw, dh)
+  context.drawImage(. sprite.params.png->Sprite.Png.toImg, sx, sy, sw, sh, dx, dy, dw, dh)
 }
 
 // Draws two background images, which needs to be done because of the

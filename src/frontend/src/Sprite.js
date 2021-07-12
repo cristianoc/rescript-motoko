@@ -3,7 +3,84 @@
 import * as Caml_obj from "rescript/lib/es6/caml_obj.js";
 import * as Caml_int32 from "rescript/lib/es6/caml_int32.js";
 
-function spriteParams(bboxOffsetOpt, bboxSizeOpt, frameSizeOpt, maxTicksOpt, maxFramesOpt, srcOffset, img) {
+function create(src) {
+  var img = document.createElement("img");
+  img.src = src;
+  return img;
+}
+
+var bgd1 = create("./sprites/bgd-1.png");
+
+var blocks = create("./sprites/blocks.png");
+
+var chunks = create("./sprites/chunks.png");
+
+var enemies = create("./sprites/enemies.png");
+
+var ground = create("./sprites/ground.png");
+
+var items = create("./sprites/items.png");
+
+var marioSmall = create("./sprites/mario-small.png");
+
+var mario2Small = create("./sprites/mario2-small.png");
+
+var marioBig = create("./sprites/mario-big.png");
+
+var mario2Big = create("./sprites/mario2-big.png");
+
+var panel = create("./sprites/panel.png");
+
+var score = create("./sprites/score.png");
+
+function toImg(t) {
+  switch (t) {
+    case /* Bgd1 */0 :
+        return bgd1;
+    case /* Blocks */1 :
+        return blocks;
+    case /* Chunks */2 :
+        return chunks;
+    case /* Enemies */3 :
+        return enemies;
+    case /* Ground */4 :
+        return ground;
+    case /* Items */5 :
+        return items;
+    case /* MarioSmall */6 :
+        return marioSmall;
+    case /* Mario2Small */7 :
+        return mario2Small;
+    case /* MarioBig */8 :
+        return marioBig;
+    case /* Mario2Big */9 :
+        return mario2Big;
+    case /* Panel */10 :
+        return panel;
+    case /* Score */11 :
+        return score;
+    
+  }
+}
+
+var Png = {
+  create: create,
+  bgd1: bgd1,
+  blocks: blocks,
+  chunks: chunks,
+  enemies: enemies,
+  ground: ground,
+  items: items,
+  marioSmall: marioSmall,
+  mario2Small: mario2Small,
+  marioBig: marioBig,
+  mario2Big: mario2Big,
+  panel: panel,
+  score: score,
+  toImg: toImg
+};
+
+function spriteParams(bboxOffsetOpt, bboxSizeOpt, frameSizeOpt, maxTicksOpt, maxFramesOpt, srcOffset, png) {
   var bboxOffset = bboxOffsetOpt !== undefined ? bboxOffsetOpt : [
       0,
       0
@@ -26,7 +103,7 @@ function spriteParams(bboxOffsetOpt, bboxSizeOpt, frameSizeOpt, maxTicksOpt, max
   return {
           maxFrames: maxFrames$1,
           maxTicks: maxTicks,
-          img: img,
+          png: png,
           frameSize: frameSize,
           srcOffset: srcOffset,
           bboxOffset: bboxOffset,
@@ -34,54 +111,8 @@ function spriteParams(bboxOffsetOpt, bboxSizeOpt, frameSizeOpt, maxTicksOpt, max
         };
 }
 
-function create(src) {
-  var img = document.createElement("img");
-  img.src = src;
-  return img;
-}
-
-var marioSmall = create("./sprites/mario-small.png");
-
-var mario2Small = create("./sprites/mario2-small.png");
-
-var marioBig = create("./sprites/mario-big.png");
-
-var mario2Big = create("./sprites/mario2-big.png");
-
-var enemies = create("./sprites/enemies.png");
-
-var items = create("./sprites/items.png");
-
-var blocks = create("./sprites/blocks.png");
-
-var panel = create("./sprites/panel.png");
-
-var ground = create("./sprites/ground.png");
-
-var chunks = create("./sprites/chunks.png");
-
-var score = create("./sprites/score.png");
-
-var bgd1 = create("./sprites/bgd-1.png");
-
-var Png = {
-  create: create,
-  marioSmall: marioSmall,
-  mario2Small: mario2Small,
-  marioBig: marioBig,
-  mario2Big: mario2Big,
-  enemies: enemies,
-  items: items,
-  blocks: blocks,
-  panel: panel,
-  ground: ground,
-  chunks: chunks,
-  score: score,
-  bgd1: bgd1
-};
-
 function smallPlayerParams(typ, dir, playerNum) {
-  var png = playerNum ? mario2Small : marioSmall;
+  var png = playerNum ? /* Mario2Small */7 : /* MarioSmall */6;
   if (dir) {
     switch (typ) {
       case /* Standing */0 :
@@ -182,7 +213,7 @@ function smallPlayerParams(typ, dir, playerNum) {
 }
 
 function bigPlayerParams(typ, dir, playerNum) {
-  var png = playerNum ? mario2Big : marioBig;
+  var png = playerNum ? /* Mario2Big */9 : /* MarioBig */8;
   if (dir) {
     switch (typ) {
       case /* Standing */0 :
@@ -318,7 +349,7 @@ function enemyParams(typ, dir) {
                   ], undefined, 10, 2, [
                     0,
                     128
-                  ], enemies);
+                  ], /* Enemies */3);
     case /* GKoopa */1 :
         if (dir) {
           return spriteParams([
@@ -333,7 +364,7 @@ function enemyParams(typ, dir) {
                     ], 10, 2, [
                       32,
                       69
-                    ], enemies);
+                    ], /* Enemies */3);
         } else {
           return spriteParams([
                       4,
@@ -347,7 +378,7 @@ function enemyParams(typ, dir) {
                     ], 10, 2, [
                       0,
                       69
-                    ], enemies);
+                    ], /* Enemies */3);
         }
     case /* RKoopa */2 :
         if (dir) {
@@ -363,7 +394,7 @@ function enemyParams(typ, dir) {
                     ], 10, 2, [
                       32,
                       5
-                    ], enemies);
+                    ], /* Enemies */3);
         } else {
           return spriteParams([
                       4,
@@ -377,7 +408,7 @@ function enemyParams(typ, dir) {
                     ], 10, 2, [
                       0,
                       5
-                    ], enemies);
+                    ], /* Enemies */3);
         }
     case /* GKoopaShell */3 :
         return spriteParams([
@@ -389,7 +420,7 @@ function enemyParams(typ, dir) {
                   ], undefined, 10, 4, [
                     0,
                     96
-                  ], enemies);
+                  ], /* Enemies */3);
     case /* RKoopaShell */4 :
         return spriteParams([
                     2,
@@ -400,7 +431,7 @@ function enemyParams(typ, dir) {
                   ], undefined, 10, 4, [
                     0,
                     32
-                  ], enemies);
+                  ], /* Enemies */3);
     
   }
 }
@@ -416,7 +447,7 @@ function makeParams(x) {
               ], undefined, 15, 3, [
                 0,
                 80
-              ], items);
+              ], /* Items */5);
   } else {
     return spriteParams([
                 2,
@@ -427,34 +458,34 @@ function makeParams(x) {
               ], undefined, undefined, undefined, [
                 0,
                 0
-              ], items);
+              ], /* Items */5);
   }
 }
 
 var brickParams = spriteParams(undefined, undefined, undefined, 10, 5, [
       0,
       0
-    ], blocks);
+    ], /* Blocks */1);
 
 var qBlockParams = spriteParams(undefined, undefined, undefined, 15, 4, [
       0,
       16
-    ], blocks);
+    ], /* Blocks */1);
 
 var qBlockUsedParams = spriteParams(undefined, undefined, undefined, undefined, undefined, [
       0,
       32
-    ], blocks);
+    ], /* Blocks */1);
 
 var unBBlockParams = spriteParams(undefined, undefined, undefined, undefined, undefined, [
       0,
       48
-    ], blocks);
+    ], /* Blocks */1);
 
 var cloudParams = spriteParams(undefined, undefined, undefined, undefined, undefined, [
       0,
       64
-    ], blocks);
+    ], /* Blocks */1);
 
 var panelParams = spriteParams(undefined, undefined, [
       26,
@@ -462,12 +493,12 @@ var panelParams = spriteParams(undefined, undefined, [
     ], 15, 3, [
       0,
       0
-    ], panel);
+    ], /* Panel */10);
 
 var groundParams = spriteParams(undefined, undefined, undefined, undefined, undefined, [
       0,
       32
-    ], ground);
+    ], /* Ground */4);
 
 function blockParams(x) {
   if (typeof x !== "number") {
@@ -496,7 +527,7 @@ function particleParams(x) {
         return spriteParams(undefined, undefined, undefined, undefined, undefined, [
                     0,
                     144
-                  ], enemies);
+                  ], /* Enemies */3);
     case /* BrickChunkL */1 :
         return spriteParams(undefined, undefined, [
                     8,
@@ -504,7 +535,7 @@ function particleParams(x) {
                   ], undefined, undefined, [
                     0,
                     0
-                  ], chunks);
+                  ], /* Chunks */2);
     case /* BrickChunkR */2 :
         return spriteParams(undefined, undefined, [
                     8,
@@ -512,7 +543,7 @@ function particleParams(x) {
                   ], undefined, undefined, [
                     8,
                     0
-                  ], chunks);
+                  ], /* Chunks */2);
     case /* Score100 */3 :
         return spriteParams(undefined, undefined, [
                     12,
@@ -520,7 +551,7 @@ function particleParams(x) {
                   ], undefined, undefined, [
                     0,
                     0
-                  ], score);
+                  ], /* Score */11);
     case /* Score200 */4 :
         return spriteParams(undefined, undefined, [
                     12,
@@ -528,7 +559,7 @@ function particleParams(x) {
                   ], undefined, undefined, [
                     0,
                     9
-                  ], score);
+                  ], /* Score */11);
     case /* Score400 */5 :
         return spriteParams(undefined, undefined, [
                     12,
@@ -536,7 +567,7 @@ function particleParams(x) {
                   ], undefined, undefined, [
                     0,
                     18
-                  ], score);
+                  ], /* Score */11);
     case /* Score800 */6 :
         return spriteParams(undefined, undefined, [
                     12,
@@ -544,7 +575,7 @@ function particleParams(x) {
                   ], undefined, undefined, [
                     0,
                     27
-                  ], score);
+                  ], /* Score */11);
     case /* Score1000 */7 :
         return spriteParams(undefined, undefined, [
                     14,
@@ -552,7 +583,7 @@ function particleParams(x) {
                   ], undefined, undefined, [
                     13,
                     0
-                  ], score);
+                  ], /* Score */11);
     case /* Score2000 */8 :
         return spriteParams(undefined, undefined, [
                     14,
@@ -560,7 +591,7 @@ function particleParams(x) {
                   ], undefined, undefined, [
                     13,
                     9
-                  ], score);
+                  ], /* Score */11);
     case /* Score4000 */9 :
         return spriteParams(undefined, undefined, [
                     14,
@@ -568,7 +599,7 @@ function particleParams(x) {
                   ], undefined, undefined, [
                     13,
                     18
-                  ], score);
+                  ], /* Score */11);
     case /* Score8000 */10 :
         return spriteParams(undefined, undefined, [
                     14,
@@ -576,7 +607,7 @@ function particleParams(x) {
                   ], undefined, undefined, [
                     13,
                     27
-                  ], score);
+                  ], /* Score */11);
     
   }
 }
@@ -605,7 +636,7 @@ function makeBgd(param) {
               ], undefined, undefined, [
                 0,
                 0
-              ], bgd1),
+              ], /* Bgd1 */0),
           frame: 0,
           ticks: 0
         };
@@ -637,8 +668,8 @@ function updateAnimation(spr) {
 }
 
 export {
-  spriteParams ,
   Png ,
+  spriteParams ,
   smallPlayerParams ,
   bigPlayerParams ,
   enemyParams ,
@@ -660,4 +691,4 @@ export {
   updateAnimation ,
   
 }
-/* marioSmall Not a pure module */
+/* bgd1 Not a pure module */
