@@ -46,3 +46,5 @@ let new = (~level) => {
 
 // Add [i] to the score in [state]
 let updateScore = (state, i) => state.score = state.score + i
+
+let current = ref(new(~level=1))

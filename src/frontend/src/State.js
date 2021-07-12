@@ -30,9 +30,14 @@ function updateScore(state, i) {
   
 }
 
+var current = {
+  contents: $$new(1)
+};
+
 export {
   $$new ,
   updateScore ,
+  current ,
   
 }
-/* Sprite Not a pure module */
+/* current Not a pure module */

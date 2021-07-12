@@ -339,11 +339,14 @@ let updateParticle = (state: State.t, part) => {
   }
 }
 
-let rec updateHelper = (~state: State.t) => {
+// updateLoop is constantly being called to check for collisions and to
+// update each of the objects in the game.
+let rec updateLoop = () => {
+  let state = State.current.contents
   switch state.status {
   | _ if Keys.checkPaused() =>
     Draw.paused()
-    Html.requestAnimationFrame(_ => updateHelper(~state))
+    Html.requestAnimationFrame(_ => updateLoop())
 
   | Finished({levelResult, finishTime})
     if Html.performance.now(.) -. finishTime > Config.delayWhenFinished =>
@@ -354,11 +357,11 @@ let rec updateHelper = (~state: State.t) => {
         state.level->string_of_int,
         timeToStart->int_of_float->string_of_int,
       )
-      Html.requestAnimationFrame(_ => updateHelper(~state))
+      Html.requestAnimationFrame(_ => updateLoop())
     } else {
       let level = levelResult == Won ? state.level + 1 : state.level
-      let state = State.new(~level)
-      updateHelper(~state)
+      State.current := State.new(~level)
+      updateLoop()
     }
 
   | Playing | Finished(_) =>
@@ -390,13 +393,6 @@ let rec updateHelper = (~state: State.t) => {
     oldParticles->List.forEach(part => updateParticle(state, part))
     Draw.fps(fps)
     Draw.scoreAndCoins(state.score, state.coins)
-    Html.requestAnimationFrame(_ => updateHelper(~state))
+    Html.requestAnimationFrame(_ => updateLoop())
   }
-}
-
-// updateLoop is constantly being called to check for collisions and to
-// update each of the objects in the game.
-let updateLoop = (~level) => {
-  let state = State.new(~level)
-  updateHelper(~state)
 }

@@ -502,18 +502,16 @@ function updateParticle(state, part) {
   
 }
 
-function updateHelper(_state) {
+function updateLoop(_param) {
   while(true) {
-    var state = _state;
+    var state = State.current.contents;
     var match = state.status;
     var exit = 0;
     if (Keys.checkPaused(undefined)) {
       Draw.paused(undefined);
-      requestAnimationFrame((function(state){
-          return function (param) {
-            return updateHelper(state);
-          }
-          }(state)));
+      requestAnimationFrame(function (param) {
+            return updateLoop(undefined);
+          });
       return ;
     }
     if (match) {
@@ -523,15 +521,14 @@ function updateHelper(_state) {
         var timeToStart = Config.restartAfter - (performance.now() - finishTime) / 1000;
         if (timeToStart > 0) {
           Draw.levelFinished(levelResult, String(state.level), String(timeToStart | 0));
-          requestAnimationFrame((function(state){
-              return function (param) {
-                return updateHelper(state);
-              }
-              }(state)));
+          requestAnimationFrame(function (param) {
+                return updateLoop(undefined);
+              });
           return ;
         }
         var level = levelResult === /* Won */0 ? state.level + 1 | 0 : state.level;
-        _state = State.$$new(level);
+        State.current.contents = State.$$new(level);
+        _param = undefined;
         continue ;
       }
       exit = 1;
@@ -585,19 +582,13 @@ function updateHelper(_state) {
           }(state)));
       Draw.fps(fps);
       Draw.scoreAndCoins(state.score, state.coins);
-      requestAnimationFrame((function(state){
-          return function (param) {
-            return updateHelper(state);
-          }
-          }(state)));
+      requestAnimationFrame(function (param) {
+            return updateLoop(undefined);
+          });
       return ;
     }
     
   };
-}
-
-function updateLoop(level) {
-  return updateHelper(State.$$new(level));
 }
 
 export {
@@ -615,7 +606,6 @@ export {
   updateObject0 ,
   updateObject ,
   updateParticle ,
-  updateHelper ,
   updateLoop ,
   
 }
