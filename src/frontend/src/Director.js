@@ -375,17 +375,17 @@ function processCollision(dir, obj1, obj2, state) {
   }
 }
 
-function viewportFilter(obj, state) {
-  if (Viewport.inViewport(state.viewport, obj.px, obj.py) || $$Object.isPlayer(obj)) {
+function viewportFilter(obj, viewport) {
+  if (Viewport.inViewport(viewport, obj.px, obj.py) || $$Object.isPlayer(obj)) {
     return true;
   } else {
-    return Viewport.outOfViewportBelow(state.viewport, obj.py);
+    return Viewport.outOfViewportBelow(viewport, obj.py);
   }
 }
 
-function broadPhase(allCollids, state) {
+function broadPhase(allCollids, viewport) {
   return Belt_List.keep(allCollids, (function (o) {
-                return viewportFilter(o, state);
+                return viewportFilter(o, viewport);
               }));
 }
 
@@ -439,24 +439,24 @@ function narrowPhase(obj, cs, state) {
   };
 }
 
-function checkCollisions(obj, state, objects) {
+function checkCollisions(obj, state, allCollids) {
   var match = obj.objTyp;
   if (match.TAG === /* Block */3) {
     return /* [] */0;
   }
-  var broad = broadPhase(objects, state);
+  var broad = broadPhase(allCollids, state.viewport);
   return narrowPhase(obj, broad, state);
 }
 
-function updateObject0(obj, state) {
+function updateObject0(allCollids, obj, state) {
   var spr = obj.sprite;
   obj.invuln = obj.invuln > 0 ? obj.invuln - 1 | 0 : 0;
-  if (!((!obj.kill || $$Object.isPlayer(obj)) && viewportFilter(obj, state))) {
+  if (!((!obj.kill || $$Object.isPlayer(obj)) && viewportFilter(obj, state.viewport))) {
     return /* [] */0;
   }
   obj.grounded = false;
   $$Object.processObj(obj, state.level);
-  var evolved = checkCollisions(obj, state, state.objects);
+  var evolved = checkCollisions(obj, state, allCollids);
   var vptAdjXy = Viewport.fromCoord(state.viewport, obj.px, obj.py);
   Draw.render(spr, vptAdjXy.x, vptAdjXy.y);
   if (Keys.checkBboxEnabled(undefined)) {
@@ -468,18 +468,18 @@ function updateObject0(obj, state) {
   return evolved;
 }
 
-function updateObject(obj, state) {
+function updateObject(allCollids, obj, state) {
   var match = obj.objTyp;
   if (match.TAG === /* Player */0) {
     var n = match._1;
     var keys = Keys.translateKeys(n);
     obj.crouch = false;
     $$Object.updatePlayer(obj, n, keys);
-    var evolved = updateObject0(obj, state);
+    var evolved = updateObject0(allCollids, obj, state);
     collidObjs.contents = Pervasives.$at(evolved, collidObjs.contents);
     return ;
   }
-  var evolved$1 = updateObject0(obj, state);
+  var evolved$1 = updateObject0(allCollids, obj, state);
   if (!obj.kill) {
     collidObjs.contents = {
       hd: obj,
@@ -546,6 +546,7 @@ function updateHelper(_state) {
     }
     if (exit === 1) {
       var fps = calcFps(undefined);
+      var oldObjects = state.objects;
       collidObjs.contents = /* [] */0;
       var oldParticles = state.particles;
       state.particles = /* [] */0;
@@ -553,18 +554,14 @@ function updateHelper(_state) {
       var vposXInt = state.viewport.px / 5 | 0;
       var bgdWidth = state.bgd.params.frameSize[0] | 0;
       Draw.drawBgd(state.bgd, Caml_int32.mod_(vposXInt, bgdWidth));
-      var objects = state.objects;
-      state.objects = {
-        hd: state.player2,
-        tl: state.objects
-      };
-      updateObject(state.player1, state);
-      state.objects = {
-        hd: state.player1,
-        tl: state.objects
-      };
-      updateObject(state.player2, state);
-      state.objects = objects;
+      updateObject({
+            hd: state.player2,
+            tl: oldObjects
+          }, state.player1, state);
+      updateObject({
+            hd: state.player1,
+            tl: oldObjects
+          }, state.player2, state);
       if (state.player1.kill === true) {
         var match$1 = state.status;
         var exit$1 = 0;
@@ -580,11 +577,11 @@ function updateHelper(_state) {
         
       }
       Viewport.update(state.viewport, state.player1.px, state.player1.py);
-      Belt_List.forEach(state.objects, (function(state){
+      Belt_List.forEach(oldObjects, (function(state,oldObjects){
           return function (obj) {
-            return updateObject(obj, state);
+            return updateObject(oldObjects, obj, state);
           }
-          }(state)));
+          }(state,oldObjects)));
       Belt_List.forEach(oldParticles, (function(state){
           return function (part) {
             return updateParticle(state, part);
