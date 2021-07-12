@@ -217,13 +217,13 @@ let processCollision = (dir: Actors.dir2d, obj1: Object.t, obj2: Object.t, state
   | (_, _, _) => (None, None)
   }
 
-let viewportFilter = (obj: Object.t, state: State.t) =>
-  Viewport.inViewport(state.viewport, obj.px, obj.py) ||
+let viewportFilter = (obj: Object.t, viewport) =>
+  Viewport.inViewport(viewport, obj.px, obj.py) ||
   (Object.isPlayer(obj) ||
-  Viewport.outOfViewportBelow(state.viewport, obj.py))
+  Viewport.outOfViewportBelow(viewport, obj.py))
 
 // Run the broad phase object filtering
-let broadPhase = (allCollids, state) => allCollids->List.keep(o => o->viewportFilter(state))
+let broadPhase = (~allCollids, viewport) => allCollids->List.keep(o => o->viewportFilter(viewport))
 
 // narrowPhase of collision is used in order to continuously loop through
 // each of the collidable objects to constantly check if collisions are
@@ -267,17 +267,17 @@ let narrowPhase = (obj, cs, state) => {
 // is a collision, and process the collision.
 // This method returns a list of objects that are created, which should be
 // added to the list of objects for the next iteration.
-let checkCollisions = (obj, state, objects) =>
+let checkCollisions = (obj, state: State.t, ~allCollids) =>
   switch obj.Object.objTyp {
   | Block(_) => list{}
   | _ =>
-    let broad = objects->broadPhase(state)
+    let broad = broadPhase(~allCollids, state.viewport)
     narrowPhase(obj, broad, state)
   }
 
 // primary update method for objects,
 // checking the collision, updating the object, and drawing to the canvas
-let updateObject0 = (obj: Object.t, ~state) => {
+let updateObject0 = (~allCollids, obj: Object.t, ~state: State.t) => {
   /* TODO: optimize. Draw static elements only once */
   let spr = obj.sprite
   obj.invuln = if obj.invuln > 0 {
@@ -285,11 +285,11 @@ let updateObject0 = (obj: Object.t, ~state) => {
   } else {
     0
   }
-  if (!obj.kill || obj->Object.isPlayer) && obj->viewportFilter(state) {
+  if (!obj.kill || obj->Object.isPlayer) && obj->viewportFilter(state.viewport) {
     obj.grounded = false
     obj->Object.processObj(~level=state.level)
     // Run collision detection if moving object
-    let evolved = obj->checkCollisions(state, state.objects)
+    let evolved = obj->checkCollisions(state, ~allCollids)
     // Render and update animation
     let vptAdjXy = Viewport.fromCoord(state.viewport, obj.px, obj.py)
     Draw.render(spr, vptAdjXy.x, vptAdjXy.y)
@@ -309,16 +309,16 @@ let updateObject0 = (obj: Object.t, ~state) => {
 // as a wrapper method. This method is necessary to differentiate between
 // the player collidable and the remaining collidables, as special operations
 // such as viewport centering only occur with the player
-let updateObject = (obj: Object.t, ~state) =>
+let updateObject = (~allCollids, obj: Object.t, ~state) =>
   switch obj.objTyp {
   | Player(_, n) =>
     let keys = Keys.translateKeys(n)
     obj.crouch = false
     Object.updatePlayer(obj, n, keys)
-    let evolved = obj->updateObject0(~state)
+    let evolved = obj->updateObject0(~allCollids, ~state)
     collidObjs := \"@"(evolved, collidObjs.contents)
   | _ =>
-    let evolved = obj->updateObject0(~state)
+    let evolved = obj->updateObject0(~allCollids, ~state)
     if !obj.kill {
       collidObjs := list{obj, ...\"@"(evolved, collidObjs.contents)}
     }
@@ -367,6 +367,7 @@ let rec updateHelper = (~state: State.t) => {
 
   | Playing | Finished(_) =>
     let fps = calcFps()
+    let oldObjects = state.objects
     collidObjs := list{}
     let oldParticles = state.particles
     state.particles = list{}
@@ -375,12 +376,8 @@ let rec updateHelper = (~state: State.t) => {
     let vposXInt = int_of_float(state.viewport.px /. 5.)
     let bgdWidth = int_of_float(fst(state.bgd.params.frameSize))
     Draw.drawBgd(state.bgd, @doesNotRaise float_of_int(mod(vposXInt, bgdWidth)))
-    let objects = state.objects
-    state.objects = list{state.player2, ...state.objects}
-    state.player1->updateObject(~state)
-    state.objects = list{state.player1, ...state.objects}
-    state.player2->updateObject(~state)
-    state.objects = objects
+    state.player1->updateObject(~allCollids=list{state.player2, ...oldObjects}, ~state)
+    state.player2->updateObject(~allCollids=list{state.player1, ...oldObjects}, ~state)
     if state.player1.kill == true {
       switch state.status {
       | Finished({levelResult: Lost}) => ()
@@ -388,7 +385,7 @@ let rec updateHelper = (~state: State.t) => {
       }
     }
     Viewport.update(state.viewport, state.player1.px, state.player1.py)
-    state.objects->List.forEach(obj => obj->updateObject(~state))
+    oldObjects->List.forEach(obj => obj->updateObject(~allCollids=oldObjects, ~state))
     oldParticles->List.forEach(part => updateParticle(state, part))
     Draw.fps(fps)
     Draw.scoreAndCoins(state.score, state.coins)
