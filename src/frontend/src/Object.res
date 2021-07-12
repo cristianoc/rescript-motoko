@@ -207,7 +207,7 @@ let updatePlayer = (player, playerNum, keys) => {
   switch playerTyp {
   | Some(playerTyp) =>
     let newSprite =
-      Sprite.makePlayer(plSize, playerTyp, player.dir, ~playerNum)->Sprite.makeFromParams
+      Sprite.playerParams(plSize, playerTyp, player.dir, ~playerNum)->Sprite.makeFromParams
     let newTyp = plSize
     normalizePos(player, player.sprite.params, newSprite.params)
     player.objTyp = Player(newTyp, playerNum)
@@ -274,7 +274,7 @@ let evolveEnemy = (player_dir, typ, spr: Sprite.t, obj) =>
       ~speed=3.,
       ~dir=obj.dir,
       ~objTyp=Enemy(GKoopaShell),
-      ~spriteParams=Sprite.makeEnemy(GKoopaShell, obj.dir),
+      ~spriteParams=Sprite.enemyParams(GKoopaShell, obj.dir),
       obj.px,
       obj.py,
     )
@@ -285,7 +285,7 @@ let evolveEnemy = (player_dir, typ, spr: Sprite.t, obj) =>
       ~speed=3.,
       ~dir=obj.dir,
       ~objTyp=Enemy(RKoopaShell),
-      ~spriteParams=Sprite.makeEnemy(RKoopaShell, obj.dir),
+      ~spriteParams=Sprite.enemyParams(RKoopaShell, obj.dir),
       obj.px,
       obj.py,
     )
@@ -331,7 +331,7 @@ let evolveBlock = obj => {
     ~hasGravity=false,
     ~dir=obj.dir,
     ~objTyp=Block(QBlockUsed),
-    ~spriteParams=Sprite.makeBlock(QBlockUsed),
+    ~spriteParams=Sprite.blockParams(QBlockUsed),
     obj.px,
     obj.py,
   )
