@@ -11,7 +11,8 @@ var pressedKeys = {
   right2: false,
   up2: false,
   down2: false,
-  bbox: 0
+  bbox: false,
+  paused: false
 };
 
 function keydown(evt) {
@@ -22,10 +23,13 @@ function keydown(evt) {
           pressedKeys.left2 = true;
           break;
       case 66 :
-          pressedKeys.bbox = (pressedKeys.bbox + 1 | 0) % 2;
+          pressedKeys.bbox = !pressedKeys.bbox;
           break;
       case 68 :
           pressedKeys.right2 = true;
+          break;
+      case 80 :
+          pressedKeys.paused = !pressedKeys.paused;
           break;
       case 83 :
           pressedKeys.down2 = true;
@@ -42,7 +46,6 @@ function keydown(evt) {
       case 77 :
       case 78 :
       case 79 :
-      case 80 :
       case 81 :
       case 82 :
       case 84 :
@@ -130,7 +133,11 @@ function keyup(evt) {
 }
 
 function checkBboxEnabled(param) {
-  return pressedKeys.bbox === 1;
+  return pressedKeys.bbox;
+}
+
+function checkPaused(param) {
+  return pressedKeys.paused;
 }
 
 function translateKeys(playerNum) {
@@ -205,6 +212,7 @@ export {
   keydown ,
   keyup ,
   checkBboxEnabled ,
+  checkPaused ,
   translateKeys ,
   
 }

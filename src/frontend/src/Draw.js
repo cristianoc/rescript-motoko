@@ -58,7 +58,11 @@ function scoreAndCoins(score, coins) {
 
 function fps(fps_val) {
   var fps_str = String(fps_val | 0);
-  return Load.getContext(undefined).fillText(fps_str, 169, 18);
+  return Load.getContext(undefined).fillText(fps_str, 165, 18);
+}
+
+function paused(param) {
+  return Load.getContext(undefined).fillText("Paused", 142, 90);
 }
 
 function blackScreen(texts) {
@@ -121,6 +125,7 @@ export {
   scoreString ,
   scoreAndCoins ,
   fps ,
+  paused ,
   blackScreen ,
   levelFinished ,
   

@@ -378,6 +378,12 @@ let rec updateLoop = (~player1: Object.t, ~player2, ~level, ~objects) => {
 
   let rec updateHelper = (~objects, ~parts) =>
     switch state.status {
+    | _ if Keys.checkPaused() =>
+      Draw.paused()
+      Html.requestAnimationFrame(_ =>
+        updateHelper(~objects=collidObjs.contents, ~parts=particles.contents)
+      )
+
     | Finished({levelResult, finishTime})
       if Html.performance.now(.) -. finishTime > Config.delayWhenFinished =>
       let timeToStart = Config.restartAfter -. (Html.performance.now(.) -. finishTime) /. 1000.
