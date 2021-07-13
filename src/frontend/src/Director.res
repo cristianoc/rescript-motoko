@@ -284,7 +284,7 @@ let checkCollisions = (obj, state: State.t, ~allCollids) =>
 // checking the collision, updating the object, and drawing to the canvas
 let updateObject0 = (~allCollids, obj: Object.t, ~state: State.t) => {
   /* TODO: optimize. Draw static elements only once */
-  let spr = obj.sprite
+  let sprite = obj.sprite
   obj.invuln = if obj.invuln > 0 {
     obj.invuln - 1
   } else {
@@ -297,12 +297,12 @@ let updateObject0 = (~allCollids, obj: Object.t, ~state: State.t) => {
     let evolved = obj->checkCollisions(state, ~allCollids)
     // Render and update animation
     let vptAdjXy = Viewport.fromCoord(state.viewport, obj.px, obj.py)
-    Draw.render(spr, vptAdjXy.x, vptAdjXy.y)
+    Draw.render(sprite, vptAdjXy.x, vptAdjXy.y)
     if Keys.checkBboxEnabled() {
-      Draw.renderBbox(spr, vptAdjXy.x, vptAdjXy.y)
+      Draw.renderBbox(sprite, vptAdjXy.x, vptAdjXy.y)
     }
     if obj.vx != 0. || !Object.isEnemy(obj) {
-      Sprite.updateAnimation(spr)
+      Sprite.updateAnimation(sprite)
     }
     evolved
   } else {

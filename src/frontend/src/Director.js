@@ -445,7 +445,7 @@ function checkCollisions(obj, state, allCollids) {
 }
 
 function updateObject0(allCollids, obj, state) {
-  var spr = obj.sprite;
+  var sprite = obj.sprite;
   obj.invuln = obj.invuln > 0 ? obj.invuln - 1 | 0 : 0;
   if (!((!obj.kill || $$Object.isPlayer(obj)) && viewportFilter(obj, state.viewport))) {
     return /* [] */0;
@@ -454,12 +454,12 @@ function updateObject0(allCollids, obj, state) {
   $$Object.processObj(obj, state.level);
   var evolved = checkCollisions(obj, state, allCollids);
   var vptAdjXy = Viewport.fromCoord(state.viewport, obj.px, obj.py);
-  Draw.render(spr, vptAdjXy.x, vptAdjXy.y);
+  Draw.render(sprite, vptAdjXy.x, vptAdjXy.y);
   if (Keys.checkBboxEnabled(undefined)) {
-    Draw.renderBbox(spr, vptAdjXy.x, vptAdjXy.y);
+    Draw.renderBbox(sprite, vptAdjXy.x, vptAdjXy.y);
   }
   if (obj.vx !== 0 || !$$Object.isEnemy(obj)) {
-    Sprite.updateAnimation(spr);
+    Sprite.updateAnimation(sprite);
   }
   return evolved;
 }
