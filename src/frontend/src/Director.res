@@ -237,16 +237,11 @@ let narrowPhase = (obj, ~state, ~visibleCollids) => {
   let rec narrowHelper = (obj: Object.t, ~visibleCollids, ~acc) =>
     switch visibleCollids {
     | list{} => acc
-    | list{h, ...nextVisibleCollids} =>
-      let newObjs = if !Object.equals(obj, h) {
-        switch Object.checkCollision(obj, h) {
+    | list{collid, ...nextVisibleCollids} =>
+      let newObjs = if !Object.sameId(obj, collid) {
+        switch Object.checkCollision(obj, collid) {
         | None => (None, None)
-        | Some(dir) =>
-          if h.id != obj.id {
-            processCollision(dir, obj, h, state)
-          } else {
-            (None, None)
-          }
+        | Some(dir) => processCollision(dir, obj, collid, state)
         }
       } else {
         (None, None)
@@ -282,7 +277,7 @@ let checkCollisions = (obj, state: State.t, ~allCollids) =>
 
 // primary update method for objects,
 // checking the collision, updating the object, and drawing to the canvas
-let updateObject0 = (~allCollids, obj: Object.t, ~state: State.t) => {
+let findObjectsColliding = (~allCollids, obj: Object.t, ~state: State.t) => {
   /* TODO: optimize. Draw static elements only once */
   let sprite = obj.sprite
   obj.invuln = if obj.invuln > 0 {
@@ -294,7 +289,7 @@ let updateObject0 = (~allCollids, obj: Object.t, ~state: State.t) => {
     obj.grounded = false
     obj->Object.processObj(~level=state.level)
     // Run collision detection if moving object
-    let evolved = obj->checkCollisions(state, ~allCollids)
+    let objectsColliding = obj->checkCollisions(state, ~allCollids)
     // Render and update animation
     let vptAdjXy = Viewport.fromCoord(state.viewport, obj.px, obj.py)
     Draw.render(sprite, vptAdjXy.x, vptAdjXy.y)
@@ -304,7 +299,7 @@ let updateObject0 = (~allCollids, obj: Object.t, ~state: State.t) => {
     if obj.vx != 0. || !Object.isEnemy(obj) {
       Sprite.updateAnimation(sprite)
     }
-    evolved
+    objectsColliding
   } else {
     list{}
   }
@@ -320,12 +315,12 @@ let updateObject = (~allCollids, obj: Object.t, ~state) =>
     let keys = Keys.translateKeys(playerNum)
     obj.crouch = false
     obj->Object.updatePlayer(playerNum, keys)
-    let evolved = obj->updateObject0(~allCollids, ~state)
-    state.objects = \"@"(evolved, state.objects)
+    let oblectsColliding = obj->findObjectsColliding(~allCollids, ~state)
+    state.objects = \"@"(oblectsColliding, state.objects)
   | _ =>
-    let evolved = obj->updateObject0(~allCollids, ~state)
+    let oblectsColliding = obj->findObjectsColliding(~allCollids, ~state)
     if !obj.kill {
-      state.objects = list{obj, ...\"@"(evolved, state.objects)}
+      state.objects = list{obj, ...\"@"(oblectsColliding, state.objects)}
     }
     let newParts = if obj.kill {
       Object.kill(obj)
