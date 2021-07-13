@@ -1,19 +1,20 @@
 open Belt
 
-let lastTime = ref(0.) // Used for calculating fps
-let initialTime = ref(0.) // Used for calculating fps
-
 // Calculate fps as the difference between [t0] and [t1]
-let calcFps = () => {
-  let t0 = lastTime.contents
-  let time = Html.performance.now(.)
-  lastTime := time
-  if t0 == 0. {
-    initialTime := time
-    0.
-  } else {
-    let delta = (time -. t0) /. 1000.
-    time -. initialTime.contents < 1000.0 ? 0. : 1. /. delta
+let calcFps = {
+  let lastTime = ref(0.)
+  let initialTime = ref(0.)
+  () => {
+    let t0 = lastTime.contents
+    let time = Html.performance.now(.)
+    lastTime := time
+    if t0 == 0. {
+      initialTime := time
+      0.
+    } else {
+      let delta = (time -. t0) /. 1000.
+      time -. initialTime.contents < 1000.0 ? 0. : 1. /. delta
+    }
   }
 }
 
@@ -190,7 +191,10 @@ let processCollision = (dir: Actors.dir2d, obj1: Object.t, obj2: Object.t, state
         (None, None)
       }
     | Panel =>
-      state.status = Finished({levelResult: Won, finishTime: Html.performance.now(.)})
+      state.status = Finished({
+        levelResult: Won,
+        restartTime: Config.delayWhenFinished +. Html.performance.now(.),
+      })
       (None, None)
     | _ =>
       Object.collideBlock(dir, obj1)
@@ -199,7 +203,10 @@ let processCollision = (dir: Actors.dir2d, obj1: Object.t, obj2: Object.t, state
   | ({objTyp: Player(_)}, {objTyp: Block(t)}, _) =>
     switch t {
     | Panel =>
-      state.status = Finished({levelResult: Won, finishTime: Html.performance.now(.)})
+      state.status = Finished({
+        levelResult: Won,
+        restartTime: Config.delayWhenFinished +. Html.performance.now(.),
+      })
       (None, None)
     | _ =>
       switch dir {
@@ -347,10 +354,9 @@ let rec updateLoop = () => {
     Draw.paused()
     Html.requestAnimationFrame(_ => updateLoop())
 
-  | Finished({levelResult, finishTime})
-    if Html.performance.now(.) -. finishTime > Config.delayWhenFinished =>
-    let timeToStart = Config.restartAfter -. (Html.performance.now(.) -. finishTime) /. 1000.
-    if timeToStart > 0. {
+  | Finished({levelResult, restartTime}) =>
+    let timeToStart = (restartTime -. Html.performance.now(.)) /. 1000.
+    if timeToStart > 0.9 /* briefly show 0 */ {
       Draw.levelFinished(
         levelResult,
         State.current.contents.level->string_of_int,
@@ -364,7 +370,7 @@ let rec updateLoop = () => {
       updateLoop()
     }
 
-  | Playing | Finished(_) =>
+  | Playing =>
     let fps = calcFps()
     let oldObjects = State.current.contents.objects
     State.current.contents.objects = list{}
@@ -393,7 +399,7 @@ let rec updateLoop = () => {
       | _ =>
         State.current.contents.status = Finished({
           levelResult: Lost,
-          finishTime: Html.performance.now(.),
+          restartTime: Config.delayWhenFinished +. Html.performance.now(.),
         })
       }
     }
