@@ -32,9 +32,8 @@ let drawBgd = (bgd, off_x) => {
 let drawBgd = (state: State.t) => {
   let vposXInt = int_of_float(state.viewport.px /. 5.)
   let bgdWidth = int_of_float(fst(state.bgd.params.frameSize))
-  let bgd = State.current.contents.bgd
   let off_x = @doesNotRaise float_of_int(mod(vposXInt, bgdWidth))
-  drawBgd(bgd, off_x)
+  drawBgd(state.bgd, off_x)
 }
 
 // Used for animation updating. Canvas is cleared each frame and redrawn.
@@ -111,4 +110,18 @@ let object = (obj: Object.t, ~viewport: Viewport.t) => {
   if Keys.checkBboxEnabled() {
     obj.sprite->renderBbox(x, y)
   }
+}
+
+let drawState = (state: State.t, ~fps as fps_) => {
+  let objectsWithPlayers = {
+    let objectsWihtPlayer1 = list{state.player1, ...state.objects}
+    Keys.checkTwoPlayers() ? list{state.player2, ...objectsWihtPlayer1} : objectsWihtPlayer1
+  }
+
+  clearCanvas()
+  drawBgd(state)
+  objectsWithPlayers->List.forEach(obj => obj->object(~viewport=state.viewport))
+  state.particles->particles(~viewport=state.viewport)
+  fps(fps_)
+  scoreAndCoins(state.score, state.coins)
 }

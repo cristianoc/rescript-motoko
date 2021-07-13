@@ -2,7 +2,6 @@
 
 import * as Keys from "./Keys.js";
 import * as Load from "./Load.js";
-import * as State from "./State.js";
 import * as Config from "./Config.js";
 import * as Sprite from "./Sprite.js";
 import * as $$String from "rescript/lib/es6/string.js";
@@ -31,8 +30,8 @@ function render(sprite, posx, posy) {
 function drawBgd(state) {
   var vposXInt = state.viewport.px / 5 | 0;
   var bgdWidth = state.bgd.params.frameSize[0] | 0;
-  var bgd = State.current.contents.bgd;
   var off_x = Caml_int32.mod_(vposXInt, bgdWidth);
+  var bgd = state.bgd;
   render(bgd, -off_x, 0);
   return render(bgd, bgd.params.frameSize[0] - off_x, 0);
 }
@@ -145,6 +144,27 @@ function object(obj, viewport) {
   
 }
 
+function drawState(state, fps_) {
+  var objectsWihtPlayer1_0 = state.player1;
+  var objectsWihtPlayer1_1 = state.objects;
+  var objectsWihtPlayer1 = {
+    hd: objectsWihtPlayer1_0,
+    tl: objectsWihtPlayer1_1
+  };
+  var objectsWithPlayers = Keys.checkTwoPlayers(undefined) ? ({
+        hd: state.player2,
+        tl: objectsWihtPlayer1
+      }) : objectsWihtPlayer1;
+  clearCanvas(undefined);
+  drawBgd(state);
+  Belt_List.forEach(objectsWithPlayers, (function (obj) {
+          return object(obj, state.viewport);
+        }));
+  particles(state.particles, state.viewport);
+  fps(fps_);
+  return scoreAndCoins(state.score, state.coins);
+}
+
 export {
   renderBbox ,
   render ,
@@ -158,6 +178,7 @@ export {
   levelFinished ,
   particles ,
   object ,
+  drawState ,
   
 }
-/* State Not a pure module */
+/* Sprite Not a pure module */
