@@ -457,11 +457,6 @@ function findObjectsColliding(allCollids, obj, state) {
   obj.grounded = false;
   $$Object.processObj(obj, state.level);
   var objectsColliding = checkCollisions(obj, state, allCollids);
-  var vptAdjXy = Viewport.fromCoord(state.viewport, obj.px, obj.py);
-  Draw.render(sprite, vptAdjXy.x, vptAdjXy.y);
-  if (Keys.checkBboxEnabled(undefined)) {
-    Draw.renderBbox(sprite, vptAdjXy.x, vptAdjXy.y);
-  }
   if (obj.vx !== 0 || !$$Object.isEnemy(obj)) {
     Sprite.updateAnimation(sprite);
   }
@@ -551,6 +546,19 @@ function updateLoop(_param) {
           return updateObject(oldObjects, obj, State.current.contents);
         }
         }(oldObjects)));
+    var objectsWihtPlayer1_0 = State.current.contents.player1;
+    var objectsWihtPlayer1_1 = State.current.contents.objects;
+    var objectsWihtPlayer1 = {
+      hd: objectsWihtPlayer1_0,
+      tl: objectsWihtPlayer1_1
+    };
+    var objectsWithPlayers = Keys.checkTwoPlayers(undefined) ? ({
+          hd: State.current.contents.player2,
+          tl: objectsWihtPlayer1
+        }) : objectsWihtPlayer1;
+    Belt_List.forEach(objectsWithPlayers, (function (obj) {
+            return Draw.object(obj, State.current.contents.viewport);
+          }));
     Draw.particles(State.current.contents.particles, State.current.contents.viewport);
     Draw.fps(fps);
     Draw.scoreAndCoins(State.current.contents.score, State.current.contents.coins);
