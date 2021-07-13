@@ -356,10 +356,7 @@ let rec updateLoop = () => {
     let oldObjects = State.current.contents.objects
     State.current.contents.objects = list{}
     Draw.clearCanvas()
-    /* Parallax background */
-    let vposXInt = int_of_float(State.current.contents.viewport.px /. 5.)
-    let bgdWidth = int_of_float(fst(State.current.contents.bgd.params.frameSize))
-    Draw.drawBgd(State.current.contents.bgd, @doesNotRaise float_of_int(mod(vposXInt, bgdWidth)))
+    Draw.drawBgd(State.current.contents)
     State.current.contents.particles = State.current.contents.particles->List.keep(updateParticle)
     State.current.contents.player1->updateObject(
       ~allCollids=Keys.checkTwoPlayers()

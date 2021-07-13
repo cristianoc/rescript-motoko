@@ -9,7 +9,6 @@ import * as Sprite from "./Sprite.js";
 import * as Particle from "./Particle.js";
 import * as Viewport from "./Viewport.js";
 import * as Belt_List from "rescript/lib/es6/belt_List.js";
-import * as Caml_int32 from "rescript/lib/es6/caml_int32.js";
 import * as Pervasives from "rescript/lib/es6/pervasives.js";
 
 var lastTime = {
@@ -520,9 +519,7 @@ function updateLoop(_param) {
     var oldObjects = State.current.contents.objects;
     State.current.contents.objects = /* [] */0;
     Draw.clearCanvas(undefined);
-    var vposXInt = State.current.contents.viewport.px / 5 | 0;
-    var bgdWidth = State.current.contents.bgd.params.frameSize[0] | 0;
-    Draw.drawBgd(State.current.contents.bgd, Caml_int32.mod_(vposXInt, bgdWidth));
+    Draw.drawBgd(State.current.contents);
     State.current.contents.particles = Belt_List.keep(State.current.contents.particles, updateParticle);
     updateObject(Keys.checkTwoPlayers(undefined) ? ({
               hd: State.current.contents.player2,

@@ -2,11 +2,13 @@
 
 import * as Keys from "./Keys.js";
 import * as Load from "./Load.js";
+import * as State from "./State.js";
 import * as Config from "./Config.js";
 import * as Sprite from "./Sprite.js";
 import * as $$String from "rescript/lib/es6/string.js";
 import * as Viewport from "./Viewport.js";
 import * as Belt_List from "rescript/lib/es6/belt_List.js";
+import * as Caml_int32 from "rescript/lib/es6/caml_int32.js";
 
 function renderBbox(sprite, posx, posy) {
   var match = sprite.params.bboxOffset;
@@ -26,7 +28,11 @@ function render(sprite, posx, posy) {
   return context.drawImage(Sprite.Png.toImg(sprite.params.png), sx, match[1], sw, match$1[1], posx, posy, match$2[0], match$2[1]);
 }
 
-function drawBgd(bgd, off_x) {
+function drawBgd(state) {
+  var vposXInt = state.viewport.px / 5 | 0;
+  var bgdWidth = state.bgd.params.frameSize[0] | 0;
+  var bgd = State.current.contents.bgd;
+  var off_x = Caml_int32.mod_(vposXInt, bgdWidth);
   render(bgd, -off_x, 0);
   return render(bgd, bgd.params.frameSize[0] - off_x, 0);
 }
@@ -44,11 +50,11 @@ function scoreString(score) {
   var blen = b.length;
   var s = String(score);
   var slen = s.length;
-  if (slen <= blen) {
-    return $$String.sub(b, 0, blen - slen | 0) + s;
-  } else {
+  if (slen > blen) {
     return s;
   }
+  var sub = $$String.sub(b, 0, blen - slen | 0);
+  return sub + s;
 }
 
 function scoreAndCoins(score, coins) {
@@ -154,4 +160,4 @@ export {
   object ,
   
 }
-/* Sprite Not a pure module */
+/* State Not a pure module */

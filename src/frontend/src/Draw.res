@@ -28,6 +28,15 @@ let drawBgd = (bgd, off_x) => {
   render(bgd, fst(bgd.params.frameSize) -. off_x, 0.)
 }
 
+/* Parallax background */
+let drawBgd = (state: State.t) => {
+  let vposXInt = int_of_float(state.viewport.px /. 5.)
+  let bgdWidth = int_of_float(fst(state.bgd.params.frameSize))
+  let bgd = State.current.contents.bgd
+  let off_x = @doesNotRaise float_of_int(mod(vposXInt, bgdWidth))
+  drawBgd(bgd, off_x)
+}
+
 // Used for animation updating. Canvas is cleared each frame and redrawn.
 let clearCanvas = () => {
   let canvas = Load.getCanvas()
@@ -43,7 +52,8 @@ let scoreString = score => {
   let s = string_of_int(score)
   let slen = s->String.length
   if slen <= blen {
-    String.sub(b, 0, blen - slen) ++ s
+    let sub = @doesNotRaise String.sub(b, 0, blen - slen)
+    sub ++ s
   } else {
     s
   }
