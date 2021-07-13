@@ -93,7 +93,7 @@ var gravity = 0.2;
 
 var maxYVel = 4.5;
 
-var playerSpeed = 2.8;
+var playerSpeed = 3.0;
 
 var playerJump = 5.7;
 

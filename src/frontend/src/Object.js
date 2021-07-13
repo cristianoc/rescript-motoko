@@ -128,9 +128,7 @@ function updatePlayerKeys(player, controls) {
   switch (controls) {
     case /* CLeft */0 :
         if (!player.crouch) {
-          if (player.vx > -player.speed) {
-            player.vx = player.vx - (0.4 + Math.abs(lr_acc));
-          }
+          player.vx = player.vx - (0.4 + Math.abs(lr_acc));
           player.dir = /* Left */0;
           return ;
         } else {
@@ -138,9 +136,7 @@ function updatePlayerKeys(player, controls) {
         }
     case /* CRight */1 :
         if (!player.crouch) {
-          if (player.vx < player.speed) {
-            player.vx = player.vx + (0.4 + Math.abs(lr_acc));
-          }
+          player.vx = player.vx + (0.4 + Math.abs(lr_acc));
           player.dir = /* Right */1;
           return ;
         } else {
@@ -183,6 +179,11 @@ function updatePlayer(player, playerNum, keys) {
   var v = player.vx * Config.friction;
   var vel_damped = Math.abs(v) < 0.1 ? 0 : v;
   player.vx = vel_damped;
+  if (player.vx > player.speed) {
+    player.vx = player.speed;
+  } else if (player.vx < -player.speed) {
+    player.vx = -player.speed;
+  }
   var plSize = player.health <= 1 ? /* SmallM */1 : /* BigM */0;
   var playerTyp = !prev_jumping && player.jumping ? /* Jumping */1 : (
       prev_dir !== player.dir || prev_vx === 0 && Math.abs(player.vx) > 0 && !player.jumping ? /* Running */2 : (

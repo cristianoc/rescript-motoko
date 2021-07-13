@@ -69,16 +69,21 @@ function playerAttackEnemy(o1, enemyTyp, s2, o2, state) {
         ];
 }
 
-function enemyAttackPlayer(o1, enemy, s2, o2) {
-  if (enemy >= 3) {
-    var r2 = o2.vx === 0 ? $$Object.evolveEnemy(o1.dir, enemy, s2, o2) : ($$Object.decHealth(o1), o1.invuln = Config.invuln, undefined);
-    return [
-            undefined,
-            r2
-          ];
+function enemyAttackPlayer(enemy, player) {
+  var enemyTyp = enemy.objTyp;
+  if (enemyTyp.TAG === /* Enemy */1) {
+    var enemyTyp$1 = enemyTyp._0;
+    if (enemyTyp$1 >= 3 && enemy.vx === 0) {
+      var r2 = $$Object.evolveEnemy(player.dir, enemyTyp$1, enemy.sprite, enemy);
+      return [
+              undefined,
+              r2
+            ];
+    }
+    
   }
-  $$Object.decHealth(o1);
-  o1.invuln = Config.invuln;
+  $$Object.decHealth(player);
+  player.invuln = Config.invuln;
   return [
           undefined,
           undefined
@@ -169,12 +174,11 @@ function processCollision(dir, obj, collid, state) {
                       ];
               }
           case /* Enemy */1 :
-              var typ = t._0;
               var s2 = collid.sprite;
               if (dir !== 1) {
-                return enemyAttackPlayer(obj, typ, s2, collid);
+                return enemyAttackPlayer(collid, obj);
               } else {
-                return playerAttackEnemy(obj, typ, s2, collid, state);
+                return playerAttackEnemy(obj, t._0, s2, collid, state);
               }
           case /* Item */2 :
               t2 = t._0;
@@ -256,7 +260,7 @@ function processCollision(dir, obj, collid, state) {
         switch (t2$1.TAG | 0) {
           case /* Player */0 :
               if (dir !== 0) {
-                return enemyAttackPlayer(obj, t1$1, s1, collid);
+                return enemyAttackPlayer(obj, collid);
               } else {
                 return playerAttackEnemy(obj, t1$1, s1, collid, state);
               }
