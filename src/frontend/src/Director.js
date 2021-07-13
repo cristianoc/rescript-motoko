@@ -492,14 +492,6 @@ function updateParticle(part) {
   return !part.kill;
 }
 
-function drawParticles(particles, viewport) {
-  return Belt_List.forEach(particles, (function (part) {
-                var x = part.px - viewport.px;
-                var y = part.py - viewport.py;
-                return Draw.render(part.params.sprite, x, y);
-              }));
-}
-
 function updateLoop(_param) {
   while(true) {
     var match = State.current.contents.status;
@@ -563,7 +555,7 @@ function updateLoop(_param) {
           return updateObject(oldObjects, obj, State.current.contents);
         }
         }(oldObjects)));
-    drawParticles(State.current.contents.particles, State.current.contents.viewport);
+    Draw.drawParticles(State.current.contents.particles, State.current.contents.viewport);
     Draw.fps(fps);
     Draw.scoreAndCoins(State.current.contents.score, State.current.contents.coins);
     requestAnimationFrame(function (param) {
@@ -586,7 +578,6 @@ export {
   updateObject0 ,
   updateObject ,
   updateParticle ,
-  drawParticles ,
   updateLoop ,
   
 }

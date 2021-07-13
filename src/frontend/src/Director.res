@@ -341,13 +341,6 @@ let updateParticle = part => {
   !part.kill
 }
 
-let drawParticles = (particles: list<Particle.t>, ~viewport: Viewport.t) =>
-  particles->List.forEach(part => {
-    let x = part.px -. viewport.px
-    and y = part.py -. viewport.py
-    Draw.render(part.params.sprite, x, y)
-  })
-
 // updateLoop is constantly being called to check for collisions and to
 // update each of the objects in the game.
 let rec updateLoop = () => {
@@ -412,7 +405,7 @@ let rec updateLoop = () => {
     oldObjects->List.forEach(obj =>
       obj->updateObject(~allCollids=oldObjects, ~state=State.current.contents)
     )
-    State.current.contents.particles->drawParticles(~viewport=State.current.contents.viewport)
+    State.current.contents.particles->Draw.drawParticles(~viewport=State.current.contents.viewport)
     Draw.fps(fps)
     Draw.scoreAndCoins(State.current.contents.score, State.current.contents.coins)
     Html.requestAnimationFrame(_ => updateLoop())
