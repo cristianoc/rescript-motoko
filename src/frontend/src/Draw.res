@@ -88,7 +88,7 @@ let levelFinished = (result: Actors.levelResult, level, elapsed) =>
     blackScreen(list{("You lose level " ++ (level ++ "!"), 80., 100.), (elapsed, 230., 160.)})
   }
 
-let drawParticles = (particles: list<Particle.t>, ~viewport: Viewport.t) =>
+let particles = (particles: list<Particle.t>, ~viewport: Viewport.t) =>
   particles->List.forEach(part => {
     let x = part.px -. viewport.px
     and y = part.py -. viewport.py
