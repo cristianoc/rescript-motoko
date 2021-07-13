@@ -222,13 +222,13 @@ let processCollision = (dir: Actors.dir2d, obj1: Object.t, obj2: Object.t, state
   | (_, _, _) => (None, None)
   }
 
-let viewportFilter = (obj: Object.t, viewport) =>
+let inViewport = (obj: Object.t, ~viewport) =>
   Viewport.inViewport(viewport, obj.px, obj.py) ||
   (Object.isPlayer(obj) ||
   Viewport.outOfViewportBelow(viewport, obj.py))
 
 // Run the broad phase object filtering
-let broadPhase = (~allCollids, viewport) => allCollids->List.keep(o => o->viewportFilter(viewport))
+let broadPhase = (~allCollids, viewport) => allCollids->List.keep(o => o->inViewport(~viewport))
 
 // narrowPhase of collision is used in order to continuously loop through
 // each of the collidable objects to constantly check if collisions are
@@ -290,7 +290,7 @@ let updateObject0 = (~allCollids, obj: Object.t, ~state: State.t) => {
   } else {
     0
   }
-  if (!obj.kill || obj->Object.isPlayer) && obj->viewportFilter(state.viewport) {
+  if (!obj.kill || obj->Object.isPlayer) && obj->inViewport(~viewport=state.viewport) {
     obj.grounded = false
     obj->Object.processObj(~level=state.level)
     // Run collision detection if moving object
@@ -316,10 +316,10 @@ let updateObject0 = (~allCollids, obj: Object.t, ~state: State.t) => {
 // such as viewport centering only occur with the player
 let updateObject = (~allCollids, obj: Object.t, ~state) =>
   switch obj.objTyp {
-  | Player(_, n) =>
-    let keys = Keys.translateKeys(n)
+  | Player(_, playerNum) =>
+    let keys = Keys.translateKeys(playerNum)
     obj.crouch = false
-    Object.updatePlayer(obj, n, keys)
+    obj->Object.updatePlayer(playerNum, keys)
     let evolved = obj->updateObject0(~allCollids, ~state)
     state.objects = \"@"(evolved, state.objects)
   | _ =>
