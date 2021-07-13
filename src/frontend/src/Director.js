@@ -371,7 +371,7 @@ function processCollision(dir, obj1, obj2, state) {
   }
 }
 
-function viewportFilter(obj, viewport) {
+function inViewport(obj, viewport) {
   if (Viewport.inViewport(viewport, obj.px, obj.py) || $$Object.isPlayer(obj)) {
     return true;
   } else {
@@ -381,7 +381,7 @@ function viewportFilter(obj, viewport) {
 
 function broadPhase(allCollids, viewport) {
   return Belt_List.keep(allCollids, (function (o) {
-                return viewportFilter(o, viewport);
+                return inViewport(o, viewport);
               }));
 }
 
@@ -447,7 +447,7 @@ function checkCollisions(obj, state, allCollids) {
 function updateObject0(allCollids, obj, state) {
   var sprite = obj.sprite;
   obj.invuln = obj.invuln > 0 ? obj.invuln - 1 | 0 : 0;
-  if (!((!obj.kill || $$Object.isPlayer(obj)) && viewportFilter(obj, state.viewport))) {
+  if (!((!obj.kill || $$Object.isPlayer(obj)) && inViewport(obj, state.viewport))) {
     return /* [] */0;
   }
   obj.grounded = false;
@@ -467,10 +467,10 @@ function updateObject0(allCollids, obj, state) {
 function updateObject(allCollids, obj, state) {
   var match = obj.objTyp;
   if (match.TAG === /* Player */0) {
-    var n = match._1;
-    var keys = Keys.translateKeys(n);
+    var playerNum = match._1;
+    var keys = Keys.translateKeys(playerNum);
     obj.crouch = false;
-    $$Object.updatePlayer(obj, n, keys);
+    $$Object.updatePlayer(obj, playerNum, keys);
     var evolved = updateObject0(allCollids, obj, state);
     state.objects = Pervasives.$at(evolved, state.objects);
     return ;
@@ -563,7 +563,7 @@ export {
   enemyAttackPlayer ,
   collEnemyEnemy ,
   processCollision ,
-  viewportFilter ,
+  inViewport ,
   broadPhase ,
   narrowPhase ,
   checkCollisions ,
