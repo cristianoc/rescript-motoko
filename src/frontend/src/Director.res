@@ -332,6 +332,7 @@ let updateParticle = part => {
 let rec updateLoop = () => {
   switch State.current.contents.status {
   | _ if Keys.checkPaused() =>
+    State.current.contents->Draw.drawState(~fps=0.)
     Draw.paused()
     Html.requestAnimationFrame(_ => updateLoop())
 

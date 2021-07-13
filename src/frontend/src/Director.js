@@ -494,6 +494,7 @@ function updateLoop(_param) {
   while(true) {
     var match = State.current.contents.status;
     if (Keys.checkPaused(undefined)) {
+      Draw.drawState(State.current.contents, 0);
       Draw.paused(undefined);
       requestAnimationFrame(function (param) {
             return updateLoop(undefined);
