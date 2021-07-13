@@ -49,7 +49,7 @@ let gravity = 0.2
 
 let maxYVel = 4.5
 
-let playerSpeed = 2.8
+let playerSpeed = 3.0
 
 let playerJump = 5.7
 

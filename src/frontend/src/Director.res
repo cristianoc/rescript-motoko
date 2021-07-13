@@ -50,23 +50,21 @@ let playerAttackEnemy = (o1, enemyTyp: Actors.enemyTyp, s2, o2, state: State.t) 
 }
 
 // enemyAttackPlayer is used when an enemy kills a player.
-let enemyAttackPlayer = (o1: Object.t, enemy: Actors.enemyTyp, s2, o2: Object.t) =>
-  switch enemy {
-  | GKoopaShell | RKoopaShell =>
-    let r2 = if o2.vx == 0. {
-      Object.evolveEnemy(o1.dir, enemy, s2, o2)
-    } else {
-      Object.decHealth(o1)
-      o1.invuln = Config.invuln
-      None
+let enemyAttackPlayer = (enemy: Object.t, player: Object.t) => {
+  switch enemy.objTyp {
+  | Enemy((GKoopaShell | RKoopaShell) as enemyTyp) if enemy.vx == 0. =>
+    // This only works if the player does not go faster than the shell
+    // Otherwise it can try to overtake and touch it when it has non-zero velocity
+    let r2 = {
+      Object.evolveEnemy(player.dir, enemyTyp, enemy.sprite, enemy)
     }
     (None, r2)
   | _ =>
-    Object.decHealth(o1)
-    o1.invuln = Config.invuln
+    Object.decHealth(player)
+    player.invuln = Config.invuln
     (None, None)
   }
-
+}
 // In the case that two enemies collide, they are to reverse directions. However,
 // in the case that one or more of the two enemies is a koopa shell, then
 // the koopa shell kills the other enemy.
@@ -127,9 +125,8 @@ let processCollision = (dir: Actors.dir2d, obj: Object.t, collid: Object.t, stat
   | ({objTyp: Player(_)}, {objTyp: Enemy(typ), sprite: s2}, South)
   | ({objTyp: Enemy(typ), sprite: s2}, {objTyp: Player(_)}, North) =>
     playerAttackEnemy(obj, typ, s2, collid, state)
-  | ({objTyp: Player(_)}, {objTyp: Enemy(t2), sprite: s2}, _)
-  | ({objTyp: Enemy(t2), sprite: s2}, {objTyp: Player(_)}, _) =>
-    enemyAttackPlayer(obj, t2, s2, collid)
+  | ({objTyp: Player(_)}, {objTyp: Enemy(_)}, _) => enemyAttackPlayer(collid, obj)
+  | ({objTyp: Enemy(_)}, {objTyp: Player(_)}, _) => enemyAttackPlayer(obj, collid)
   | ({objTyp: Player(_)}, {objTyp: Item(t2)}, _) | ({objTyp: Item(t2)}, {objTyp: Player(_)}, _) =>
     switch t2 {
     | Mushroom =>

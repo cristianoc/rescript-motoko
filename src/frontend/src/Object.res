@@ -134,16 +134,12 @@ let updatePlayerKeys = (player: t, controls: controls): unit => {
   switch controls {
   | CLeft =>
     if !player.crouch {
-      if player.vx > -.player.speed {
-        player.vx = player.vx -. (0.4 +. abs_float(lr_acc))
-      }
+      player.vx = player.vx -. (0.4 +. abs_float(lr_acc))
       player.dir = Left
     }
   | CRight =>
     if !player.crouch {
-      if player.vx < player.speed {
-        player.vx = player.vx +. (0.4 +. abs_float(lr_acc))
-      }
+      player.vx = player.vx +. (0.4 +. abs_float(lr_acc))
       player.dir = Right
     }
   | CUp =>
@@ -175,7 +171,7 @@ let updatePlayer = (player, playerNum, keys) => {
   let prev_jumping = player.jumping
   let prev_dir = player.dir
   and prev_vx = abs_float(player.vx)
-  List.forEach(keys, updatePlayerKeys(player))
+  keys->List.forEach(updatePlayerKeys(player))
   let v = player.vx *. Config.friction
   let vel_damped = if abs_float(v) < 0.1 {
     0.
@@ -183,6 +179,12 @@ let updatePlayer = (player, playerNum, keys) => {
     v
   }
   player.vx = vel_damped
+  if player.vx > player.speed {
+    player.vx = player.speed
+  } else if player.vx < -.player.speed {
+    player.vx = -.player.speed
+  }
+
   let plSize = if player.health <= 1 {
     SmallM
   } else {
