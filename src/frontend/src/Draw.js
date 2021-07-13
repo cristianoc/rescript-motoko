@@ -118,6 +118,14 @@ function levelFinished(result, level, elapsed) {
   }
 }
 
+function drawParticles(particles, viewport) {
+  return Belt_List.forEach(particles, (function (part) {
+                var x = part.px - viewport.px;
+                var y = part.py - viewport.py;
+                return render(part.params.sprite, x, y);
+              }));
+}
+
 export {
   renderBbox ,
   render ,
@@ -129,6 +137,7 @@ export {
   paused ,
   blackScreen ,
   levelFinished ,
+  drawParticles ,
   
 }
 /* Sprite Not a pure module */
