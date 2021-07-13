@@ -287,12 +287,6 @@ let findObjectsColliding = (~allCollids, obj: Object.t, ~state: State.t) => {
     obj->Object.processObj(~level=state.level)
     // Run collision detection if moving object
     let objectsColliding = obj->checkCollisions(state, ~allCollids)
-    // Render and update animation
-    let vptAdjXy = Viewport.fromCoord(state.viewport, obj.px, obj.py)
-    Draw.render(sprite, vptAdjXy.x, vptAdjXy.y)
-    if Keys.checkBboxEnabled() {
-      Draw.renderBbox(sprite, vptAdjXy.x, vptAdjXy.y)
-    }
     if obj.vx != 0. || !Object.isEnemy(obj) {
       Sprite.updateAnimation(sprite)
     }
@@ -392,6 +386,19 @@ let rec updateLoop = () => {
     )
     oldObjects->List.forEach(obj =>
       obj->updateObject(~allCollids=oldObjects, ~state=State.current.contents)
+    )
+
+    let objectsWithPlayers = {
+      let objectsWihtPlayer1 = list{
+        State.current.contents.player1,
+        ...State.current.contents.objects,
+      }
+      Keys.checkTwoPlayers()
+        ? list{State.current.contents.player2, ...objectsWihtPlayer1}
+        : objectsWihtPlayer1
+    }
+    objectsWithPlayers->List.forEach(obj =>
+      obj->Draw.object(~viewport=State.current.contents.viewport)
     )
     State.current.contents.particles->Draw.particles(~viewport=State.current.contents.viewport)
     Draw.fps(fps)
