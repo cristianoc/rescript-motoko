@@ -1,20 +1,35 @@
-# my_counter
+# mareo
 
-Welcome to your new my_counter project and to the internet computer development community. By default, creating a new project adds this README and some template files to your project directory. You can edit these template files to customize your project and to include your own code to speed up the development cycle.
+Based on [https://github.com/cristianoc/mareo](), with a frontend written in [ReScript](https://rescript-lang.org) and backend written in [Motoko](https://sdk.dfinity.org/docs/language-guide/motoko.html).
+The backend is used to load and save game state.
 
-To get started, you might want to explore the project directory structure and the default configuration file. Working with this project in your development environment will not affect any production deployment or identity tokens.
 
-To learn more before you start working with my_counter, see the following documentation available online:
+Prerequisites:
 
-- [Quick Start](https://sdk.dfinity.org/docs/quickstart/quickstart-intro.html)
-- [SDK Developer Tools](https://sdk.dfinity.org/docs/developers-guide/sdk-guide.html)
-- [Motoko Programming Language Guide](https://sdk.dfinity.org/docs/language-guide/motoko.html)
-- [Motoko Language Quick Reference](https://sdk.dfinity.org/docs/language-guide/language-manual.html)
+- `dfx` command line from [Internet Computer SDK](https://sdk.dfinity.org/docs/quickstart/local-quickstart.html#download-and-install)
+- `node` installed
 
-If you want to start working on your project right away, you might want to try the following commands:
+To start working on the project right away:
 
 ```bash
-cd my_counter/
-dfx help
-dfx config --help
+cd rescript-motoko
+
+# start the replica and build the backend
+dfx start --background
+dfx deploy backend
+
+# start the frontend
+npm install
+npm run start
+```
+
+To iterate on the frontend code in `src/frontend` either use an editor extension with ReScript support such as [rescript-vscode](https://marketplace.visualstudio.com/items?itemName=chenglou92.rescript-vscode), or build directly with `npx rescript`.
+
+To iterate on the backend code, edit `.mo` files in `src/backend`.
+The interface between frontend and backend is in [src/frontend/src/Candid.res](src/frontend/src/Candid.res).
+
+To deploy both backend and frontend canisters, use:
+
+```bash
+dfx deploy
 ```
