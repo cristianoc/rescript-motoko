@@ -355,8 +355,6 @@ let rec updateLoop = () => {
     let fps = calcFps()
     let oldObjects = State.current.contents.objects
     State.current.contents.objects = list{}
-    Draw.clearCanvas()
-    Draw.drawBgd(State.current.contents)
     State.current.contents.particles = State.current.contents.particles->List.keep(updateParticle)
     State.current.contents.player1->updateObject(
       ~allCollids=Keys.checkTwoPlayers()
@@ -385,21 +383,7 @@ let rec updateLoop = () => {
       obj->updateObject(~allCollids=oldObjects, ~state=State.current.contents)
     )
 
-    let objectsWithPlayers = {
-      let objectsWihtPlayer1 = list{
-        State.current.contents.player1,
-        ...State.current.contents.objects,
-      }
-      Keys.checkTwoPlayers()
-        ? list{State.current.contents.player2, ...objectsWihtPlayer1}
-        : objectsWihtPlayer1
-    }
-    objectsWithPlayers->List.forEach(obj =>
-      obj->Draw.object(~viewport=State.current.contents.viewport)
-    )
-    State.current.contents.particles->Draw.particles(~viewport=State.current.contents.viewport)
-    Draw.fps(fps)
-    Draw.scoreAndCoins(State.current.contents.score, State.current.contents.coins)
+    State.current.contents->Draw.drawState(~fps)
     Html.requestAnimationFrame(_ => updateLoop())
   }
 }
