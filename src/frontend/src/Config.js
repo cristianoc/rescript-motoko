@@ -79,7 +79,7 @@ function mapDim(level) {
 
 var canvasId = "canvas";
 
-var delayWhenFinished = 300;
+var delayWhenFinished = 5000;
 
 var restartAfter = 5;
 

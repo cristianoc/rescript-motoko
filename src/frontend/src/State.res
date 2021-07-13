@@ -1,6 +1,6 @@
 type status =
   | Playing
-  | Finished({levelResult: Actors.levelResult, finishTime: float})
+  | Finished({levelResult: Actors.levelResult, restartTime: float})
 
 // State of the game. It includes a background sprite (e.g.,
 // (e.g., hills), a context (used for rendering onto the page), a viewport

@@ -28,7 +28,7 @@ let enemyDensity = (~level) =>
 
 let canvasId = "canvas"
 
-let delayWhenFinished = 300.
+let delayWhenFinished = 5000.
 
 let images = ["blocks.png", "items.png", "enemies.png", "mario-small.png"]
 
