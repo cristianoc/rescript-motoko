@@ -394,16 +394,16 @@ function narrowPhase(obj, state, visibleCollids) {
     if (!visibleCollids$1) {
       return acc;
     }
-    var h = visibleCollids$1.hd;
+    var collid = visibleCollids$1.hd;
     var newObjs;
-    if ($$Object.equals(obj, h)) {
+    if ($$Object.sameId(obj, collid)) {
       newObjs = [
         undefined,
         undefined
       ];
     } else {
-      var dir = $$Object.checkCollision(obj, h);
-      newObjs = dir !== undefined && h.id !== obj.id ? processCollision(dir, obj, h, state) : [
+      var dir = $$Object.checkCollision(obj, collid);
+      newObjs = dir !== undefined ? processCollision(dir, obj, collid, state) : [
           undefined,
           undefined
         ];
@@ -444,7 +444,7 @@ function checkCollisions(obj, state, allCollids) {
   return narrowPhase(obj, state, visibleCollids);
 }
 
-function updateObject0(allCollids, obj, state) {
+function findObjectsColliding(allCollids, obj, state) {
   var sprite = obj.sprite;
   obj.invuln = obj.invuln > 0 ? obj.invuln - 1 | 0 : 0;
   if (!((!obj.kill || $$Object.isPlayer(obj)) && inViewport(obj, state.viewport))) {
@@ -452,7 +452,7 @@ function updateObject0(allCollids, obj, state) {
   }
   obj.grounded = false;
   $$Object.processObj(obj, state.level);
-  var evolved = checkCollisions(obj, state, allCollids);
+  var objectsColliding = checkCollisions(obj, state, allCollids);
   var vptAdjXy = Viewport.fromCoord(state.viewport, obj.px, obj.py);
   Draw.render(sprite, vptAdjXy.x, vptAdjXy.y);
   if (Keys.checkBboxEnabled(undefined)) {
@@ -461,7 +461,7 @@ function updateObject0(allCollids, obj, state) {
   if (obj.vx !== 0 || !$$Object.isEnemy(obj)) {
     Sprite.updateAnimation(sprite);
   }
-  return evolved;
+  return objectsColliding;
 }
 
 function updateObject(allCollids, obj, state) {
@@ -471,15 +471,15 @@ function updateObject(allCollids, obj, state) {
     var keys = Keys.translateKeys(playerNum);
     obj.crouch = false;
     $$Object.updatePlayer(obj, playerNum, keys);
-    var evolved = updateObject0(allCollids, obj, state);
-    state.objects = Pervasives.$at(evolved, state.objects);
+    var oblectsColliding = findObjectsColliding(allCollids, obj, state);
+    state.objects = Pervasives.$at(oblectsColliding, state.objects);
     return ;
   }
-  var evolved$1 = updateObject0(allCollids, obj, state);
+  var oblectsColliding$1 = findObjectsColliding(allCollids, obj, state);
   if (!obj.kill) {
     state.objects = {
       hd: obj,
-      tl: Pervasives.$at(evolved$1, state.objects)
+      tl: Pervasives.$at(oblectsColliding$1, state.objects)
     };
   }
   var newParts = obj.kill ? $$Object.kill(obj) : /* [] */0;
@@ -567,7 +567,7 @@ export {
   broadPhase ,
   narrowPhase ,
   checkCollisions ,
-  updateObject0 ,
+  findObjectsColliding ,
   updateObject ,
   updateParticle ,
   updateLoop ,

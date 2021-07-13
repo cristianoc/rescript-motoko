@@ -117,7 +117,7 @@ let isEnemy = x =>
   | _ => false
   }
 
-let equals = (col1, col2) => col1.id == col2.id
+let sameId = (o1, o2) => o1.id == o2.id
 
 let jump = player => {
   player.jumping = true

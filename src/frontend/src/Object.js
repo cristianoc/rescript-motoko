@@ -112,8 +112,8 @@ function isEnemy(x) {
   }
 }
 
-function equals(col1, col2) {
-  return col1.id === col2.id;
+function sameId(o1, o2) {
+  return o1.id === o2.id;
 }
 
 function jump(player) {
@@ -511,7 +511,7 @@ export {
   make ,
   isPlayer ,
   isEnemy ,
-  equals ,
+  sameId ,
   jump ,
   updatePlayerKeys ,
   normalizePos ,
