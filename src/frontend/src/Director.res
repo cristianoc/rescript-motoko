@@ -119,75 +119,75 @@ let collEnemyEnemy = (
 // a new item spawned as a result of the first object. None indicates that
 // no new item should be spawned. Transformations to existing objects occur
 // mutably, as many changes are side-effectual.
-let processCollision = (dir: Actors.dir2d, obj1: Object.t, obj2: Object.t, state: State.t) =>
-  switch (obj1, obj2, dir) {
+let processCollision = (dir: Actors.dir2d, obj: Object.t, collid: Object.t, state: State.t) =>
+  switch (obj, collid, dir) {
   | ({objTyp: Player(_)}, {objTyp: Player(_)}, East | West) =>
-    obj2.vx = obj2.vx +. obj1.vx
+    collid.vx = collid.vx +. obj.vx
     (None, None)
   | ({objTyp: Player(_)}, {objTyp: Enemy(typ), sprite: s2}, South)
   | ({objTyp: Enemy(typ), sprite: s2}, {objTyp: Player(_)}, North) =>
-    playerAttackEnemy(obj1, typ, s2, obj2, state)
+    playerAttackEnemy(obj, typ, s2, collid, state)
   | ({objTyp: Player(_)}, {objTyp: Enemy(t2), sprite: s2}, _)
   | ({objTyp: Enemy(t2), sprite: s2}, {objTyp: Player(_)}, _) =>
-    enemyAttackPlayer(obj1, t2, s2, obj2)
+    enemyAttackPlayer(obj, t2, s2, collid)
   | ({objTyp: Player(_)}, {objTyp: Item(t2)}, _) | ({objTyp: Item(t2)}, {objTyp: Player(_)}, _) =>
     switch t2 {
     | Mushroom =>
-      Object.decHealth(obj2)
-      if obj1.health == 2 {
+      Object.decHealth(collid)
+      if obj.health == 2 {
         ()
       } else {
-        obj1.health = obj1.health + 1
+        obj.health = obj.health + 1
       }
-      obj1.vx = 0.
-      obj1.vy = 0.
+      obj.vx = 0.
+      obj.vy = 0.
       state->State.updateScore(1000)
-      obj2.score = 1000
+      collid.score = 1000
       (None, None)
     | Coin =>
       state.coins = state.coins + 1
-      Object.decHealth(obj2)
+      Object.decHealth(collid)
       state->State.updateScore(100)
       (None, None)
     }
   | ({objTyp: Enemy(t1), sprite: s1}, {objTyp: Enemy(t2), sprite: s2}, dir) =>
-    collEnemyEnemy(t1, s1, obj1, t2, s2, obj2, dir)
+    collEnemyEnemy(t1, s1, obj, t2, s2, collid, dir)
   | ({objTyp: Enemy(t1), sprite: s1}, {objTyp: Block(t2)}, East)
   | ({objTyp: Enemy(t1), sprite: s1}, {objTyp: Block(t2)}, West) =>
     switch (t1, t2) {
     | (RKoopaShell, Brick) | (GKoopaShell, Brick) =>
-      Object.decHealth(obj2)
-      Object.reverseLeftRight(obj1)
+      Object.decHealth(collid)
+      Object.reverseLeftRight(obj)
       (None, None)
     | (RKoopaShell, QBlock(typ)) | (GKoopaShell, QBlock(typ)) =>
-      let updatedBlock = Object.evolveBlock(obj2)
-      let spawnedItem = Object.spawnAbove(obj1.dir, obj2, typ)
-      Object.revDir(obj1, t1, s1)
+      let updatedBlock = Object.evolveBlock(collid)
+      let spawnedItem = Object.spawnAbove(obj.dir, collid, typ)
+      Object.revDir(obj, t1, s1)
       (Some(updatedBlock), Some(spawnedItem))
     | (_, _) =>
-      Object.revDir(obj1, t1, s1)
+      Object.revDir(obj, t1, s1)
       (None, None)
     }
   | ({objTyp: Item(_)}, {objTyp: Block(_)}, East) | ({objTyp: Item(_)}, {objTyp: Block(_)}, West) =>
-    Object.reverseLeftRight(obj1)
+    Object.reverseLeftRight(obj)
     (None, None)
   | ({objTyp: Enemy(_)}, {objTyp: Block(_)}, _) | ({objTyp: Item(_)}, {objTyp: Block(_)}, _) =>
-    Object.collideBlock(dir, obj1)
+    Object.collideBlock(dir, obj)
     (None, None)
   | ({objTyp: Player(t1, _)}, {objTyp: Block(t)}, North) =>
     switch t {
     | QBlock(typ) =>
-      let updatedBlock = Object.evolveBlock(obj2)
-      let spawnedItem = Object.spawnAbove(obj1.dir, obj2, typ)
-      Object.collideBlock(dir, obj1)
+      let updatedBlock = Object.evolveBlock(collid)
+      let spawnedItem = Object.spawnAbove(obj.dir, collid, typ)
+      Object.collideBlock(dir, obj)
       (Some(spawnedItem), Some(updatedBlock))
     | Brick =>
       if t1 == BigM {
-        Object.collideBlock(dir, obj1)
-        Object.decHealth(obj2)
+        Object.collideBlock(dir, obj)
+        Object.decHealth(collid)
         (None, None)
       } else {
-        Object.collideBlock(dir, obj1)
+        Object.collideBlock(dir, obj)
         (None, None)
       }
     | Panel =>
@@ -197,7 +197,7 @@ let processCollision = (dir: Actors.dir2d, obj1: Object.t, obj2: Object.t, state
       })
       (None, None)
     | _ =>
-      Object.collideBlock(dir, obj1)
+      Object.collideBlock(dir, obj)
       (None, None)
     }
   | ({objTyp: Player(_)}, {objTyp: Block(t)}, _) =>
@@ -212,10 +212,10 @@ let processCollision = (dir: Actors.dir2d, obj1: Object.t, obj2: Object.t, state
       switch dir {
       | South =>
         state.multiplier = 1
-        Object.collideBlock(dir, obj1)
+        Object.collideBlock(dir, obj)
         (None, None)
       | _ =>
-        Object.collideBlock(dir, obj1)
+        Object.collideBlock(dir, obj)
         (None, None)
       }
     }
@@ -315,12 +315,12 @@ let updateObject = (~allCollids, obj: Object.t, ~state) =>
     let keys = Keys.translateKeys(playerNum)
     obj.crouch = false
     obj->Object.updatePlayer(playerNum, keys)
-    let oblectsColliding = obj->findObjectsColliding(~allCollids, ~state)
-    state.objects = \"@"(oblectsColliding, state.objects)
+    let objectsColliding = obj->findObjectsColliding(~allCollids, ~state)
+    state.objects = \"@"(objectsColliding, state.objects)
   | _ =>
-    let oblectsColliding = obj->findObjectsColliding(~allCollids, ~state)
+    let objectsColliding = obj->findObjectsColliding(~allCollids, ~state)
     if !obj.kill {
-      state.objects = list{obj, ...\"@"(oblectsColliding, state.objects)}
+      state.objects = list{obj, ...\"@"(objectsColliding, state.objects)}
     }
     let newParts = if obj.kill {
       Object.kill(obj)

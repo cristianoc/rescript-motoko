@@ -148,16 +148,16 @@ function collEnemyEnemy(enemy1, s1, o1, enemy2, s2, o2, dir) {
   }
 }
 
-function processCollision(dir, obj1, obj2, state) {
+function processCollision(dir, obj, collid, state) {
   var t2;
-  var t1 = obj1.objTyp;
+  var t1 = obj.objTyp;
   switch (t1.TAG | 0) {
     case /* Player */0 :
-        var t = obj2.objTyp;
+        var t = collid.objTyp;
         switch (t.TAG | 0) {
           case /* Player */0 :
               if (dir >= 2) {
-                obj2.vx = obj2.vx + obj1.vx;
+                collid.vx = collid.vx + obj.vx;
                 return [
                         undefined,
                         undefined
@@ -170,11 +170,11 @@ function processCollision(dir, obj1, obj2, state) {
               }
           case /* Enemy */1 :
               var typ = t._0;
-              var s2 = obj2.sprite;
+              var s2 = collid.sprite;
               if (dir !== 1) {
-                return enemyAttackPlayer(obj1, typ, s2, obj2);
+                return enemyAttackPlayer(obj, typ, s2, collid);
               } else {
-                return playerAttackEnemy(obj1, typ, s2, obj2, state);
+                return playerAttackEnemy(obj, typ, s2, collid, state);
               }
           case /* Item */2 :
               t2 = t._0;
@@ -192,14 +192,14 @@ function processCollision(dir, obj1, obj2, state) {
                           undefined
                         ];
                 } else if (dir !== 1) {
-                  $$Object.collideBlock(dir, obj1);
+                  $$Object.collideBlock(dir, obj);
                   return [
                           undefined,
                           undefined
                         ];
                 } else {
                   state.multiplier = 1;
-                  $$Object.collideBlock(dir, obj1);
+                  $$Object.collideBlock(dir, obj);
                   return [
                           undefined,
                           undefined
@@ -209,7 +209,7 @@ function processCollision(dir, obj1, obj2, state) {
               if (typeof t$1 === "number") {
                 if (t$1 !== 1) {
                   if (t$1 !== 4) {
-                    $$Object.collideBlock(dir, obj1);
+                    $$Object.collideBlock(dir, obj);
                     return [
                             undefined,
                             undefined
@@ -225,23 +225,23 @@ function processCollision(dir, obj1, obj2, state) {
                           ];
                   }
                 } else if (t1._0 === /* BigM */0) {
-                  $$Object.collideBlock(dir, obj1);
-                  $$Object.decHealth(obj2);
+                  $$Object.collideBlock(dir, obj);
+                  $$Object.decHealth(collid);
                   return [
                           undefined,
                           undefined
                         ];
                 } else {
-                  $$Object.collideBlock(dir, obj1);
+                  $$Object.collideBlock(dir, obj);
                   return [
                           undefined,
                           undefined
                         ];
                 }
               }
-              var updatedBlock = $$Object.evolveBlock(obj2);
-              var spawnedItem = $$Object.spawnAbove(obj1.dir, obj2, t$1._0);
-              $$Object.collideBlock(dir, obj1);
+              var updatedBlock = $$Object.evolveBlock(collid);
+              var spawnedItem = $$Object.spawnAbove(obj.dir, collid, t$1._0);
+              $$Object.collideBlock(dir, obj);
               return [
                       spawnedItem,
                       updatedBlock
@@ -251,18 +251,18 @@ function processCollision(dir, obj1, obj2, state) {
         break;
     case /* Enemy */1 :
         var t1$1 = t1._0;
-        var s1 = obj1.sprite;
-        var t2$1 = obj2.objTyp;
+        var s1 = obj.sprite;
+        var t2$1 = collid.objTyp;
         switch (t2$1.TAG | 0) {
           case /* Player */0 :
               if (dir !== 0) {
-                return enemyAttackPlayer(obj1, t1$1, s1, obj2);
+                return enemyAttackPlayer(obj, t1$1, s1, collid);
               } else {
-                return playerAttackEnemy(obj1, t1$1, s1, obj2, state);
+                return playerAttackEnemy(obj, t1$1, s1, collid, state);
               }
           case /* Enemy */1 :
-              var s2$1 = obj2.sprite;
-              return collEnemyEnemy(t1$1, s1, obj1, t2$1._0, s2$1, obj2, dir);
+              var s2$1 = collid.sprite;
+              return collEnemyEnemy(t1$1, s1, obj, t2$1._0, s2$1, collid, dir);
           case /* Item */2 :
               return [
                       undefined,
@@ -274,35 +274,35 @@ function processCollision(dir, obj1, obj2, state) {
                 if (t1$1 >= 3) {
                   if (typeof t2$2 === "number") {
                     if (t2$2 !== 1) {
-                      $$Object.revDir(obj1, t1$1, s1);
+                      $$Object.revDir(obj, t1$1, s1);
                       return [
                               undefined,
                               undefined
                             ];
                     } else {
-                      $$Object.decHealth(obj2);
-                      $$Object.reverseLeftRight(obj1);
+                      $$Object.decHealth(collid);
+                      $$Object.reverseLeftRight(obj);
                       return [
                               undefined,
                               undefined
                             ];
                     }
                   }
-                  var updatedBlock$1 = $$Object.evolveBlock(obj2);
-                  var spawnedItem$1 = $$Object.spawnAbove(obj1.dir, obj2, t2$2._0);
-                  $$Object.revDir(obj1, t1$1, s1);
+                  var updatedBlock$1 = $$Object.evolveBlock(collid);
+                  var spawnedItem$1 = $$Object.spawnAbove(obj.dir, collid, t2$2._0);
+                  $$Object.revDir(obj, t1$1, s1);
                   return [
                           updatedBlock$1,
                           spawnedItem$1
                         ];
                 }
-                $$Object.revDir(obj1, t1$1, s1);
+                $$Object.revDir(obj, t1$1, s1);
                 return [
                         undefined,
                         undefined
                       ];
               }
-              $$Object.collideBlock(dir, obj1);
+              $$Object.collideBlock(dir, obj);
               return [
                       undefined,
                       undefined
@@ -310,7 +310,7 @@ function processCollision(dir, obj1, obj2, state) {
           
         }
     case /* Item */2 :
-        var match = obj2.objTyp;
+        var match = collid.objTyp;
         switch (match.TAG | 0) {
           case /* Player */0 :
               t2 = t1._0;
@@ -323,13 +323,13 @@ function processCollision(dir, obj1, obj2, state) {
                     ];
           case /* Block */3 :
               if (dir >= 2) {
-                $$Object.reverseLeftRight(obj1);
+                $$Object.reverseLeftRight(obj);
                 return [
                         undefined,
                         undefined
                       ];
               } else {
-                $$Object.collideBlock(dir, obj1);
+                $$Object.collideBlock(dir, obj);
                 return [
                         undefined,
                         undefined
@@ -347,23 +347,23 @@ function processCollision(dir, obj1, obj2, state) {
   }
   if (t2) {
     state.coins = state.coins + 1 | 0;
-    $$Object.decHealth(obj2);
+    $$Object.decHealth(collid);
     State.updateScore(state, 100);
     return [
             undefined,
             undefined
           ];
   } else {
-    $$Object.decHealth(obj2);
-    if (obj1.health === 2) {
+    $$Object.decHealth(collid);
+    if (obj.health === 2) {
       
     } else {
-      obj1.health = obj1.health + 1 | 0;
+      obj.health = obj.health + 1 | 0;
     }
-    obj1.vx = 0;
-    obj1.vy = 0;
+    obj.vx = 0;
+    obj.vy = 0;
     State.updateScore(state, 1000);
-    obj2.score = 1000;
+    collid.score = 1000;
     return [
             undefined,
             undefined
@@ -471,15 +471,15 @@ function updateObject(allCollids, obj, state) {
     var keys = Keys.translateKeys(playerNum);
     obj.crouch = false;
     $$Object.updatePlayer(obj, playerNum, keys);
-    var oblectsColliding = findObjectsColliding(allCollids, obj, state);
-    state.objects = Pervasives.$at(oblectsColliding, state.objects);
+    var objectsColliding = findObjectsColliding(allCollids, obj, state);
+    state.objects = Pervasives.$at(objectsColliding, state.objects);
     return ;
   }
-  var oblectsColliding$1 = findObjectsColliding(allCollids, obj, state);
+  var objectsColliding$1 = findObjectsColliding(allCollids, obj, state);
   if (!obj.kill) {
     state.objects = {
       hd: obj,
-      tl: Pervasives.$at(oblectsColliding$1, state.objects)
+      tl: Pervasives.$at(objectsColliding$1, state.objects)
     };
   }
   var newParts = obj.kill ? $$Object.kill(obj) : /* [] */0;
