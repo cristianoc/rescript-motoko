@@ -487,19 +487,17 @@ function updateObject(allCollids, obj, state) {
   
 }
 
-function updateParticle(state, part) {
+function updateParticle(part) {
   Particle.$$process(part);
-  var x = part.px - state.viewport.px;
-  var y = part.py - state.viewport.py;
-  Draw.render(part.params.sprite, x, y);
-  if (!part.kill) {
-    state.particles = {
-      hd: part,
-      tl: state.particles
-    };
-    return ;
-  }
-  
+  return !part.kill;
+}
+
+function drawParticles(particles, viewport) {
+  return Belt_List.forEach(particles, (function (part) {
+                var x = part.px - viewport.px;
+                var y = part.py - viewport.py;
+                return Draw.render(part.params.sprite, x, y);
+              }));
 }
 
 function updateLoop(_param) {
@@ -530,12 +528,11 @@ function updateLoop(_param) {
     var fps = calcFps(undefined);
     var oldObjects = State.current.contents.objects;
     State.current.contents.objects = /* [] */0;
-    var oldParticles = State.current.contents.particles;
-    State.current.contents.particles = /* [] */0;
     Draw.clearCanvas(undefined);
     var vposXInt = State.current.contents.viewport.px / 5 | 0;
     var bgdWidth = State.current.contents.bgd.params.frameSize[0] | 0;
     Draw.drawBgd(State.current.contents.bgd, Caml_int32.mod_(vposXInt, bgdWidth));
+    State.current.contents.particles = Belt_List.keep(State.current.contents.particles, updateParticle);
     updateObject(Keys.checkTwoPlayers(undefined) ? ({
               hd: State.current.contents.player2,
               tl: oldObjects
@@ -566,9 +563,7 @@ function updateLoop(_param) {
           return updateObject(oldObjects, obj, State.current.contents);
         }
         }(oldObjects)));
-    Belt_List.forEach(oldParticles, (function (part) {
-            return updateParticle(State.current.contents, part);
-          }));
+    drawParticles(State.current.contents.particles, State.current.contents.viewport);
     Draw.fps(fps);
     Draw.scoreAndCoins(State.current.contents.score, State.current.contents.coins);
     requestAnimationFrame(function (param) {
@@ -591,6 +586,7 @@ export {
   updateObject0 ,
   updateObject ,
   updateParticle ,
+  drawParticles ,
   updateLoop ,
   
 }
