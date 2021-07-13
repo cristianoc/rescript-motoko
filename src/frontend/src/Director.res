@@ -387,15 +387,11 @@ let rec updateLoop = () => {
         ~state=State.current.contents,
       )
     }
-    if State.current.contents.player1.kill == true {
-      switch State.current.contents.status {
-      | Finished({levelResult: Lost}) => ()
-      | _ =>
-        State.current.contents.status = Finished({
-          levelResult: Lost,
-          restartTime: Config.delayWhenFinished +. Html.performance.now(.),
-        })
-      }
+    if State.current.contents.player1.kill {
+      State.current.contents.status = Finished({
+        levelResult: Lost,
+        restartTime: Config.delayWhenFinished +. Html.performance.now(.),
+      })
     }
     Viewport.update(
       State.current.contents.viewport,
@@ -405,7 +401,7 @@ let rec updateLoop = () => {
     oldObjects->List.forEach(obj =>
       obj->updateObject(~allCollids=oldObjects, ~state=State.current.contents)
     )
-    State.current.contents.particles->Draw.drawParticles(~viewport=State.current.contents.viewport)
+    State.current.contents.particles->Draw.particles(~viewport=State.current.contents.viewport)
     Draw.fps(fps)
     Draw.scoreAndCoins(State.current.contents.score, State.current.contents.coins)
     Html.requestAnimationFrame(_ => updateLoop())

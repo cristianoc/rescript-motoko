@@ -118,8 +118,8 @@ function levelFinished(result, level, elapsed) {
   }
 }
 
-function drawParticles(particles, viewport) {
-  return Belt_List.forEach(particles, (function (part) {
+function particles(particles$1, viewport) {
+  return Belt_List.forEach(particles$1, (function (part) {
                 var x = part.px - viewport.px;
                 var y = part.py - viewport.py;
                 return render(part.params.sprite, x, y);
@@ -137,7 +137,7 @@ export {
   paused ,
   blackScreen ,
   levelFinished ,
-  drawParticles ,
+  particles ,
   
 }
 /* Sprite Not a pure module */

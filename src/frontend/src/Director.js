@@ -535,19 +535,11 @@ function updateLoop(_param) {
             tl: oldObjects
           }, State.current.contents.player2, State.current.contents);
     }
-    if (State.current.contents.player1.kill === true) {
-      var match$1 = State.current.contents.status;
-      var exit = 0;
-      if (!(match$1 && match$1.levelResult)) {
-        exit = 1;
-      }
-      if (exit === 1) {
-        State.current.contents.status = /* Finished */{
-          levelResult: /* Lost */1,
-          restartTime: Config.delayWhenFinished + performance.now()
-        };
-      }
-      
+    if (State.current.contents.player1.kill) {
+      State.current.contents.status = /* Finished */{
+        levelResult: /* Lost */1,
+        restartTime: Config.delayWhenFinished + performance.now()
+      };
     }
     Viewport.update(State.current.contents.viewport, State.current.contents.player1.px, State.current.contents.player1.py);
     Belt_List.forEach(oldObjects, (function(oldObjects){
@@ -555,7 +547,7 @@ function updateLoop(_param) {
           return updateObject(oldObjects, obj, State.current.contents);
         }
         }(oldObjects)));
-    Draw.drawParticles(State.current.contents.particles, State.current.contents.viewport);
+    Draw.particles(State.current.contents.particles, State.current.contents.viewport);
     Draw.fps(fps);
     Draw.scoreAndCoins(State.current.contents.score, State.current.contents.coins);
     requestAnimationFrame(function (param) {
