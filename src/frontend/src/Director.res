@@ -331,6 +331,28 @@ let updateParticle = part => {
 // update each of the objects in the game.
 let rec updateLoop = () => {
   switch State.current.contents.status {
+  | _ if Keys.pressedKeys.pendingStateOperations != None =>
+    switch Keys.pressedKeys.pendingStateOperations {
+    | Some(LoadState) =>
+      Keys.pressedKeys.pendingStateOperations = None
+      Js.log("loading...")
+      State.load()
+      ->Promise.thenResolve(() => {
+        Js.log("loaded")
+      })
+      ->ignore
+    | Some(SaveState) =>
+      Keys.pressedKeys.pendingStateOperations = None
+      Js.log("saving...")
+      State.save()
+      ->Promise.thenResolve(() => {
+        Js.log("saved")
+      })
+      ->ignore
+    | None => ()
+    }
+    Html.requestAnimationFrame(_ => updateLoop())
+
   | _ if Keys.checkPaused() =>
     State.current.contents->Draw.drawState(~fps=0.)
     Draw.paused()

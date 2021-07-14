@@ -493,6 +493,30 @@ function updateParticle(part) {
 function updateLoop(_param) {
   while(true) {
     var match = State.current.contents.status;
+    if (Keys.pressedKeys.pendingStateOperations !== undefined) {
+      var match$1 = Keys.pressedKeys.pendingStateOperations;
+      if (match$1 !== undefined) {
+        if (match$1) {
+          Keys.pressedKeys.pendingStateOperations = undefined;
+          console.log("saving...");
+          State.save(undefined).then(function (param) {
+                console.log("saved");
+                
+              });
+        } else {
+          Keys.pressedKeys.pendingStateOperations = undefined;
+          console.log("loading...");
+          State.load(undefined).then(function (param) {
+                console.log("loaded");
+                
+              });
+        }
+      }
+      requestAnimationFrame(function (param) {
+            return updateLoop(undefined);
+          });
+      return ;
+    }
     if (Keys.checkPaused(undefined)) {
       Draw.drawState(State.current.contents, 0);
       Draw.paused(undefined);
