@@ -30,16 +30,10 @@ let canvasId = "canvas"
 
 let delayWhenFinished = 5000.
 
-let images = ["blocks.png", "items.png", "enemies.png", "mario-small.png"]
-
 let blockw = (~level) => levelWidth(~level) /. 16.
 let blockh = (~level) => levelHeight(~level) /. 16. -. 1.
 
 let mapDim = (~level) => (levelWidth(~level), levelHeight(~level))
-
-let restartAfter = 5.
-
-let spritesDir = "sprites/"
 
 let scale = 1.5
 

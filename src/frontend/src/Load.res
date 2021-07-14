@@ -4,7 +4,7 @@ type canvasData = {
   context: Html.canvasRenderingContext2D,
 }
 
-let canvasAndContext = lazy (
+let lazyCanvasData = lazy (
   switch Html.getElementById(Html.document, Config.canvasId) {
   | None =>
     print_endline("cant find canvas " ++ (Config.canvasId ++ " \n"))
@@ -25,10 +25,10 @@ let canvasAndContext = lazy (
   }
 )
 
-let getCanvasAndContext = () => Lazy.force(canvasAndContext)
+let getCanvasData = () => Lazy.force(lazyCanvasData)
 
-let getCanvas = () => getCanvasAndContext().canvasElement
+let getCanvas = () => getCanvasData().canvasElement
 
-let getContext = () => getCanvasAndContext().context
+let getContext = () => getCanvasData().context
 
-let getCanvasSizeScaled = () => getCanvasAndContext().sizeScaled
+let getSizeScaled = () => getCanvasData().sizeScaled

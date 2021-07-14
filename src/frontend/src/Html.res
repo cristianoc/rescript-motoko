@@ -44,10 +44,6 @@ external getElementById: (Dom.document, string) => option<Dom.element> = "getEle
 external addEventListener: (Dom.document, string, Dom.event_like<'a> => bool, bool) => unit =
   "addEventListener"
 
-@send
-external addEventListenerImg: (imageElement, string, Dom.event_like<'a> => bool, bool) => unit =
-  "addEventListener"
-
 type renderingContext
 
 external keyboardEventToJsObj: Dom.keyboardEvent => {..} = "%identity"

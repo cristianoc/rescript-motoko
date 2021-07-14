@@ -8,7 +8,7 @@ type t = {
 }
 
 let make = (~level) => {
-  let (vx, vy) = Load.getCanvasSizeScaled()
+  let (vx, vy) = Load.getSizeScaled()
   let (mx, my) = Config.mapDim(~level)
   {
     px: 0.,
