@@ -5,7 +5,7 @@ import * as Load from "./Load.js";
 import * as Config from "./Config.js";
 
 function make(level) {
-  var match = Load.getCanvasSizeScaled(undefined);
+  var match = Load.getSizeScaled(undefined);
   var match$1 = Config.mapDim(level);
   return {
           px: 0,

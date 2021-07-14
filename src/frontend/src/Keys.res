@@ -30,8 +30,6 @@ let pressedKeys = {
   twoPlayers: false,
 }
 
-type loadingOrSaving = Loading | Saving
-
 let doSave = ref(() => Promise.resolve())
 let doLoad = ref(() => Promise.resolve())
 

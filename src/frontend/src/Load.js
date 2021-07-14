@@ -4,7 +4,7 @@ import * as Keys from "./Keys.js";
 import * as Config from "./Config.js";
 import * as CamlinternalLazy from "rescript/lib/es6/camlinternalLazy.js";
 
-var canvasAndContext = {
+var lazyCanvasData = {
   LAZY_DONE: false,
   VAL: (function () {
       var el = document.getElementById(Config.canvasId);
@@ -37,28 +37,28 @@ var canvasAndContext = {
     })
 };
 
-function getCanvasAndContext(param) {
-  return CamlinternalLazy.force(canvasAndContext);
+function getCanvasData(param) {
+  return CamlinternalLazy.force(lazyCanvasData);
 }
 
 function getCanvas(param) {
-  return CamlinternalLazy.force(canvasAndContext).canvasElement;
+  return CamlinternalLazy.force(lazyCanvasData).canvasElement;
 }
 
 function getContext(param) {
-  return CamlinternalLazy.force(canvasAndContext).context;
+  return CamlinternalLazy.force(lazyCanvasData).context;
 }
 
-function getCanvasSizeScaled(param) {
-  return CamlinternalLazy.force(canvasAndContext).sizeScaled;
+function getSizeScaled(param) {
+  return CamlinternalLazy.force(lazyCanvasData).sizeScaled;
 }
 
 export {
-  canvasAndContext ,
-  getCanvasAndContext ,
+  lazyCanvasData ,
+  getCanvasData ,
   getCanvas ,
   getContext ,
-  getCanvasSizeScaled ,
+  getSizeScaled ,
   
 }
 /* No side effect */

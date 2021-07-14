@@ -55,13 +55,6 @@ function enemyDensity(level) {
   }
 }
 
-var images = [
-  "blocks.png",
-  "items.png",
-  "enemies.png",
-  "mario-small.png"
-];
-
 function blockw(level) {
   return levelWidth(level) / 16;
 }
@@ -80,10 +73,6 @@ function mapDim(level) {
 var canvasId = "canvas";
 
 var delayWhenFinished = 5000;
-
-var restartAfter = 5;
-
-var spritesDir = "sprites/";
 
 var scale = 1.5;
 
@@ -110,12 +99,9 @@ export {
   enemyDensity ,
   canvasId ,
   delayWhenFinished ,
-  images ,
   blockw ,
   blockh ,
   mapDim ,
-  restartAfter ,
-  spritesDir ,
   scale ,
   friction ,
   gravity ,
