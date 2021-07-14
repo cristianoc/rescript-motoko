@@ -1,5 +1,7 @@
 open Belt
 
+type loadOrSave = LoadState | SaveState
+
 /* Represents the values of relevant key bindings. */
 type keys = {
   mutable bbox: bool,
@@ -8,6 +10,7 @@ type keys = {
   mutable left1: bool,
   mutable left2: bool,
   mutable paused: bool,
+  mutable pendingStateOperations: option<loadOrSave>,
   mutable right1: bool,
   mutable right2: bool,
   mutable twoPlayers: bool,
@@ -23,15 +26,13 @@ let pressedKeys = {
   left1: false,
   left2: false,
   paused: false,
+  pendingStateOperations: None,
   right1: false,
   right2: false,
   twoPlayers: false,
   up1: false,
   up2: false,
 }
-
-let doSave = ref(() => Promise.resolve())
-let doLoad = ref(() => Promise.resolve())
 
 /* Keydown event handler translates a key press */
 let keydown = evt => {
@@ -45,22 +46,8 @@ let keydown = evt => {
   | 65 /* KeyA */ => pressedKeys.left2 = true
   | 40 => pressedKeys.down1 = true
   | 88 /* KeyX */ => pressedKeys.down2 = true
-  | 83 /* KeyS */ =>
-    Js.log("saving...")
-    pressedKeys.paused = false
-    doSave.contents()
-    ->Promise.thenResolve(() => {
-      Js.log("saved")
-    })
-    ->ignore
-  | 76 /* KeyL */ =>
-    Js.log("loading...")
-    doLoad.contents()
-    ->Promise.thenResolve(() => {
-      Js.log("loaded")
-      pressedKeys.paused = false
-    })
-    ->ignore
+  | 83 /* KeyS */ => pressedKeys.pendingStateOperations = SaveState->Some
+  | 76 /* KeyL */ => pressedKeys.pendingStateOperations = LoadState->Some
   | 66 /* KeyB */ => pressedKeys.bbox = !pressedKeys.bbox
   | 80 /* KeyP */ => pressedKeys.paused = !pressedKeys.paused
   | 50 /* Digit2 */ => pressedKeys.twoPlayers = !pressedKeys.twoPlayers
