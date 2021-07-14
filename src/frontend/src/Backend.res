@@ -14,8 +14,3 @@ let rec printTree = (t: Candid.Tree.t) => {
   | Node(t1, t2) => "(" ++ printTree(t1) ++ ", " ++ printTree(t2) ++ ")"
   }
 }
-
-let current = ref("hello")
-let onTick = () => {
-  service.get()->Promise.thenResolve(t => current := t->printTree)->ignore
-}
