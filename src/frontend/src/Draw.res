@@ -73,6 +73,14 @@ let fps = fps_val => {
   Load.getContext().fillText(. fps_str, 165., 18.)
 }
 
+let loading = () => {
+  Load.getContext().fillText(. "Loading...", 142., 90.)
+}
+
+let saving = () => {
+  Load.getContext().fillText(. "Saving...", 142., 90.)
+}
+
 let paused = () => {
   Load.getContext().fillText(. "Paused", 142., 90.)
 }

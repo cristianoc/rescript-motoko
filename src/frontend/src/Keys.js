@@ -160,10 +160,6 @@ function checkBboxEnabled(param) {
   return pressedKeys.bbox;
 }
 
-function checkPaused(param) {
-  return pressedKeys.paused;
-}
-
 function checkTwoPlayers(param) {
   return pressedKeys.twoPlayers;
 }
@@ -240,7 +236,6 @@ export {
   keydown ,
   keyup ,
   checkBboxEnabled ,
-  checkPaused ,
   checkTwoPlayers ,
   translateKeys ,
   

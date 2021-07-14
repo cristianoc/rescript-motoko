@@ -69,6 +69,14 @@ function fps(fps_val) {
   return Load.getContext(undefined).fillText(fps_str, 165, 18);
 }
 
+function loading(param) {
+  return Load.getContext(undefined).fillText("Loading...", 142, 90);
+}
+
+function saving(param) {
+  return Load.getContext(undefined).fillText("Saving...", 142, 90);
+}
+
 function paused(param) {
   return Load.getContext(undefined).fillText("Paused", 142, 90);
 }
@@ -173,6 +181,8 @@ export {
   scoreString ,
   scoreAndCoins ,
   fps ,
+  loading ,
+  saving ,
   paused ,
   blackScreen ,
   levelFinished ,

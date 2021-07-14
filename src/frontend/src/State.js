@@ -22,7 +22,7 @@ function $$new(level) {
           player1: player1,
           player2: player2,
           score: 0,
-          status: /* Playing */0,
+          status: /* Playing */2,
           viewport: viewport
         };
 }

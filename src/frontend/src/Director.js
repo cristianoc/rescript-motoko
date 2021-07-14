@@ -492,42 +492,93 @@ function updateParticle(part) {
 
 function updateLoop(_param) {
   while(true) {
-    var match = State.current.contents.status;
-    if (Keys.pressedKeys.pendingStateOperations !== undefined) {
-      var match$1 = Keys.pressedKeys.pendingStateOperations;
-      if (match$1 !== undefined) {
-        if (match$1) {
-          Keys.pressedKeys.pendingStateOperations = undefined;
-          console.log("saving...");
-          State.save(undefined).then(function (param) {
-                console.log("saved");
-                
-              });
-        } else {
-          Keys.pressedKeys.pendingStateOperations = undefined;
-          console.log("loading...");
-          State.load(undefined).then(function (param) {
-                console.log("loaded");
-                
-              });
-        }
+    var match = Keys.pressedKeys.pendingStateOperations;
+    if (match !== undefined) {
+      if (match) {
+        Keys.pressedKeys.pendingStateOperations = undefined;
+        console.log("saving...");
+        State.current.contents.status = /* Saving */3;
+        State.save(undefined).then(function (param) {
+              console.log("saved");
+              State.current.contents.status = /* Paused */1;
+              
+            });
+      } else {
+        Keys.pressedKeys.pendingStateOperations = undefined;
+        console.log("loading...");
+        State.current.contents.status = /* Loading */0;
+        State.load(undefined).then(function (param) {
+              console.log("loaded");
+              State.current.contents.status = /* Playing */2;
+              
+            });
       }
-      requestAnimationFrame(function (param) {
-            return updateLoop(undefined);
-          });
-      return ;
+    } else if (Keys.pressedKeys.paused) {
+      State.current.contents.status = /* Paused */1;
+    } else if (State.current.contents.status === /* Paused */1) {
+      State.current.contents.status = /* Playing */2;
     }
-    if (Keys.checkPaused(undefined)) {
-      Draw.drawState(State.current.contents, 0);
-      Draw.paused(undefined);
-      requestAnimationFrame(function (param) {
-            return updateLoop(undefined);
-          });
-      return ;
-    }
-    if (match) {
-      var levelResult = match.levelResult;
-      var timeToStart = (match.restartTime - performance.now()) / 1000;
+    var match$1 = State.current.contents.status;
+    if (typeof match$1 === "number") {
+      switch (match$1) {
+        case /* Loading */0 :
+            Draw.drawState(State.current.contents, 0);
+            Draw.loading(undefined);
+            requestAnimationFrame(function (param) {
+                  return updateLoop(undefined);
+                });
+            return ;
+        case /* Paused */1 :
+            Draw.drawState(State.current.contents, 0);
+            Draw.paused(undefined);
+            requestAnimationFrame(function (param) {
+                  return updateLoop(undefined);
+                });
+            return ;
+        case /* Playing */2 :
+            var fps = calcFps(undefined);
+            var oldObjects = State.current.contents.objects;
+            State.current.contents.objects = /* [] */0;
+            State.current.contents.particles = Belt_List.keep(State.current.contents.particles, updateParticle);
+            updateObject(Keys.checkTwoPlayers(undefined) ? ({
+                      hd: State.current.contents.player2,
+                      tl: oldObjects
+                    }) : oldObjects, State.current.contents.player1, State.current.contents);
+            if (Keys.checkTwoPlayers(undefined)) {
+              updateObject({
+                    hd: State.current.contents.player1,
+                    tl: oldObjects
+                  }, State.current.contents.player2, State.current.contents);
+            }
+            if (State.current.contents.player1.kill) {
+              State.current.contents.status = /* Finished */{
+                levelResult: /* Lost */1,
+                restartTime: Config.delayWhenFinished + performance.now()
+              };
+            }
+            Viewport.update(State.current.contents.viewport, State.current.contents.player1.px, State.current.contents.player1.py);
+            Belt_List.forEach(oldObjects, (function(oldObjects){
+                return function (obj) {
+                  return updateObject(oldObjects, obj, State.current.contents);
+                }
+                }(oldObjects)));
+            Draw.drawState(State.current.contents, fps);
+            requestAnimationFrame(function (param) {
+                  return updateLoop(undefined);
+                });
+            return ;
+        case /* Saving */3 :
+            Draw.drawState(State.current.contents, 0);
+            Draw.saving(undefined);
+            requestAnimationFrame(function (param) {
+                  return updateLoop(undefined);
+                });
+            return ;
+        
+      }
+    } else {
+      var levelResult = match$1.levelResult;
+      var timeToStart = (match$1.restartTime - performance.now()) / 1000;
       if (timeToStart > 0.9) {
         Draw.levelFinished(levelResult, String(State.current.contents.level), String(timeToStart | 0));
         requestAnimationFrame(function (param) {
@@ -540,37 +591,6 @@ function updateLoop(_param) {
       _param = undefined;
       continue ;
     }
-    var fps = calcFps(undefined);
-    var oldObjects = State.current.contents.objects;
-    State.current.contents.objects = /* [] */0;
-    State.current.contents.particles = Belt_List.keep(State.current.contents.particles, updateParticle);
-    updateObject(Keys.checkTwoPlayers(undefined) ? ({
-              hd: State.current.contents.player2,
-              tl: oldObjects
-            }) : oldObjects, State.current.contents.player1, State.current.contents);
-    if (Keys.checkTwoPlayers(undefined)) {
-      updateObject({
-            hd: State.current.contents.player1,
-            tl: oldObjects
-          }, State.current.contents.player2, State.current.contents);
-    }
-    if (State.current.contents.player1.kill) {
-      State.current.contents.status = /* Finished */{
-        levelResult: /* Lost */1,
-        restartTime: Config.delayWhenFinished + performance.now()
-      };
-    }
-    Viewport.update(State.current.contents.viewport, State.current.contents.player1.px, State.current.contents.player1.py);
-    Belt_List.forEach(oldObjects, (function(oldObjects){
-        return function (obj) {
-          return updateObject(oldObjects, obj, State.current.contents);
-        }
-        }(oldObjects)));
-    Draw.drawState(State.current.contents, fps);
-    requestAnimationFrame(function (param) {
-          return updateLoop(undefined);
-        });
-    return ;
   };
 }
 
