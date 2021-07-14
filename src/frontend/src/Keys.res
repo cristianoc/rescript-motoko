@@ -76,8 +76,6 @@ let keyup = evt => {
 // Returns whether the bounding box should be drawn
 let checkBboxEnabled = () => pressedKeys.bbox
 
-let checkPaused = () => pressedKeys.paused
-
 let checkTwoPlayers = () => pressedKeys.twoPlayers
 
 /* Converts a keypress to a list of control keys, allowing more than one key

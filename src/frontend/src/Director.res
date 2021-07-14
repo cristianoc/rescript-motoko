@@ -330,30 +330,47 @@ let updateParticle = part => {
 // updateLoop is constantly being called to check for collisions and to
 // update each of the objects in the game.
 let rec updateLoop = () => {
-  switch State.current.contents.status {
-  | _ if Keys.pressedKeys.pendingStateOperations != None =>
-    switch Keys.pressedKeys.pendingStateOperations {
-    | Some(LoadState) =>
-      Keys.pressedKeys.pendingStateOperations = None
-      Js.log("loading...")
-      State.load()
-      ->Promise.thenResolve(() => {
-        Js.log("loaded")
-      })
-      ->ignore
-    | Some(SaveState) =>
-      Keys.pressedKeys.pendingStateOperations = None
-      Js.log("saving...")
-      State.save()
-      ->Promise.thenResolve(() => {
-        Js.log("saved")
-      })
-      ->ignore
-    | None => ()
+  switch Keys.pressedKeys.pendingStateOperations {
+  | Some(LoadState) =>
+    Keys.pressedKeys.pendingStateOperations = None
+    Js.log("loading...")
+    State.current.contents.status = Loading
+    State.load()
+    ->Promise.thenResolve(() => {
+      Js.log("loaded")
+      State.current.contents.status = Playing
+    })
+    ->ignore
+  | Some(SaveState) =>
+    Keys.pressedKeys.pendingStateOperations = None
+    Js.log("saving...")
+    State.current.contents.status = Saving
+    State.save()
+    ->Promise.thenResolve(() => {
+      Js.log("saved")
+      State.current.contents.status = Paused
+    })
+    ->ignore
+  | None =>
+    if Keys.pressedKeys.paused {
+      State.current.contents.status = Paused
+    } else if State.current.contents.status == Paused {
+      State.current.contents.status = Playing
     }
+  }
+
+  switch State.current.contents.status {
+  | Loading =>
+    State.current.contents->Draw.drawState(~fps=0.)
+    Draw.loading()
     Html.requestAnimationFrame(_ => updateLoop())
 
-  | _ if Keys.checkPaused() =>
+  | Saving =>
+    State.current.contents->Draw.drawState(~fps=0.)
+    Draw.saving()
+    Html.requestAnimationFrame(_ => updateLoop())
+
+  | Paused =>
     State.current.contents->Draw.drawState(~fps=0.)
     Draw.paused()
     Html.requestAnimationFrame(_ => updateLoop())
