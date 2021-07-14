@@ -26,8 +26,9 @@ let trimEdge = (x, y, ~level) => {
   !(x < 128. || (pixx -. x < 528. || (y == 0. || pixy -. y < 48.)))
 }
 
-let convertCoinToObj = ((_, x, y)) => {
+let convertCoinToObj = ((_, x, y), ~level) => {
   let obj = Object.make(
+    ~level,
     ~hasGravity=false,
     ~objTyp=Item(Coin),
     ~spriteParams=Sprite.makeParams(Coin),
@@ -40,12 +41,13 @@ let convertCoinToObj = ((_, x, y)) => {
 let addCoins = (objects, x, y0, ~level) => {
   let y = y0 -. 16.
   if Random.bool() && (trimEdge(x, y, ~level) && !(objects.contents->memPos(x, y))) {
-    objects := list{(QBlock(Coin), x, y)->convertCoinToObj, ...objects.contents}
+    objects := list{(QBlock(Coin), x, y)->convertCoinToObj(~level), ...objects.contents}
   }
 }
 
-let convertEnemyToObj = ((enemyTyp, x, y)) => {
+let convertEnemyToObj = ((enemyTyp, x, y), ~level) => {
   let obj = Object.make(
+    ~level,
     ~objTyp=Enemy(enemyTyp),
     ~spriteParams=Sprite.enemyParams(enemyTyp, Left),
     x,
@@ -65,7 +67,7 @@ let randomEnemyTyp = () =>
 let addEnemyOnBlock = (objects, x, y, ~level) => {
   let placeEnemy = Random.int(Config.enemyDensity(~level))
   if placeEnemy == 0 && !(objects.contents->memPos(x, y -. 16.)) {
-    objects := list{(randomEnemyTyp(), x, y -. 16.)->convertEnemyToObj, ...objects.contents}
+    objects := list{(randomEnemyTyp(), x, y -. 16.)->convertEnemyToObj(~level), ...objects.contents}
   }
 }
 
@@ -73,7 +75,13 @@ let addBlock = (objects, blockTyp, xBlock, yBlock, ~level) => {
   let x = xBlock *. 16.
   let y = yBlock *. 16.
   if !(objects.contents->memPos(x, y)) && trimEdge(x, y, ~level) {
-    let obj = Object.make(~objTyp=Block(blockTyp), ~spriteParams=Sprite.blockParams(blockTyp), x, y)
+    let obj = Object.make(
+      ~level,
+      ~objTyp=Block(blockTyp),
+      ~spriteParams=Sprite.blockParams(blockTyp),
+      x,
+      y,
+    )
     objects := list{obj, ...objects.contents}
     objects->addCoins(x, y, ~level)
     objects->addEnemyOnBlock(x, y, ~level)
@@ -197,7 +205,10 @@ let rec generateEnemiesOnGround = (objects, cbx: float, cby: float, ~level) =>
     generateEnemiesOnGround(objects, cbx, cby +. 1., ~level)
   } else {
     objects :=
-      list{(randomEnemyTyp(), cbx *. 16., cby *. 16.)->convertEnemyToObj, ...objects.contents}
+      list{
+        (randomEnemyTyp(), cbx *. 16., cby *. 16.)->convertEnemyToObj(~level),
+        ...objects.contents,
+      }
     generateEnemiesOnGround(objects, cbx, cby +. 1., ~level)
   }
 
@@ -220,6 +231,7 @@ let rec generateBlocks = (objects, cbx: float, cby: float, ~level) =>
 // collision with player.
 let generatePanel = (~level): Object.t => {
   let obj = Object.make(
+    ~level,
     ~objTyp=Block(Panel),
     ~spriteParams=Sprite.blockParams(Panel),
     Config.blockw(~level) *. 16. -. 256.,
@@ -245,7 +257,7 @@ let rec generateGround = (objects, inc: float, ~level) =>
     } else {
       objects :=
         list{
-          (Ground, inc *. 16., Config.blockh(~level) *. 16.)->convertBlockToObj,
+          (Ground, inc *. 16., Config.blockh(~level) *. 16.)->convertBlockToObj(~level),
           ...objects.contents,
         }
       generateGround(objects, inc +. 1., ~level)
@@ -253,7 +265,7 @@ let rec generateGround = (objects, inc: float, ~level) =>
   } else {
     objects :=
       list{
-        (Ground, inc *. 16., Config.blockh(~level) *. 16.)->convertBlockToObj,
+        (Ground, inc *. 16., Config.blockh(~level) *. 16.)->convertBlockToObj(~level),
         ...objects.contents,
       }
     generateGround(objects, inc +. 1., ~level)

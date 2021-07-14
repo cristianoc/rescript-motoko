@@ -7,8 +7,8 @@ import * as Viewport from "./Viewport.js";
 import * as Generator from "./Generator.js";
 
 function $$new(level) {
-  var player1 = Generator.newPlayer(/* One */0);
-  var player2 = Generator.newPlayer(/* Two */1);
+  var player1 = Generator.newPlayer(/* One */0)(level);
+  var player2 = Generator.newPlayer(/* Two */1)(level);
   var viewport = Viewport.make(level);
   Viewport.update(viewport, player1.px, player1.py);
   var objects = Generator.generate(level);

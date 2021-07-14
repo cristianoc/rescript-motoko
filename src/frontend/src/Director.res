@@ -22,13 +22,13 @@ let calcFps = {
 // This causes the player to either kill the enemy or move the enemy, in the
 // case that the enemy is a shell. Invulnerability, jumping, and grounded
 // are used for fine tuning the movements.
-let playerAttackEnemy = (o1, enemyTyp: Actors.enemyTyp, s2, o2, state: State.t) => {
+let playerAttackEnemy = (. o1, enemyTyp: Actors.enemyTyp, s2, o2, state: State.t) => {
   o1.Object.invuln = 10
   o1.jumping = false
   o1.grounded = true
   switch enemyTyp {
   | GKoopaShell | RKoopaShell =>
-    let r2 = Object.evolveEnemy(o1.dir, enemyTyp, s2, o2)
+    let r2 = Object.evolveEnemy(. o1.dir, enemyTyp, s2, o2, state.level)
     o1.vy = -.Config.dampenJump
     o1.py = o1.py -. 5.
     (None, r2)
@@ -38,25 +38,25 @@ let playerAttackEnemy = (o1, enemyTyp: Actors.enemyTyp, s2, o2, state: State.t) 
     if state.multiplier == 8 {
       state->State.updateScore(800)
       o2.score = 800
-      (None, Object.evolveEnemy(o1.dir, enemyTyp, s2, o2))
+      (None, Object.evolveEnemy(. o1.dir, enemyTyp, s2, o2, state.level))
     } else {
       let score = 100 * state.multiplier
       state->State.updateScore(score)
       o2.score = score
       state.multiplier = state.multiplier * 2
-      (None, Object.evolveEnemy(o1.dir, enemyTyp, s2, o2))
+      (None, Object.evolveEnemy(. o1.dir, enemyTyp, s2, o2, state.level))
     }
   }
 }
 
 // enemyAttackPlayer is used when an enemy kills a player.
-let enemyAttackPlayer = (enemy: Object.t, player: Object.t) => {
+let enemyAttackPlayer = (. enemy: Object.t, player: Object.t, level) => {
   switch enemy.objTyp {
   | Enemy((GKoopaShell | RKoopaShell) as enemyTyp) if enemy.vx == 0. =>
     // This only works if the player does not go faster than the shell
     // Otherwise it can try to overtake and touch it when it has non-zero velocity
     let r2 = {
-      Object.evolveEnemy(player.dir, enemyTyp, enemy.sprite, enemy)
+      Object.evolveEnemy(. player.dir, enemyTyp, enemy.sprite, enemy, level)
     }
     (None, r2)
   | _ =>
@@ -117,16 +117,16 @@ let collEnemyEnemy = (
 // a new item spawned as a result of the first object. None indicates that
 // no new item should be spawned. Transformations to existing objects occur
 // mutably, as many changes are side-effectual.
-let processCollision = (dir: Actors.dir2d, obj: Object.t, collid: Object.t, state: State.t) =>
+let processCollision = (. dir: Actors.dir2d, obj: Object.t, collid: Object.t, state: State.t) =>
   switch (obj, collid, dir) {
   | ({objTyp: Player(_)}, {objTyp: Player(_)}, East | West) =>
     collid.vx = collid.vx +. obj.vx
     (None, None)
   | ({objTyp: Player(_)}, {objTyp: Enemy(typ), sprite: s2}, South)
   | ({objTyp: Enemy(typ), sprite: s2}, {objTyp: Player(_)}, North) =>
-    playerAttackEnemy(obj, typ, s2, collid, state)
-  | ({objTyp: Player(_)}, {objTyp: Enemy(_)}, _) => enemyAttackPlayer(collid, obj)
-  | ({objTyp: Enemy(_)}, {objTyp: Player(_)}, _) => enemyAttackPlayer(obj, collid)
+    playerAttackEnemy(. obj, typ, s2, collid, state)
+  | ({objTyp: Player(_)}, {objTyp: Enemy(_)}, _) => enemyAttackPlayer(. collid, obj, state.level)
+  | ({objTyp: Enemy(_)}, {objTyp: Player(_)}, _) => enemyAttackPlayer(. obj, collid, state.level)
   | ({objTyp: Player(_)}, {objTyp: Item(t2)}, _) | ({objTyp: Item(t2)}, {objTyp: Player(_)}, _) =>
     switch t2 {
     | Mushroom =>
@@ -157,8 +157,8 @@ let processCollision = (dir: Actors.dir2d, obj: Object.t, collid: Object.t, stat
       Object.reverseLeftRight(obj)
       (None, None)
     | (RKoopaShell, QBlock(typ)) | (GKoopaShell, QBlock(typ)) =>
-      let updatedBlock = Object.evolveBlock(collid)
-      let spawnedItem = Object.spawnAbove(obj.dir, collid, typ)
+      let updatedBlock = Object.evolveBlock(. collid, state.level)
+      let spawnedItem = Object.spawnAbove(. obj.dir, collid, typ, state.level)
       Object.revDir(obj, t1, s1)
       (Some(updatedBlock), Some(spawnedItem))
     | (_, _) =>
@@ -174,8 +174,8 @@ let processCollision = (dir: Actors.dir2d, obj: Object.t, collid: Object.t, stat
   | ({objTyp: Player(t1, _)}, {objTyp: Block(t)}, North) =>
     switch t {
     | QBlock(typ) =>
-      let updatedBlock = Object.evolveBlock(collid)
-      let spawnedItem = Object.spawnAbove(obj.dir, collid, typ)
+      let updatedBlock = Object.evolveBlock(. collid, state.level)
+      let spawnedItem = Object.spawnAbove(. obj.dir, collid, typ, state.level)
       Object.collideBlock(dir, obj)
       (Some(spawnedItem), Some(updatedBlock))
     | Brick =>
@@ -238,7 +238,7 @@ let narrowPhase = (obj, ~state, ~visibleCollids) => {
       let newObjs = if !Object.sameId(obj, collid) {
         switch Object.checkCollision(obj, collid) {
         | None => (None, None)
-        | Some(dir) => processCollision(dir, obj, collid, state)
+        | Some(dir) => processCollision(. dir, obj, collid, state)
         }
       } else {
         (None, None)
@@ -264,7 +264,7 @@ let narrowPhase = (obj, ~state, ~visibleCollids) => {
 // is a collision, and process the collision.
 // This method returns a list of objects that are created, which should be
 // added to the list of objects for the next iteration.
-let checkCollisions = (obj, state: State.t, ~allCollids) =>
+let checkCollisions = (obj, ~state: State.t, ~allCollids) =>
   switch obj.Object.objTyp {
   | Block(_) => list{}
   | _ =>
@@ -274,7 +274,7 @@ let checkCollisions = (obj, state: State.t, ~allCollids) =>
 
 // primary update method for objects,
 // checking the collision, updating the object, and drawing to the canvas
-let findObjectsColliding = (~allCollids, obj: Object.t, ~state: State.t) => {
+let findObjectsColliding = (obj: Object.t, ~allCollids, ~state: State.t) => {
   /* TODO: optimize. Draw static elements only once */
   let sprite = obj.sprite
   obj.invuln = if obj.invuln > 0 {
@@ -286,7 +286,7 @@ let findObjectsColliding = (~allCollids, obj: Object.t, ~state: State.t) => {
     obj.grounded = false
     obj->Object.processObj(~level=state.level)
     // Run collision detection if moving object
-    let objectsColliding = obj->checkCollisions(state, ~allCollids)
+    let objectsColliding = obj->checkCollisions(~state, ~allCollids)
     if obj.vx != 0. || !Object.isEnemy(obj) {
       Sprite.updateAnimation(sprite)
     }

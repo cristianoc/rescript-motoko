@@ -5,6 +5,26 @@ function randomSeed(param) {
   return 34;
 }
 
+function levelSpeed(level) {
+  switch (level) {
+    case 1 :
+    case 2 :
+    case 3 :
+        return 1;
+    case 4 :
+    case 5 :
+    case 6 :
+        return 1.5;
+    case 7 :
+    case 8 :
+        return 2.0;
+    case 9 :
+        return 2.5;
+    default:
+      return 3.0;
+  }
+}
+
 function levelWidth(level) {
   switch (level) {
     case 1 :
@@ -94,6 +114,7 @@ var invuln = 60;
 
 export {
   randomSeed ,
+  levelSpeed ,
   levelWidth ,
   levelHeight ,
   enemyDensity ,
