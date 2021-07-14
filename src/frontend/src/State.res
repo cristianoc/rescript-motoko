@@ -26,7 +26,7 @@ type t = {
   viewport: Viewport.t,
 }
 
-let new = (~level) => {
+let new = (~level, ~score) => {
   let player1 = One->Generator.newPlayer(~level)
   let player2 = Two->Generator.newPlayer(~level)
   let viewport = Viewport.make(~level)
@@ -41,7 +41,7 @@ let new = (~level) => {
     particles: list{},
     player1: player1,
     player2: player2,
-    score: 0,
+    score: score,
     status: Playing,
     viewport: viewport,
   }
@@ -50,7 +50,7 @@ let new = (~level) => {
 // Add [i] to the score in [state]
 let updateScore = (state, i) => state.score = state.score + i
 
-let current = ref(new(~level=1))
+let current = ref(new(~level=1, ~score=0))
 
 let load = () => {
   Backend.service.loadGameState()->Promise.then(json => {

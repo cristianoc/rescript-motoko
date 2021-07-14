@@ -387,7 +387,8 @@ let rec updateLoop = () => {
     } else {
       let level =
         levelResult == Won ? State.current.contents.level + 1 : State.current.contents.level
-      State.current := State.new(~level)
+      let score = levelResult == Won ? State.current.contents.score : 0
+      State.current := State.new(~level, ~score)
       updateLoop()
     }
 

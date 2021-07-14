@@ -6,7 +6,7 @@ import * as Backend from "./Backend.js";
 import * as Viewport from "./Viewport.js";
 import * as Generator from "./Generator.js";
 
-function $$new(level) {
+function $$new(level, score) {
   var player1 = Generator.newPlayer(/* One */0)(level);
   var player2 = Generator.newPlayer(/* Two */1)(level);
   var viewport = Viewport.make(level);
@@ -21,7 +21,7 @@ function $$new(level) {
           particles: /* [] */0,
           player1: player1,
           player2: player2,
-          score: 0,
+          score: score,
           status: /* Playing */2,
           viewport: viewport
         };
@@ -33,7 +33,7 @@ function updateScore(state, i) {
 }
 
 var current = {
-  contents: $$new(1)
+  contents: $$new(1, 0)
 };
 
 function load(param) {
