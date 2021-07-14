@@ -500,7 +500,7 @@ function updateLoop(_param) {
         State.current.contents.status = /* Saving */3;
         State.save(undefined).then(function (param) {
               console.log("saved");
-              State.current.contents.status = /* Paused */1;
+              State.current.contents.status = /* Playing */2;
               
             });
       } else {
