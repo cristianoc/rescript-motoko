@@ -603,7 +603,8 @@ function updateLoop(_param) {
         return ;
       }
       var level = levelResult === /* Won */0 ? State.current.contents.level + 1 | 0 : State.current.contents.level;
-      State.current.contents = State.$$new(level);
+      var score = levelResult === /* Won */0 ? State.current.contents.score : 0;
+      State.current.contents = State.$$new(level, score);
       _param = undefined;
       continue ;
     }
