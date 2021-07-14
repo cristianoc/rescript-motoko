@@ -27,8 +27,8 @@ type t = {
 }
 
 let new = (~level) => {
-  let player1 = One->Generator.newPlayer
-  let player2 = Two->Generator.newPlayer
+  let player1 = One->Generator.newPlayer(~level)
+  let player2 = Two->Generator.newPlayer(~level)
   let viewport = Viewport.make(~level)
   viewport->Viewport.update(player1.px, player1.py)
   let objects = Generator.generate(~level)

@@ -1,5 +1,20 @@
 let randomSeed = (~level as _) => 34
 
+let levelSpeed = (~level) =>
+  switch level {
+  | 1 => 1.
+  | 2 => 1.
+  | 3 => 1.
+  | 4 => 1.5
+  | 5 => 1.5
+  | 6 => 1.5
+  | 7 => 2.0
+  | 8 => 2.0
+  | 9 => 2.5
+  | _ => 3.0
+  }
+
+
 let levelWidth = (~level) =>
   switch level {
   | 1 => 800.

@@ -35,10 +35,11 @@ function makeItem(o, t) {
   
 }
 
-function makeEnemy(o, t) {
+function makeEnemy(o, t, level) {
   if (t >= 3) {
     o.speed = 3;
-    return ;
+  } else {
+    o.speed = Config.levelSpeed(level);
   }
   
 }
@@ -53,7 +54,7 @@ function newId(param) {
   return idCounter.contents;
 }
 
-function make(hasGravityOpt, speedOpt, dirOpt, objTyp, spriteParams, px, py) {
+function make(hasGravityOpt, speedOpt, dirOpt, level, objTyp, spriteParams, px, py) {
   var hasGravity = hasGravityOpt !== undefined ? hasGravityOpt : true;
   var speed = speedOpt !== undefined ? speedOpt : 1.0;
   var dir = dirOpt !== undefined ? dirOpt : /* Left */0;
@@ -81,7 +82,7 @@ function make(hasGravityOpt, speedOpt, dirOpt, objTyp, spriteParams, px, py) {
         newObj.speed = Config.playerSpeed;
         break;
     case /* Enemy */1 :
-        makeEnemy(newObj, objTyp._0);
+        makeEnemy(newObj, objTyp._0, level);
         break;
     case /* Item */2 :
         makeItem(newObj, objTyp._0);
@@ -268,20 +269,20 @@ function reverseLeftRight(obj) {
   
 }
 
-function evolveEnemy(player_dir, typ, spr, obj) {
+function evolveEnemy(player_dir, typ, spr, obj, level) {
   switch (typ) {
     case /* Goomba */0 :
         obj.kill = true;
         return ;
     case /* GKoopa */1 :
-        var newObj = make(undefined, 3, obj.dir, {
+        var newObj = make(undefined, 3, obj.dir, level, {
               TAG: /* Enemy */1,
               _0: /* GKoopaShell */3
             }, Sprite.enemyParams(/* GKoopaShell */3, obj.dir), obj.px, obj.py);
         normalizePos(newObj, spr.params, newObj.sprite.params);
         return newObj;
     case /* RKoopa */2 :
-        return make(undefined, 3, obj.dir, {
+        return make(undefined, 3, obj.dir, level, {
                     TAG: /* Enemy */1,
                     _0: /* RKoopaShell */4
                   }, Sprite.enemyParams(/* RKoopaShell */4, obj.dir), obj.px, obj.py);
@@ -319,16 +320,16 @@ function decHealth(obj) {
   
 }
 
-function evolveBlock(obj) {
+function evolveBlock(obj, level) {
   decHealth(obj);
-  return make(false, undefined, obj.dir, {
+  return make(false, undefined, obj.dir, level, {
               TAG: /* Block */3,
               _0: /* QBlockUsed */0
             }, Sprite.blockParams(/* QBlockUsed */0), obj.px, obj.py);
 }
 
-function spawnAbove(player_dir, obj, itemTyp) {
-  var item = make(itemTyp !== /* Coin */1, undefined, /* Left */0, {
+function spawnAbove(player_dir, obj, itemTyp, level) {
+  var item = make(itemTyp !== /* Coin */1, undefined, /* Left */0, level, {
         TAG: /* Item */2,
         _0: itemTyp
       }, Sprite.makeParams(itemTyp), obj.px, obj.py);

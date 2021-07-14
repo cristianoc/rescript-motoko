@@ -29,8 +29,8 @@ function trimEdge(x, y, level) {
   return !(x < 128 || pixx - x < 528 || y === 0 || pixy - y < 48);
 }
 
-function convertCoinToObj(param) {
-  return $$Object.make(false, undefined, undefined, {
+function convertCoinToObj(param, level) {
+  return $$Object.make(false, undefined, undefined, level, {
               TAG: /* Item */2,
               _0: /* Coin */1
             }, Sprite.makeParams(/* Coin */1), param[1], param[2]);
@@ -46,7 +46,7 @@ function addCoins(objects, x, y0, level) {
             },
             x,
             y
-          ]),
+          ], level),
       tl: objects.contents
     };
     return ;
@@ -54,9 +54,9 @@ function addCoins(objects, x, y0, level) {
   
 }
 
-function convertEnemyToObj(param) {
+function convertEnemyToObj(param, level) {
   var enemyTyp = param[0];
-  var obj = $$Object.make(undefined, undefined, undefined, {
+  var obj = $$Object.make(undefined, undefined, undefined, level, {
         TAG: /* Enemy */1,
         _0: enemyTyp
       }, Sprite.enemyParams(enemyTyp, /* Left */0), param[1], param[2]);
@@ -85,7 +85,7 @@ function addEnemyOnBlock(objects, x, y, level) {
             randomEnemyTyp(undefined),
             x,
             y - 16
-          ]),
+          ], level),
       tl: objects.contents
     };
     return ;
@@ -99,7 +99,7 @@ function addBlock(objects, blockTyp, xBlock, yBlock, level) {
   if (!(!memPos(objects.contents, x, y) && trimEdge(x, y, level))) {
     return ;
   }
-  var obj = $$Object.make(undefined, undefined, undefined, {
+  var obj = $$Object.make(undefined, undefined, undefined, level, {
         TAG: /* Block */3,
         _0: blockTyp
       }, Sprite.blockParams(blockTyp), x, y);
@@ -237,7 +237,7 @@ function generateEnemiesOnGround(objects, _cbx, _cby, level) {
             randomEnemyTyp(undefined),
             cbx * 16,
             cby * 16
-          ]),
+          ], level),
       tl: objects.contents
     };
     _cby = cby + 1;
@@ -272,18 +272,24 @@ function generateBlocks(objects, _cbx, _cby, level) {
 }
 
 function generatePanel(level) {
-  return $$Object.make(undefined, undefined, undefined, {
+  return $$Object.make(undefined, undefined, undefined, level, {
               TAG: /* Block */3,
               _0: /* Panel */4
             }, Sprite.blockParams(/* Panel */4), Config.blockw(level) * 16 - 256, Config.blockh(level) * 16 * 2 / 3);
 }
 
 function convertBlockToObj(param) {
+  var y = param[2];
+  var x = param[1];
   var blockTyp = param[0];
-  return $$Object.make(undefined, undefined, undefined, {
-              TAG: /* Block */3,
-              _0: blockTyp
-            }, Sprite.blockParams(blockTyp), param[1], param[2]);
+  var arg = {
+    TAG: /* Block */3,
+    _0: blockTyp
+  };
+  var arg$1 = Sprite.blockParams(blockTyp);
+  return function (param) {
+    return $$Object.make(undefined, undefined, undefined, param, arg, arg$1, x, y);
+  };
 }
 
 function generateGround(objects, _inc, level) {
@@ -300,10 +306,10 @@ function generateGround(objects, _inc, level) {
       }
       objects.contents = {
         hd: convertBlockToObj([
-              /* Ground */5,
-              inc * 16,
-              Config.blockh(level) * 16
-            ]),
+                /* Ground */5,
+                inc * 16,
+                Config.blockh(level) * 16
+              ])(level),
         tl: objects.contents
       };
       _inc = inc + 1;
@@ -311,10 +317,10 @@ function generateGround(objects, _inc, level) {
     }
     objects.contents = {
       hd: convertBlockToObj([
-            /* Ground */5,
-            inc * 16,
-            Config.blockh(level) * 16
-          ]),
+              /* Ground */5,
+              inc * 16,
+              Config.blockh(level) * 16
+            ])(level),
       tl: objects.contents
     };
     _inc = inc + 1;
@@ -337,11 +343,15 @@ function generateHelper(level) {
 }
 
 function newPlayer(playerNum) {
-  return $$Object.make(undefined, undefined, undefined, {
-              TAG: /* Player */0,
-              _0: /* SmallM */1,
-              _1: playerNum
-            }, Sprite.playerParams(/* SmallM */1, /* Standing */0, /* Left */0, playerNum), 100, 224);
+  var arg = {
+    TAG: /* Player */0,
+    _0: /* SmallM */1,
+    _1: playerNum
+  };
+  var arg$1 = Sprite.playerParams(/* SmallM */1, /* Standing */0, /* Left */0, playerNum);
+  return function (param) {
+    return $$Object.make(undefined, undefined, undefined, param, arg, arg$1, 100, 224);
+  };
 }
 
 function generate(level) {

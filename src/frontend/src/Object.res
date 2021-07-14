@@ -56,11 +56,12 @@ let makeItem = (o, t) =>
   | Coin => o.hasGravity = false
   }
 
-let makeEnemy = (o, t) =>
+let makeEnemy = (o, t, level) =>
   switch t {
-  | Goomba => ()
-  | GKoopa => ()
-  | RKoopa => ()
+  | Goomba
+  | GKoopa
+  | RKoopa =>
+    o.speed = Config.levelSpeed(~level)
   | GKoopaShell => o.speed = 3.
   | RKoopaShell => o.speed = 3.
   }
@@ -76,7 +77,7 @@ let newId = () => {
   idCounter.contents
 }
 
-let make = (~hasGravity=true, ~speed=1.0, ~dir=Left, ~objTyp, ~spriteParams, px, py) => {
+let make = (~hasGravity=true, ~speed=1.0, ~dir=Left, ~level, ~objTyp, ~spriteParams, px, py) => {
   let newObj = {
     objTyp: objTyp,
     sprite: spriteParams->Sprite.makeFromParams,
@@ -99,7 +100,7 @@ let make = (~hasGravity=true, ~speed=1.0, ~dir=Left, ~objTyp, ~spriteParams, px,
   switch objTyp {
   | Player(_) => newObj->makePlayer
   | Item(item) => newObj->makeItem(item)
-  | Enemy(t) => newObj->makeEnemy(t)
+  | Enemy(t) => newObj->makeEnemy(t, level)
   | Block(t) => newObj->makeBlock(t)
   }
   newObj
@@ -269,11 +270,12 @@ let reverseLeftRight = obj => {
 // Actually creates a new enemy and deletes the previous. The positions must be
 // normalized. This method is typically called when enemies are killed and a
 // new sprite must be used (i.e., koopa to koopa shell).
-let evolveEnemy = (player_dir, typ, spr: Sprite.t, obj) =>
+let evolveEnemy = (. player_dir, typ, spr: Sprite.t, obj, level) =>
   switch typ {
   | GKoopa =>
     let newObj = make(
       ~speed=3.,
+      ~level,
       ~dir=obj.dir,
       ~objTyp=Enemy(GKoopaShell),
       ~spriteParams=Sprite.enemyParams(GKoopaShell, obj.dir),
@@ -284,6 +286,7 @@ let evolveEnemy = (player_dir, typ, spr: Sprite.t, obj) =>
     Some(newObj)
   | RKoopa =>
     let newObj = make(
+      ~level,
       ~speed=3.,
       ~dir=obj.dir,
       ~objTyp=Enemy(RKoopaShell),
@@ -327,9 +330,10 @@ let decHealth = obj => {
 }
 
 // Used for deleting a block and replacing it with a used block
-let evolveBlock = obj => {
+let evolveBlock = (. obj, level) => {
   decHealth(obj)
   let newObj = make(
+    ~level,
     ~hasGravity=false,
     ~dir=obj.dir,
     ~objTyp=Block(QBlockUsed),
@@ -341,8 +345,9 @@ let evolveBlock = obj => {
 }
 
 // Used for spawning items above question mark blocks
-let spawnAbove = (player_dir, obj, itemTyp) => {
+let spawnAbove = (. player_dir, obj, itemTyp, level) => {
   let item = make(
+    ~level,
     ~hasGravity=itemTyp != Coin,
     ~dir=Left,
     ~objTyp=Item(itemTyp),
