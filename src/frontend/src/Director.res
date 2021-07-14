@@ -348,7 +348,7 @@ let rec updateLoop = () => {
     State.save()
     ->Promise.thenResolve(() => {
       Js.log("saved")
-      State.current.contents.status = Paused
+      State.current.contents.status = Playing
     })
     ->ignore
   | None =>
