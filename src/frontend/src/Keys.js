@@ -4,17 +4,17 @@ import * as Curry from "rescript/lib/es6/curry.js";
 import * as Belt_List from "rescript/lib/es6/belt_List.js";
 
 var pressedKeys = {
-  left1: false,
-  right1: false,
-  up1: false,
-  down1: false,
-  left2: false,
-  right2: false,
-  up2: false,
-  down2: false,
   bbox: false,
+  down1: false,
+  down2: false,
+  left1: false,
+  left2: false,
   paused: false,
-  twoPlayers: false
+  right1: false,
+  right2: false,
+  twoPlayers: false,
+  up1: false,
+  up2: false
 };
 
 var doSave = {

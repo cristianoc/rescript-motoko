@@ -2,32 +2,32 @@ open Belt
 
 /* Represents the values of relevant key bindings. */
 type keys = {
-  mutable left1: bool,
-  mutable right1: bool,
-  mutable up1: bool,
-  mutable down1: bool,
-  mutable left2: bool,
-  mutable right2: bool,
-  mutable up2: bool,
-  mutable down2: bool,
   mutable bbox: bool,
+  mutable down1: bool,
+  mutable down2: bool,
+  mutable left1: bool,
+  mutable left2: bool,
   mutable paused: bool,
+  mutable right1: bool,
+  mutable right2: bool,
   mutable twoPlayers: bool,
+  mutable up1: bool,
+  mutable up2: bool,
 }
 
 // pressedKeys instantiates the keys
 let pressedKeys = {
-  left1: false,
-  right1: false,
-  up1: false,
-  down1: false,
-  left2: false,
-  right2: false,
-  up2: false,
-  down2: false,
   bbox: false,
+  down1: false,
+  down2: false,
+  left1: false,
+  left2: false,
   paused: false,
+  right1: false,
+  right2: false,
   twoPlayers: false,
+  up1: false,
+  up2: false,
 }
 
 let doSave = ref(() => Promise.resolve())
