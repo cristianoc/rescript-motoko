@@ -1,40 +1,22 @@
 import Nat "mo:base/Nat";
+import Principal "mo:base/Principal";
+import StringHash "./StringHash";
 
 actor Main {
-  type Tree = {
-      #Leaf : (Nat);
-      #Node : (Tree, Tree)
-  };
-
-  let initialTree = #Node(#Leaf(1), #Node(#Leaf(2), #Leaf(3)));
-
-  stable var currTree : Tree = initialTree;
-  stable var counter : Nat = 0;
   stable var gameState : Text = "";
 
-  public query func loadGameState() : async Text { gameState };
+  stable var map : StringHash.StringHash<Text> = StringHash.StringHash<Text>(10);
 
-  public func saveGameState(s:Text) : async () { gameState := s };
+  public type PrincipalText = Text;
 
-  public query func get() : async Tree { currTree };
-
-  public func set(t:Tree) : async () { currTree := t };
-
-  public func reset() : async () { currTree := initialTree };
-
-  func reverse_(t:Tree) : Tree {
-    switch(t){
-    case (#Leaf(_)) { t };
-    case (#Node(t1,t2)) { #Node(reverse_(t2), reverse_(t1)) }
-    };
+  public query func loadGameState(p:PrincipalText) : async Text {
+    switch (StringHash.get(map, p)) {
+      case (?state) { state };
+      case null { "" };
+    }
   };
 
-  public func reverse() : async () {
-    currTree := reverse_(currTree)
-  };
-
-  public func extend() : async () {
-    counter := counter + 1;
-    currTree := #Node(#Leaf(counter),currTree);
+  public func saveGameState(p:PrincipalText, s:Text) : async () {
+    StringHash.put(map, p, s)
   };
 };

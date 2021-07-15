@@ -5,12 +5,3 @@ external canisterId: Agent.canisterId = "canisterId"
 external idlFactory: Agent.idlFactory<Candid.Actor.t> = "idlFactory"
 
 let actor = Agent.createActor(~idlFactory, ~canisterId)
-
-let service = actor->Candid.Service.fromActor
-
-let rec printTree = (t: Candid.Tree.t) => {
-  switch t {
-  | Leaf(n) => string_of_int(n)
-  | Node(t1, t2) => "(" ++ printTree(t1) ++ ", " ++ printTree(t2) ++ ")"
-  }
-}
