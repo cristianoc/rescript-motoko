@@ -1,54 +1,14 @@
-module Tree = {
-  type raw
-  type rec t = Leaf(int) | Node(t, t)
-
-  let rec fromCandid: raw => t = raw => {
-    let t = Obj.magic(raw)
-    t["Leaf"] !== Js.undefined
-      ? Leaf(t["Leaf"])
-      : {
-          let (x, y) = t["Node"]
-          Node(fromCandid(x), fromCandid(y))
-        }
-  }
-
-  let rec toCandid: t => raw = t =>
-    switch t {
-    | Leaf(n) => {"Leaf": n}->Obj.magic
-    | Node(x, y) => {"Node": (x->toCandid, y->toCandid)}->Obj.magic
-    }
+module Principal: {
+  type t
+  let dummy: t
+} = {
+  type t = string
+  let dummy = "dummy-principal"
 }
 
 module Actor = {
   type t = {
-    extend: (. unit) => Js.Promise.t<unit>,
-    get: (. unit) => Js.Promise.t<Tree.raw>,
-    loadGameState: (. unit) => Js.Promise.t<string>,
-    set: (. Tree.raw) => Js.Promise.t<unit>,
-    reverse: (. unit) => Js.Promise.t<unit>,
-    reset: (. unit) => Js.Promise.t<unit>,
-    saveGameState: (. string) => Js.Promise.t<unit>,
-  }
-}
-
-module Service = {
-  type t = {
-    extend: unit => Js.Promise.t<unit>,
-    loadGameState: unit => Js.Promise.t<string>,
-    get: unit => Js.Promise.t<Tree.t>,
-    set: Tree.t => Js.Promise.t<unit>,
-    reverse: unit => Js.Promise.t<unit>,
-    reset: unit => Js.Promise.t<unit>,
-    saveGameState: string => Js.Promise.t<unit>,
-  }
-
-  let fromActor = (actor: Actor.t): t => {
-    extend: () => actor.extend(.),
-    get: () => actor.get(.)->Promise.thenResolve(raw => raw->Tree.fromCandid),
-    loadGameState: () => actor.loadGameState(.),
-    set: t => actor.set(. t->Tree.toCandid),
-    reverse: () => actor.reverse(.),
-    reset: () => actor.reset(.),
-    saveGameState: s => actor.saveGameState(. s),
+    loadGameState: (. Principal.t) => Js.Promise.t<string>,
+    saveGameState: (. Principal.t, string) => Js.Promise.t<unit>,
   }
 }
