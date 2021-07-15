@@ -53,10 +53,16 @@ let updateScore = (state, i) => state.score = state.score + i
 let current = ref(new(~level=1, ~score=0))
 
 let load = () => {
-  Backend.service.loadGameState()->Promise.then(json => {
-    current := json->Js.Json.parseExn->Obj.magic
+  Backend.actor.loadGameState(. Candid.Principal.dummy)->Promise.then(json => {
+    if json != "" {
+      current := json->Js.Json.parseExn->Obj.magic
+    }
     Promise.resolve()
   })
 }
 
-let save = () => Backend.service.saveGameState(current.contents->Obj.magic->Js.Json.stringify)
+let save = () =>
+  Backend.actor.saveGameState(.
+    Candid.Principal.dummy,
+    current.contents->Obj.magic->Js.Json.stringify,
+  )
