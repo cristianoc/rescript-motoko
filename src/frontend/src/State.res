@@ -1,5 +1,6 @@
 type status =
   | Loading
+  | LoggingIn
   | Paused
   | Playing
   | Finished({levelResult: Actors.levelResult, restartTime: float})
@@ -52,8 +53,8 @@ let updateScore = (state, i) => state.score = state.score + i
 
 let current = ref(new(~level=1, ~score=0))
 
-let load = () => {
-  Backend.actor.loadGameState(. Candid.Principal.dummy)->Promise.then(json => {
+let load = (~principal) => {
+  Backend.actor.loadGameState(. principal)->Promise.then(json => {
     if json != "" {
       current := json->Js.Json.parseExn->Obj.magic
     }
@@ -61,8 +62,8 @@ let load = () => {
   })
 }
 
-let save = () =>
+let save = (~principal) =>
   Backend.actor.saveGameState(.
-    Candid.Principal.dummy,
+    principal,
     current.contents->Obj.magic->Js.Json.stringify,
   )

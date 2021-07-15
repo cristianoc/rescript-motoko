@@ -2,6 +2,7 @@
 
 import * as Draw from "./Draw.js";
 import * as Keys from "./Keys.js";
+import * as Curry from "rescript/lib/es6/curry.js";
 import * as State from "./State.js";
 import * as Config from "./Config.js";
 import * as $$Object from "./Object.js";
@@ -9,6 +10,7 @@ import * as Sprite from "./Sprite.js";
 import * as Particle from "./Particle.js";
 import * as Viewport from "./Viewport.js";
 import * as Belt_List from "rescript/lib/es6/belt_List.js";
+import * as AuthClient from "./AuthClient.js";
 import * as Pervasives from "rescript/lib/es6/pervasives.js";
 
 var lastTime = {
@@ -506,52 +508,94 @@ function updateParticle(part) {
   return !part.kill;
 }
 
+var auth = {
+  contents: /* LoggedOut */0
+};
+
 function updateLoop(_param) {
   while(true) {
+    var startLogin = function (onLogged) {
+      State.current.contents.status = /* LoggingIn */1;
+      AuthClient.authenticate((function (principal) {
+              auth.contents = /* LoggedIn */{
+                _0: principal
+              };
+              return Curry._1(onLogged, principal);
+            }), (function (error) {
+              console.log("error", AuthClient.$$Error.toString(error));
+              State.current.contents.status = /* Playing */3;
+              
+            }), 30);
+      
+    };
     var match = Keys.pressedKeys.pendingStateOperations;
     if (match !== undefined) {
+      Keys.pressedKeys.pendingStateOperations = undefined;
       if (match) {
-        Keys.pressedKeys.pendingStateOperations = undefined;
-        console.log("saving...");
-        State.current.contents.status = /* Saving */3;
-        State.save(undefined).then(function (param) {
-              console.log("saved");
-              State.current.contents.status = /* Playing */2;
-              
-            });
+        var doSave = function (principal) {
+          console.log("saving...");
+          State.current.contents.status = /* Saving */4;
+          State.save(principal).then(function (param) {
+                console.log("saved");
+                State.current.contents.status = /* Playing */3;
+                
+              });
+          
+        };
+        var principal = auth.contents;
+        if (principal) {
+          doSave(principal._0);
+        } else {
+          startLogin(doSave);
+        }
       } else {
-        Keys.pressedKeys.pendingStateOperations = undefined;
-        console.log("loading...");
-        State.current.contents.status = /* Loading */0;
-        State.load(undefined).then(function (param) {
-              console.log("loaded");
-              State.current.contents.status = /* Playing */2;
-              
-            });
+        var doLoad = function (principal) {
+          console.log("loading...");
+          State.current.contents.status = /* Loading */0;
+          State.load(principal).then(function (param) {
+                console.log("loaded");
+                State.current.contents.status = /* Playing */3;
+                
+              });
+          
+        };
+        var principal$1 = auth.contents;
+        if (principal$1) {
+          doLoad(principal$1._0);
+        } else {
+          startLogin(doLoad);
+        }
       }
     } else if (Keys.pressedKeys.paused) {
-      State.current.contents.status = /* Paused */1;
-    } else if (State.current.contents.status === /* Paused */1) {
-      State.current.contents.status = /* Playing */2;
+      State.current.contents.status = /* Paused */2;
+    } else if (State.current.contents.status === /* Paused */2) {
+      State.current.contents.status = /* Playing */3;
     }
     var match$1 = State.current.contents.status;
     if (typeof match$1 === "number") {
       switch (match$1) {
         case /* Loading */0 :
             Draw.drawState(State.current.contents, 0);
-            Draw.loading(undefined);
+            Draw.loggingIn(undefined);
             requestAnimationFrame(function (param) {
                   return updateLoop(undefined);
                 });
             return ;
-        case /* Paused */1 :
+        case /* LoggingIn */1 :
+            Draw.drawState(State.current.contents, 0);
+            Draw.loggingIn(undefined);
+            requestAnimationFrame(function (param) {
+                  return updateLoop(undefined);
+                });
+            return ;
+        case /* Paused */2 :
             Draw.drawState(State.current.contents, 0);
             Draw.paused(undefined);
             requestAnimationFrame(function (param) {
                   return updateLoop(undefined);
                 });
             return ;
-        case /* Playing */2 :
+        case /* Playing */3 :
             var fps = calcFps(undefined);
             var oldObjects = State.current.contents.objects;
             State.current.contents.objects = /* [] */0;
@@ -583,7 +627,7 @@ function updateLoop(_param) {
                   return updateLoop(undefined);
                 });
             return ;
-        case /* Saving */3 :
+        case /* Saving */4 :
             Draw.drawState(State.current.contents, 0);
             Draw.saving(undefined);
             requestAnimationFrame(function (param) {
@@ -624,6 +668,7 @@ export {
   findObjectsColliding ,
   updateObject ,
   updateParticle ,
+  auth ,
   updateLoop ,
   
 }
