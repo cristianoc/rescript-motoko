@@ -397,7 +397,7 @@ let rec updateLoop = () => {
 
   | Loading =>
     State.current.contents->Draw.drawState(~fps=0.)
-    Draw.loggingIn()
+    Draw.loading()
     Html.requestAnimationFrame(_ => updateLoop())
 
   | Saving =>

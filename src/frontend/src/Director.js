@@ -576,7 +576,7 @@ function updateLoop(_param) {
       switch (match$1) {
         case /* Loading */0 :
             Draw.drawState(State.current.contents, 0);
-            Draw.loggingIn(undefined);
+            Draw.loading(undefined);
             requestAnimationFrame(function (param) {
                   return updateLoop(undefined);
                 });
