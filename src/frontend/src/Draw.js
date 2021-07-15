@@ -69,8 +69,10 @@ function fps(fps_val) {
   return Load.getContext(undefined).fillText(fps_str, 165, 18);
 }
 
-function loggingIn(param) {
-  return Load.getContext(undefined).fillText("Logging in...", 122, 90);
+function loggingIn(loadOrSave) {
+  return Load.getContext(undefined).fillText("Logging in before " + (
+              loadOrSave ? "saving" : "loading"
+            ), 45, 90);
 }
 
 function loading(param) {

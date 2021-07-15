@@ -21,7 +21,7 @@ function $$new(level, score) {
           player1: player1,
           player2: player2,
           score: score,
-          status: /* Playing */3,
+          status: /* Playing */2,
           viewport: viewport
         };
 }

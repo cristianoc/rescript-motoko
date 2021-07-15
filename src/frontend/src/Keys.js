@@ -46,13 +46,13 @@ function keydown(evt) {
         pressedKeys.right2 = true;
         break;
     case 76 :
-        pressedKeys.pendingStateOperations = /* LoadState */0;
+        pressedKeys.pendingStateOperations = /* Load */0;
         break;
     case 80 :
         pressedKeys.paused = !pressedKeys.paused;
         break;
     case 83 :
-        pressedKeys.pendingStateOperations = /* SaveState */1;
+        pressedKeys.pendingStateOperations = /* Save */1;
         break;
     case 33 :
     case 34 :

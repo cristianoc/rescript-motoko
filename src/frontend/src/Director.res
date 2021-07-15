@@ -334,8 +334,8 @@ let auth = ref(LoggedOut)
 // updateLoop is constantly being called to check for collisions and to
 // update each of the objects in the game.
 let rec updateLoop = () => {
-  let startLogin = (~onLogged) => {
-    State.current.contents.status = LoggingIn
+  let startLogin = (~onLogged, ~loadOrSave) => {
+    State.current.contents.status = LoggingIn(loadOrSave)
     AuthClient.authenticate(
       ~onSuccess=(~principal) => {
         auth := LoggedIn(principal)
@@ -349,7 +349,7 @@ let rec updateLoop = () => {
     )->ignore
   }
   switch Keys.pressedKeys.pendingStateOperations {
-  | Some(LoadState) =>
+  | Some(Load) =>
     Keys.pressedKeys.pendingStateOperations = None
     let doLoad = (~principal) => {
       Js.log("loading...")
@@ -362,10 +362,10 @@ let rec updateLoop = () => {
       ->ignore
     }
     switch auth.contents {
-    | LoggedOut => startLogin(~onLogged=doLoad)
+    | LoggedOut => startLogin(~onLogged=doLoad, ~loadOrSave=Load)
     | LoggedIn(principal) => doLoad(~principal)
     }
-  | Some(SaveState) =>
+  | Some(Save) =>
     Keys.pressedKeys.pendingStateOperations = None
     let doSave = (~principal) => {
       Js.log("saving...")
@@ -378,7 +378,7 @@ let rec updateLoop = () => {
       ->ignore
     }
     switch auth.contents {
-    | LoggedOut => startLogin(~onLogged=doSave)
+    | LoggedOut => startLogin(~onLogged=doSave, ~loadOrSave=Save)
     | LoggedIn(principal) => doSave(~principal)
     }
   | None =>
@@ -390,9 +390,9 @@ let rec updateLoop = () => {
   }
 
   switch State.current.contents.status {
-  | LoggingIn =>
+  | LoggingIn(loadOrSave) =>
     State.current.contents->Draw.drawState(~fps=0.)
-    Draw.loggingIn()
+    Draw.loggingIn(~loadOrSave)
     Html.requestAnimationFrame(_ => updateLoop())
 
   | Loading =>
