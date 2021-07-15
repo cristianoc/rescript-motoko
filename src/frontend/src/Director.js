@@ -194,7 +194,8 @@ function processCollision(dir, obj, collid, state) {
               var t$1 = t._0;
               if (dir !== 0) {
                 if (t$1 === 4) {
-                  state.status = /* Finished */{
+                  state.status = {
+                    TAG: /* Finished */1,
                     levelResult: /* Won */0,
                     restartTime: Config.delayWhenFinished + performance.now()
                   };
@@ -226,7 +227,8 @@ function processCollision(dir, obj, collid, state) {
                             undefined
                           ];
                   } else {
-                    state.status = /* Finished */{
+                    state.status = {
+                      TAG: /* Finished */1,
                       levelResult: /* Won */0,
                       restartTime: Config.delayWhenFinished + performance.now()
                     };
@@ -514,8 +516,11 @@ var auth = {
 
 function updateLoop(_param) {
   while(true) {
-    var startLogin = function (onLogged) {
-      State.current.contents.status = /* LoggingIn */1;
+    var startLogin = function (onLogged, loadOrSave) {
+      State.current.contents.status = {
+        TAG: /* LoggingIn */0,
+        _0: loadOrSave
+      };
       AuthClient.authenticate((function (principal) {
               auth.contents = /* LoggedIn */{
                 _0: principal
@@ -523,7 +528,7 @@ function updateLoop(_param) {
               return Curry._1(onLogged, principal);
             }), (function (error) {
               console.log("error", AuthClient.$$Error.toString(error));
-              State.current.contents.status = /* Playing */3;
+              State.current.contents.status = /* Playing */2;
               
             }), 30);
       
@@ -534,10 +539,10 @@ function updateLoop(_param) {
       if (match) {
         var doSave = function (principal) {
           console.log("saving...");
-          State.current.contents.status = /* Saving */4;
+          State.current.contents.status = /* Saving */3;
           State.save(principal).then(function (param) {
                 console.log("saved");
-                State.current.contents.status = /* Playing */3;
+                State.current.contents.status = /* Playing */2;
                 
               });
           
@@ -546,7 +551,7 @@ function updateLoop(_param) {
         if (principal) {
           doSave(principal._0);
         } else {
-          startLogin(doSave);
+          startLogin(doSave, /* Save */1);
         }
       } else {
         var doLoad = function (principal) {
@@ -554,7 +559,7 @@ function updateLoop(_param) {
           State.current.contents.status = /* Loading */0;
           State.load(principal).then(function (param) {
                 console.log("loaded");
-                State.current.contents.status = /* Playing */3;
+                State.current.contents.status = /* Playing */2;
                 
               });
           
@@ -563,17 +568,17 @@ function updateLoop(_param) {
         if (principal$1) {
           doLoad(principal$1._0);
         } else {
-          startLogin(doLoad);
+          startLogin(doLoad, /* Load */0);
         }
       }
     } else if (Keys.pressedKeys.paused) {
-      State.current.contents.status = /* Paused */2;
-    } else if (State.current.contents.status === /* Paused */2) {
-      State.current.contents.status = /* Playing */3;
+      State.current.contents.status = /* Paused */1;
+    } else if (State.current.contents.status === /* Paused */1) {
+      State.current.contents.status = /* Playing */2;
     }
-    var match$1 = State.current.contents.status;
-    if (typeof match$1 === "number") {
-      switch (match$1) {
+    var loadOrSave = State.current.contents.status;
+    if (typeof loadOrSave === "number") {
+      switch (loadOrSave) {
         case /* Loading */0 :
             Draw.drawState(State.current.contents, 0);
             Draw.loading(undefined);
@@ -581,21 +586,14 @@ function updateLoop(_param) {
                   return updateLoop(undefined);
                 });
             return ;
-        case /* LoggingIn */1 :
-            Draw.drawState(State.current.contents, 0);
-            Draw.loggingIn(undefined);
-            requestAnimationFrame(function (param) {
-                  return updateLoop(undefined);
-                });
-            return ;
-        case /* Paused */2 :
+        case /* Paused */1 :
             Draw.drawState(State.current.contents, 0);
             Draw.paused(undefined);
             requestAnimationFrame(function (param) {
                   return updateLoop(undefined);
                 });
             return ;
-        case /* Playing */3 :
+        case /* Playing */2 :
             var fps = calcFps(undefined);
             var oldObjects = State.current.contents.objects;
             State.current.contents.objects = /* [] */0;
@@ -611,7 +609,8 @@ function updateLoop(_param) {
                   }, State.current.contents.player2, State.current.contents);
             }
             if (State.current.contents.player1.kill) {
-              State.current.contents.status = /* Finished */{
+              State.current.contents.status = {
+                TAG: /* Finished */1,
                 levelResult: /* Lost */1,
                 restartTime: Config.delayWhenFinished + performance.now()
               };
@@ -627,7 +626,7 @@ function updateLoop(_param) {
                   return updateLoop(undefined);
                 });
             return ;
-        case /* Saving */4 :
+        case /* Saving */3 :
             Draw.drawState(State.current.contents, 0);
             Draw.saving(undefined);
             requestAnimationFrame(function (param) {
@@ -637,8 +636,16 @@ function updateLoop(_param) {
         
       }
     } else {
-      var levelResult = match$1.levelResult;
-      var timeToStart = (match$1.restartTime - performance.now()) / 1000;
+      if (loadOrSave.TAG === /* LoggingIn */0) {
+        Draw.drawState(State.current.contents, 0);
+        Draw.loggingIn(loadOrSave._0);
+        requestAnimationFrame(function (param) {
+              return updateLoop(undefined);
+            });
+        return ;
+      }
+      var levelResult = loadOrSave.levelResult;
+      var timeToStart = (loadOrSave.restartTime - performance.now()) / 1000;
       if (timeToStart > 0.9) {
         Draw.levelFinished(levelResult, String(State.current.contents.level), String(timeToStart | 0));
         requestAnimationFrame(function (param) {

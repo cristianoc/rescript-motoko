@@ -1,6 +1,6 @@
 type status =
   | Loading
-  | LoggingIn
+  | LoggingIn(Keys.loadOrSave)
   | Paused
   | Playing
   | Finished({levelResult: Actors.levelResult, restartTime: float})
@@ -63,7 +63,4 @@ let load = (~principal) => {
 }
 
 let save = (~principal) =>
-  Backend.actor.saveGameState(.
-    principal,
-    current.contents->Obj.magic->Js.Json.stringify,
-  )
+  Backend.actor.saveGameState(. principal, current.contents->Obj.magic->Js.Json.stringify)

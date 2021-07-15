@@ -1,6 +1,6 @@
 open Belt
 
-type loadOrSave = LoadState | SaveState
+type loadOrSave = Load | Save
 
 /* Represents the values of relevant key bindings. */
 type keys = {
@@ -46,8 +46,8 @@ let keydown = evt => {
   | 65 /* KeyA */ => pressedKeys.left2 = true
   | 40 => pressedKeys.down1 = true
   | 88 /* KeyX */ => pressedKeys.down2 = true
-  | 83 /* KeyS */ => pressedKeys.pendingStateOperations = SaveState->Some
-  | 76 /* KeyL */ => pressedKeys.pendingStateOperations = LoadState->Some
+  | 83 /* KeyS */ => pressedKeys.pendingStateOperations = Save->Some
+  | 76 /* KeyL */ => pressedKeys.pendingStateOperations = Load->Some
   | 66 /* KeyB */ => pressedKeys.bbox = !pressedKeys.bbox
   | 80 /* KeyP */ => pressedKeys.paused = !pressedKeys.paused
   | 50 /* Digit2 */ => pressedKeys.twoPlayers = !pressedKeys.twoPlayers
