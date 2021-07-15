@@ -69,6 +69,10 @@ function fps(fps_val) {
   return Load.getContext(undefined).fillText(fps_str, 165, 18);
 }
 
+function loggingIn(param) {
+  return Load.getContext(undefined).fillText("Logging in...", 122, 90);
+}
+
 function loading(param) {
   return Load.getContext(undefined).fillText("Loading...", 142, 90);
 }
@@ -181,6 +185,7 @@ export {
   scoreString ,
   scoreAndCoins ,
   fps ,
+  loggingIn ,
   loading ,
   saving ,
   paused ,

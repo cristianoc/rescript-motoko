@@ -327,30 +327,60 @@ let updateParticle = part => {
   !part.kill
 }
 
+type auth = LoggedOut | LoggedIn(Candid.Principal.t)
+
+let auth = ref(LoggedOut)
+
 // updateLoop is constantly being called to check for collisions and to
 // update each of the objects in the game.
 let rec updateLoop = () => {
+  let startLogin = (~onLogged) => {
+    State.current.contents.status = LoggingIn
+    AuthClient.authenticate(
+      ~onSuccess=(~principal) => {
+        auth := LoggedIn(principal)
+        onLogged(~principal)
+      },
+      ~onError=error => {
+        Js.log2("error", error->AuthClient.Error.toString)
+        State.current.contents.status = Playing
+      },
+      ~timeoutInSeconds=30.,
+    )->ignore
+  }
   switch Keys.pressedKeys.pendingStateOperations {
   | Some(LoadState) =>
     Keys.pressedKeys.pendingStateOperations = None
-    Js.log("loading...")
-    State.current.contents.status = Loading
-    State.load()
-    ->Promise.thenResolve(() => {
-      Js.log("loaded")
-      State.current.contents.status = Playing
-    })
-    ->ignore
+    let doLoad = (~principal) => {
+      Js.log("loading...")
+      State.current.contents.status = Loading
+      State.load(~principal)
+      ->Promise.thenResolve(() => {
+        Js.log("loaded")
+        State.current.contents.status = Playing
+      })
+      ->ignore
+    }
+    switch auth.contents {
+    | LoggedOut => startLogin(~onLogged=doLoad)
+    | LoggedIn(principal) => doLoad(~principal)
+    }
   | Some(SaveState) =>
     Keys.pressedKeys.pendingStateOperations = None
-    Js.log("saving...")
-    State.current.contents.status = Saving
-    State.save()
-    ->Promise.thenResolve(() => {
-      Js.log("saved")
-      State.current.contents.status = Playing
-    })
-    ->ignore
+    let doSave = (~principal) => {
+      Js.log("saving...")
+      State.current.contents.status = Saving
+      State.save(~principal)
+      ->Promise.thenResolve(() => {
+        Js.log("saved")
+        State.current.contents.status = Playing
+      })
+      ->ignore
+    }
+    switch auth.contents {
+    | LoggedOut => startLogin(~onLogged=doSave)
+    | LoggedIn(principal) => doSave(~principal)
+    }
   | None =>
     if Keys.pressedKeys.paused {
       State.current.contents.status = Paused
@@ -360,9 +390,14 @@ let rec updateLoop = () => {
   }
 
   switch State.current.contents.status {
+  | LoggingIn =>
+    State.current.contents->Draw.drawState(~fps=0.)
+    Draw.loggingIn()
+    Html.requestAnimationFrame(_ => updateLoop())
+
   | Loading =>
     State.current.contents->Draw.drawState(~fps=0.)
-    Draw.loading()
+    Draw.loggingIn()
     Html.requestAnimationFrame(_ => updateLoop())
 
   | Saving =>

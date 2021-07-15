@@ -29,7 +29,7 @@ let authenticate = (~onSuccess, ~onError, ~timeoutInSeconds) => {
       "onSuccess": (. ()) => {
         Js.Global.clearTimeout(timeoutId)
         let principal = authClient.getIdentity(.).getPrincipal(.).toString(.)
-        onSuccess(principal)
+        onSuccess(~principal)
       },
       "onError": (. error) => {
         Js.Global.clearTimeout(timeoutId)

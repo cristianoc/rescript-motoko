@@ -73,6 +73,10 @@ let fps = fps_val => {
   Load.getContext().fillText(. fps_str, 165., 18.)
 }
 
+let loggingIn = () => {
+  Load.getContext().fillText(. "Logging in...", 122., 90.)
+}
+
 let loading = () => {
   Load.getContext().fillText(. "Loading...", 142., 90.)
 }
