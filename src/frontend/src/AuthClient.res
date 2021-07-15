@@ -1,6 +1,6 @@
 type t // agent
 
-type principal = {toString: (. unit) => Candid.Principal.t}
+type principal = {toString: (. unit) => Candid.principal}
 type identity = {getPrincipal: (. unit) => principal}
 
 type authClient = {
@@ -22,7 +22,10 @@ module Error = {
 }
 
 let authenticate = (~onSuccess, ~onError, ~timeoutInSeconds) => {
-  let timeoutId = Js.Global.setTimeoutFloat(() => onError(Error.Timeout(timeoutInSeconds)), timeoutInSeconds *. 1000.)
+  let timeoutId = Js.Global.setTimeoutFloat(
+    () => onError(Error.Timeout(timeoutInSeconds)),
+    timeoutInSeconds *. 1000.,
+  )
   _AuthClient["create"](.)
   ->Promise.then(authClient => {
     authClient.login(. {
