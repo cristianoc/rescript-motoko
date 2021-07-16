@@ -2,8 +2,6 @@ import Text "mo:base/Text";
 import Trie "mo:base/Trie";
 
 actor Main {
-  stable var gameState : Text = "";
-
   stable var map : Trie.Trie<Text, Text> = Trie.empty();
 
   public type PrincipalText = Text;
