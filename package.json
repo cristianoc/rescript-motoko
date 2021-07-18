@@ -5,7 +5,9 @@
   "keywords": [],
   "scripts": {
     "build": "rescript && webpack",
-    "start": "webpack serve"
+    "start": "webpack serve",
+    "deploy": "dfx deploy",
+    "open": "open \"http://127.0.0.1:8000/?canisterId=`dfx canister id frontend`\""
   },
   "devDependencies": {
     "@dfinity/agent": "0.8.8",
