@@ -1,23 +1,22 @@
+import Principal "mo:base/Principal";
 import Text "mo:base/Text";
 import Trie "mo:base/Trie";
 
 actor Main {
-  stable var map : Trie.Trie<PrincipalText, Text> = Trie.empty();
+  stable var map : Trie.Trie<Principal, Text> = Trie.empty();
 
-  public type PrincipalText = Text;
-
-  public query func loadGameState(p:PrincipalText) : async Text {
-    switch (Trie.find(map, key(p), Text.equal)   ) {
+  public query func loadGameState(p:Principal) : async Text {
+    switch (Trie.find(map, key(p), Principal.equal)   ) {
       case (?state) { state };
       case null { "" };
     }
   };
 
-  private func key(p : PrincipalText) : Trie.Key<PrincipalText> {
-    return { hash = Text.hash(p); key = p };
+  private func key(p : Principal) : Trie.Key<Principal> {
+    return { hash = Principal.hash(p); key = p };
   };
 
-  public func saveGameState(p:PrincipalText, s:Text) : async () {
-    map := Trie.put(map, key(p), Text.equal, s).0;
+  public func saveGameState(p:Principal, s:Text) : async () {
+    map := Trie.put(map, key(p), Principal.equal, s).0;
   };
 };
