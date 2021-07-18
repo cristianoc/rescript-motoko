@@ -1,0 +1,8 @@
+{
+    "backend": {
+        "ic": "<canister-id>"
+    },
+    "frontend": {
+        "ic": "<canister-id>"
+    }
+}
