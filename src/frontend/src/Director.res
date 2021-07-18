@@ -327,7 +327,7 @@ let updateParticle = part => {
   !part.kill
 }
 
-type auth = LoggedOut | LoggedIn(Candid.principal)
+type auth = LoggedOut | LoggedIn(Backend.Candid.principal)
 
 let auth = ref(LoggedOut)
 

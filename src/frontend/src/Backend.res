@@ -1,3 +1,14 @@
+module Candid = {
+  type principal
+
+  module Actor = {
+    type t = {
+      loadGameState: (. principal) => Js.Promise.t<string>,
+      saveGameState: (. principal, string) => Js.Promise.t<unit>,
+    }
+  }
+}
+
 @module("dfx-generated/backend")
 external canisterId: Agent.canisterId = "canisterId"
 

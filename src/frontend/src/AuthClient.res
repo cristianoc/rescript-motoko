@@ -1,6 +1,6 @@
 type t // agent
 
-type identity = {getPrincipal: (. unit) => Candid.principal}
+type identity = {getPrincipal: (. unit) => Backend.Candid.principal}
 
 type authClient = {
   login: (. {"onSuccess": (. unit) => unit, "onError": (. string) => unit}) => Promise.t<unit>,

@@ -3,9 +3,16 @@
 import * as Agent from "./Agent.js";
 import * as Backend from "dfx-generated/backend";
 
+var Actor = {};
+
+var Candid = {
+  Actor: Actor
+};
+
 var actor = Agent.createActor(Backend.idlFactory, Backend.canisterId);
 
 export {
+  Candid ,
   actor ,
   
 }
