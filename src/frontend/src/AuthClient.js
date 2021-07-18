@@ -31,7 +31,7 @@ function authenticate(onSuccess, onError, timeoutInSeconds) {
                   return authClient.login({
                               onSuccess: (function () {
                                   clearTimeout(timeoutId);
-                                  return Curry._1(onSuccess, authClient.getIdentity().getPrincipal().toString());
+                                  return Curry._1(onSuccess, authClient.getIdentity().getPrincipal());
                                 }),
                               onError: (function (error) {
                                   clearTimeout(timeoutId);
