@@ -1,8 +1,9 @@
 {
     "backend": {
-        "ic": "<canister-id>"
+        "ic": "bwgyl-cqaaa-aaaah-aaenq-cai"
     },
     "frontend": {
-        "ic": "<canister-id>"
+        "ic": "makqn-piaaa-aaaah-qadvq-cai"
     }
+
 }
