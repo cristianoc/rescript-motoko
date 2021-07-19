@@ -42,34 +42,6 @@ let clearCanvas = () => {
   Load.getContext().clearRect(. 0., 0., widthScaled, heightScaled)
 }
 
-let scoreString = score => {
-  let b = "       "
-  let blen = String.length(b)
-  let s = string_of_int(score)
-  let slen = s->String.length
-  if slen <= blen {
-    let sub = @doesNotRaise String.sub(b, 0, blen - slen)
-    sub ++ s
-  } else {
-    s
-  }
-}
-
-// Displays the text for score and coins.
-let scoreAndCoins = (score, coins) => {
-  let coin_string = coins->string_of_int
-  let context = Load.getContext()
-  context.font = "10px 'Press Start 2P'"
-  context.fillText(. "Cx" ++ coin_string, 8., 18.)
-  context.fillText(. scoreString(score), 264., 18.)
-}
-
-// Displays the fps.
-let fps = fps_val => {
-  let fps_str = int_of_float(fps_val) |> string_of_int
-  Load.getContext().fillText(. fps_str, 165., 18.)
-}
-
 let centerXText = (txt, ~fontSize, ~y) => {
   let ctx = Load.getContext()
   let {sizeScaled: {widthScaled}} = Load.getCanvasData()
@@ -84,6 +56,31 @@ let centerXYText = (txt, ~fontSize) => {
   let {sizeScaled: {heightScaled}} = Load.getCanvasData()
   let yCentered = heightScaled /. 2.
   txt->centerXText(~fontSize, ~y=yCentered *. Config.scale)
+}
+
+// Displays the text for score and coins.
+let scoreAndCoins = (score, coins) => {
+  let fontSize = 15.
+  let coin_string = coins->string_of_int
+  let context = Load.getContext()
+  let fontSizeScaled = fontSize /. Config.scale
+  let fontTxt = fontSizeScaled->int_of_float->string_of_int ++ "px"
+  context.font = fontTxt ++ " 'Press Start 2P'"
+  context.fillText(. "Cx" ++ coin_string, fontSizeScaled, fontSizeScaled *. 2.)
+  let {sizeScaled: {widthScaled}} = Load.getCanvasData()
+  let scoreTxt = string_of_int(score)
+  context.fillText(.
+    scoreTxt,
+    widthScaled -. float_of_int(String.length(scoreTxt) + 1) *. fontSizeScaled,
+    fontSizeScaled *. 2.,
+  )
+}
+
+// Displays the fps.
+let fps = fps_val => {
+  let fontSize = 15.
+  let fps_str = int_of_float(fps_val) |> string_of_int
+  fps_str->centerXText(~fontSize, ~y=fontSize *. 2.)
 }
 
 let loggingIn = (~loadOrSave: Keys.loadOrSave) => {
