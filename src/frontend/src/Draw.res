@@ -42,64 +42,61 @@ let clearCanvas = () => {
   Load.getContext().clearRect(. 0., 0., widthScaled, heightScaled)
 }
 
-let centerXText = (txt, ~fontSize, ~y) => {
+let fontPx = Config.fontSize->int_of_float->string_of_int ++ "px"
+
+let centerXText = (txt, ~y) => {
   let ctx = Load.getContext()
   let {sizeScaled: {widthScaled}} = Load.getCanvasData()
-  let fontTxt = fontSize->int_of_float->string_of_int ++ "px"
-  ctx.font = fontTxt ++ "'Press Start 2P'"
-  let xCentered = (widthScaled -. fontSize *. float_of_int(String.length(txt))) /. 2.
+  ctx.font = fontPx ++ "'Press Start 2P'"
+  let xCentered = (widthScaled -. Config.fontSize *. float_of_int(String.length(txt))) /. 2.
   ctx.fillText(. txt, xCentered, y)
 }
 
-let centerXYText = (txt, ~fontSize) => {
+let centerXYText = txt => {
   let {sizeScaled: {heightScaled}} = Load.getCanvasData()
   let yCentered = 0.5 *. heightScaled
-  txt->centerXText(~fontSize, ~y=yCentered)
+  txt->centerXText(~y=yCentered)
 }
 
 // Displays the text for score and coins.
 let scoreAndCoins = (score, coins) => {
-  let fontSize = 10.
   let coin_string = coins->string_of_int
   let context = Load.getContext()
-  let fontTxt = fontSize->int_of_float->string_of_int ++ "px"
-  context.font = fontTxt ++ " 'Press Start 2P'"
-  context.fillText(. "Cx" ++ coin_string, fontSize, fontSize *. 2.)
+  context.font = fontPx ++ " 'Press Start 2P'"
+  context.fillText(. "Cx" ++ coin_string, Config.fontSize, Config.fontSize *. 2.)
   let {sizeScaled: {widthScaled}} = Load.getCanvasData()
   let scoreTxt = string_of_int(score)
   context.fillText(.
     scoreTxt,
-    widthScaled -. float_of_int(String.length(scoreTxt) + 1) *. fontSize,
-    fontSize *. 2.,
+    widthScaled -. float_of_int(String.length(scoreTxt) + 1) *. Config.fontSize,
+    Config.fontSize *. 2.,
   )
 }
 
 // Displays the fps.
 let fps = fps_val => {
-  let fontSize = 10.
   let fps_str = int_of_float(fps_val) |> string_of_int
-  fps_str->centerXText(~fontSize, ~y=fontSize *. 2.)
+  fps_str->centerXText(~y=Config.fontSize *. 2.)
 }
 
 let loggingIn = (~loadOrSave: Keys.loadOrSave) => {
-  let fontSize = 10.
   ("Logging in before " ++
   switch loadOrSave {
   | Load => "loading"
   | Save => "saving"
-  })->centerXYText(~fontSize)
+  })->centerXYText
 }
 
 let loading = () => {
-  "Loading..."->centerXYText(~fontSize=10.)
+  "Loading..."->centerXYText
 }
 
 let saving = () => {
-  "Saving..."->centerXYText(~fontSize=10.)
+  "Saving..."->centerXYText
 }
 
 let paused = () => {
-  "Paused"->centerXYText(~fontSize=10.)
+  "Paused"->centerXYText
 }
 
 let blackScreen = texts => {
@@ -110,7 +107,7 @@ let blackScreen = texts => {
   ctx.fill(.)
   ctx.fillStyle = "white"
   texts->List.forEach(((s, yPct)) => {
-    s->centerXText(~fontSize=10., ~y=yPct *. heightScaled)
+    s->centerXText(~y=yPct *. heightScaled)
   })
   ctx.fillStyle = "black"
 }

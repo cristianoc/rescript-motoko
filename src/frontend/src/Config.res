@@ -14,7 +14,6 @@ let levelSpeed = (~level) =>
   | _ => 3.0
   }
 
-
 let levelWidth = (~level) =>
   switch level {
   | 1 => 800.
@@ -49,6 +48,8 @@ let blockw = (~level) => levelWidth(~level) /. 16.
 let blockh = (~level) => levelHeight(~level) /. 16. -. 1.
 
 let mapDim = (~level) => (levelWidth(~level), levelHeight(~level))
+
+let fontSize = 10.
 
 let scale = 1.5
 

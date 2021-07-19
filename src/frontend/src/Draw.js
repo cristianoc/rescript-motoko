@@ -2,6 +2,7 @@
 
 import * as Keys from "./Keys.js";
 import * as Load from "./Load.js";
+import * as Config from "./Config.js";
 import * as Sprite from "./Sprite.js";
 import * as Viewport from "./Viewport.js";
 import * as Belt_List from "rescript/lib/es6/belt_List.js";
@@ -40,53 +41,53 @@ function clearCanvas(param) {
   return Load.getContext(undefined).clearRect(0, 0, match$1.widthScaled, match$1.heightScaled);
 }
 
-function centerXText(txt, fontSize, y) {
+var fontPx = String(Config.fontSize | 0) + "px";
+
+function centerXText(txt, y) {
   var ctx = Load.getContext(undefined);
   var match = Load.getCanvasData(undefined);
-  var fontTxt = String(fontSize | 0) + "px";
-  ctx.font = fontTxt + "'Press Start 2P'";
-  var xCentered = (match.sizeScaled.widthScaled - fontSize * txt.length) / 2;
+  ctx.font = fontPx + "'Press Start 2P'";
+  var xCentered = (match.sizeScaled.widthScaled - Config.fontSize * txt.length) / 2;
   return ctx.fillText(txt, xCentered, y);
 }
 
-function centerXYText(txt, fontSize) {
+function centerXYText(txt) {
   var match = Load.getCanvasData(undefined);
   var yCentered = 0.5 * match.sizeScaled.heightScaled;
-  return centerXText(txt, fontSize, yCentered);
+  return centerXText(txt, yCentered);
 }
 
 function scoreAndCoins(score, coins) {
   var coin_string = String(coins);
   var context = Load.getContext(undefined);
-  var fontTxt = String(10) + "px";
-  context.font = fontTxt + " 'Press Start 2P'";
-  context.fillText("Cx" + coin_string, 10, 10 * 2);
+  context.font = fontPx + " 'Press Start 2P'";
+  context.fillText("Cx" + coin_string, Config.fontSize, Config.fontSize * 2);
   var match = Load.getCanvasData(undefined);
   var scoreTxt = String(score);
-  return context.fillText(scoreTxt, match.sizeScaled.widthScaled - (scoreTxt.length + 1 | 0) * 10, 10 * 2);
+  return context.fillText(scoreTxt, match.sizeScaled.widthScaled - (scoreTxt.length + 1 | 0) * Config.fontSize, Config.fontSize * 2);
 }
 
 function fps(fps_val) {
   var fps_str = String(fps_val | 0);
-  return centerXText(fps_str, 10, 10 * 2);
+  return centerXText(fps_str, Config.fontSize * 2);
 }
 
 function loggingIn(loadOrSave) {
   return centerXYText("Logging in before " + (
               loadOrSave ? "saving" : "loading"
-            ), 10);
+            ));
 }
 
 function loading(param) {
-  return centerXYText("Loading...", 10);
+  return centerXYText("Loading...");
 }
 
 function saving(param) {
-  return centerXYText("Saving...", 10);
+  return centerXYText("Saving...");
 }
 
 function paused(param) {
-  return centerXYText("Paused", 10);
+  return centerXYText("Paused");
 }
 
 function blackScreen(texts) {
@@ -99,7 +100,7 @@ function blackScreen(texts) {
   ctx.fill();
   ctx.fillStyle = "white";
   Belt_List.forEach(texts, (function (param) {
-          return centerXText(param[0], 10, param[1] * heightScaled);
+          return centerXText(param[0], param[1] * heightScaled);
         }));
   ctx.fillStyle = "black";
   
@@ -182,6 +183,7 @@ export {
   render ,
   drawBgd ,
   clearCanvas ,
+  fontPx ,
   centerXText ,
   centerXYText ,
   scoreAndCoins ,
@@ -197,4 +199,4 @@ export {
   drawState ,
   
 }
-/* Sprite Not a pure module */
+/* fontPx Not a pure module */
