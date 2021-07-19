@@ -69,35 +69,48 @@ function fps(fps_val) {
   return Load.getContext(undefined).fillText(fps_str, 165, 18);
 }
 
+function centerXText(txt, fontSize, y) {
+  var ctx = Load.getContext(undefined);
+  var match = Load.getCanvasData(undefined);
+  var fontSizeScaled = fontSize / Config.scale;
+  var fontTxt = String(fontSizeScaled | 0) + "px";
+  ctx.font = fontTxt + "'Press Start 2P'";
+  var xCentered = (match.sizeScaled.widthScaled - fontSizeScaled * txt.length) / 2;
+  return ctx.fillText(txt, xCentered, y / Config.scale);
+}
+
+function centerXYText(txt, fontSize) {
+  var match = Load.getCanvasData(undefined);
+  var yCentered = match.sizeScaled.heightScaled / 2;
+  return centerXText(txt, fontSize, yCentered * Config.scale);
+}
+
 function loggingIn(loadOrSave) {
-  return Load.getContext(undefined).fillText("Logging in before " + (
+  return centerXYText("Logging in before " + (
               loadOrSave ? "saving" : "loading"
-            ), 45, 90);
+            ), 15);
 }
 
 function loading(param) {
-  return Load.getContext(undefined).fillText("Loading...", 142, 90);
+  return centerXYText("Loading...", 15);
 }
 
 function saving(param) {
-  return Load.getContext(undefined).fillText("Saving...", 142, 90);
+  return centerXYText("Saving...", 15);
 }
 
 function paused(param) {
-  return Load.getContext(undefined).fillText("Paused", 142, 90);
+  return centerXYText("Paused", 15);
 }
 
 function blackScreen(texts) {
   var ctx = Load.getContext(undefined);
-  var fontSize = 20 / Config.scale;
-  var fontTxt = String(fontSize | 0) + "px";
   ctx.rect(0, 0, 512 / Config.scale, 512 / Config.scale);
   ctx.fillStyle = "black";
   ctx.fill();
   ctx.fillStyle = "white";
-  ctx.font = fontTxt + "'Press Start 2P'";
   Belt_List.forEach(texts, (function (param) {
-          return ctx.fillText(param[0], param[1] / Config.scale, param[2] / Config.scale);
+          return centerXText(param[0], 20, param[1]);
         }));
   ctx.fillStyle = "black";
   
@@ -108,13 +121,11 @@ function levelFinished(result, level, elapsed) {
     return blackScreen({
                 hd: [
                   "You lose level " + (level + "!"),
-                  90,
                   100
                 ],
                 tl: {
                   hd: [
                     elapsed,
-                    230,
                     160
                   ],
                   tl: /* [] */0
@@ -124,13 +135,11 @@ function levelFinished(result, level, elapsed) {
     return blackScreen({
                 hd: [
                   "You win level" + (level + "!"),
-                  80,
                   100
                 ],
                 tl: {
                   hd: [
                     elapsed,
-                    230,
                     160
                   ],
                   tl: /* [] */0
@@ -187,6 +196,8 @@ export {
   scoreString ,
   scoreAndCoins ,
   fps ,
+  centerXText ,
+  centerXYText ,
   loggingIn ,
   loading ,
   saving ,

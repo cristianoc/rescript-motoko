@@ -1,6 +1,8 @@
+type sizeScaled = {widthScaled: float, heightScaled: float}
+
 type canvasData = {
   canvasElement: Html.canvasElement,
-  sizeScaled: (float, float),
+  sizeScaled: sizeScaled,
   context: Html.canvasRenderingContext2D,
 }
 
@@ -20,7 +22,7 @@ let lazyCanvasData = lazy (
     {
       canvasElement: canvasElement,
       context: context,
-      sizeScaled: (width /. Config.scale, height /. Config.scale),
+      sizeScaled: {widthScaled: width /. Config.scale, heightScaled: height /. Config.scale},
     }
   }
 )

@@ -17,10 +17,10 @@ var lazyCanvasData = {
         document.addEventListener("keyup", Keys.keyup, true);
         return {
                 canvasElement: el,
-                sizeScaled: [
-                  width / Config.scale,
-                  height / Config.scale
-                ],
+                sizeScaled: {
+                  widthScaled: width / Config.scale,
+                  heightScaled: height / Config.scale
+                },
                 context: context
               };
       }
@@ -29,7 +29,7 @@ var lazyCanvasData = {
             RE_EXN_ID: "Assert_failure",
             _1: [
               "Load.res",
-              11,
+              13,
               4
             ],
             Error: new Error()
