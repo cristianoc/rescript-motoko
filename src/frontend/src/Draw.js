@@ -108,7 +108,7 @@ function levelFinished(result, level, elapsed) {
     return blackScreen({
                 hd: [
                   "You lose level " + (level + "!"),
-                  80,
+                  90,
                   100
                 ],
                 tl: {

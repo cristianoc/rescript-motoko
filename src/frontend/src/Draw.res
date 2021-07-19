@@ -114,7 +114,7 @@ let levelFinished = (result: Actors.levelResult, level, elapsed) =>
   switch result {
   | Won => blackScreen(list{("You win level" ++ (level ++ "!"), 80., 100.), (elapsed, 230., 160.)})
   | Lost =>
-    blackScreen(list{("You lose level " ++ (level ++ "!"), 80., 100.), (elapsed, 230., 160.)})
+    blackScreen(list{("You lose level " ++ (level ++ "!"), 90., 100.), (elapsed, 230., 160.)})
   }
 
 let particles = (particles: list<Particle.t>, ~viewport: Viewport.t) =>
