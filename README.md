@@ -28,8 +28,9 @@ To iterate on the frontend code in `src/frontend` either use an editor extension
 To iterate on the backend code, edit `.mo` files in `src/backend`.
 The interface between frontend and backend is in [src/frontend/src/Candid.res](src/frontend/src/Candid.res).
 
-To deploy both backend and frontend canisters, use:
+## Deploy both backend and frontend caisters
 
 ```bash
 dfx deploy
+npm run open
 ```
