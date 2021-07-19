@@ -26,7 +26,7 @@ npm run start
 To iterate on the frontend code in `src/frontend` either use an editor extension with ReScript support such as [rescript-vscode](https://marketplace.visualstudio.com/items?itemName=chenglou92.rescript-vscode), or build directly with `npx rescript`.
 
 To iterate on the backend code, edit `.mo` files in `src/backend`.
-The interface between frontend and backend is in [src/frontend/src/Candid.res](src/frontend/src/Candid.res).
+The interface between frontend and backend is in [src/frontend/src/Backend.res](src/frontend/src/Backend.res).
 
 ## Deploy both backend and frontend caisters
 
