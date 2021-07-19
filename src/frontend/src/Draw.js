@@ -4,7 +4,6 @@ import * as Keys from "./Keys.js";
 import * as Load from "./Load.js";
 import * as Config from "./Config.js";
 import * as Sprite from "./Sprite.js";
-import * as $$String from "rescript/lib/es6/string.js";
 import * as Viewport from "./Viewport.js";
 import * as Belt_List from "rescript/lib/es6/belt_List.js";
 import * as Caml_int32 from "rescript/lib/es6/caml_int32.js";
@@ -42,31 +41,6 @@ function clearCanvas(param) {
   return Load.getContext(undefined).clearRect(0, 0, match$1.widthScaled, match$1.heightScaled);
 }
 
-function scoreString(score) {
-  var b = "       ";
-  var blen = b.length;
-  var s = String(score);
-  var slen = s.length;
-  if (slen > blen) {
-    return s;
-  }
-  var sub = $$String.sub(b, 0, blen - slen | 0);
-  return sub + s;
-}
-
-function scoreAndCoins(score, coins) {
-  var coin_string = String(coins);
-  var context = Load.getContext(undefined);
-  context.font = "10px 'Press Start 2P'";
-  context.fillText("Cx" + coin_string, 8, 18);
-  return context.fillText(scoreString(score), 264, 18);
-}
-
-function fps(fps_val) {
-  var fps_str = String(fps_val | 0);
-  return Load.getContext(undefined).fillText(fps_str, 165, 18);
-}
-
 function centerXText(txt, fontSize, y) {
   var ctx = Load.getContext(undefined);
   var match = Load.getCanvasData(undefined);
@@ -81,6 +55,23 @@ function centerXYText(txt, fontSize) {
   var match = Load.getCanvasData(undefined);
   var yCentered = match.sizeScaled.heightScaled / 2;
   return centerXText(txt, fontSize, yCentered * Config.scale);
+}
+
+function scoreAndCoins(score, coins) {
+  var coin_string = String(coins);
+  var context = Load.getContext(undefined);
+  var fontSizeScaled = 15 / Config.scale;
+  var fontTxt = String(fontSizeScaled | 0) + "px";
+  context.font = fontTxt + " 'Press Start 2P'";
+  context.fillText("Cx" + coin_string, fontSizeScaled, fontSizeScaled * 2);
+  var match = Load.getCanvasData(undefined);
+  var scoreTxt = String(score);
+  return context.fillText(scoreTxt, match.sizeScaled.widthScaled - (scoreTxt.length + 1 | 0) * fontSizeScaled, fontSizeScaled * 2);
+}
+
+function fps(fps_val) {
+  var fps_str = String(fps_val | 0);
+  return centerXText(fps_str, 15, 15 * 2);
 }
 
 function loggingIn(loadOrSave) {
@@ -191,11 +182,10 @@ export {
   render ,
   drawBgd ,
   clearCanvas ,
-  scoreString ,
-  scoreAndCoins ,
-  fps ,
   centerXText ,
   centerXYText ,
+  scoreAndCoins ,
+  fps ,
   loggingIn ,
   loading ,
   saving ,
