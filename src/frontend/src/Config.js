@@ -94,6 +94,8 @@ var canvasId = "canvas";
 
 var delayWhenFinished = 5000;
 
+var fontSize = 10;
+
 var scale = 1.5;
 
 var friction = 0.9;
@@ -123,6 +125,7 @@ export {
   blockw ,
   blockh ,
   mapDim ,
+  fontSize ,
   scale ,
   friction ,
   gravity ,
