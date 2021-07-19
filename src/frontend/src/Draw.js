@@ -2,7 +2,6 @@
 
 import * as Keys from "./Keys.js";
 import * as Load from "./Load.js";
-import * as Config from "./Config.js";
 import * as Sprite from "./Sprite.js";
 import * as Viewport from "./Viewport.js";
 import * as Belt_List from "rescript/lib/es6/belt_List.js";
@@ -52,7 +51,7 @@ function centerXText(txt, fontSize, y) {
 
 function centerXYText(txt, fontSize) {
   var match = Load.getCanvasData(undefined);
-  var yCentered = match.sizeScaled.heightScaled / 2;
+  var yCentered = 0.5 * match.sizeScaled.heightScaled;
   return centerXText(txt, fontSize, yCentered);
 }
 
@@ -75,29 +74,32 @@ function fps(fps_val) {
 function loggingIn(loadOrSave) {
   return centerXYText("Logging in before " + (
               loadOrSave ? "saving" : "loading"
-            ), 15);
+            ), 10);
 }
 
 function loading(param) {
-  return centerXYText("Loading...", 15);
+  return centerXYText("Loading...", 10);
 }
 
 function saving(param) {
-  return centerXYText("Saving...", 15);
+  return centerXYText("Saving...", 10);
 }
 
 function paused(param) {
-  return centerXYText("Paused", 15);
+  return centerXYText("Paused", 10);
 }
 
 function blackScreen(texts) {
   var ctx = Load.getContext(undefined);
-  ctx.rect(0, 0, 512 / Config.scale, 512 / Config.scale);
+  var match = Load.getCanvasData(undefined);
+  var match$1 = match.sizeScaled;
+  var heightScaled = match$1.heightScaled;
+  ctx.rect(0, 0, match$1.widthScaled, heightScaled);
   ctx.fillStyle = "black";
   ctx.fill();
   ctx.fillStyle = "white";
   Belt_List.forEach(texts, (function (param) {
-          return centerXText(param[0], 20, param[1] / Config.scale);
+          return centerXText(param[0], 10, param[1] * heightScaled);
         }));
   ctx.fillStyle = "black";
   
@@ -108,12 +110,12 @@ function levelFinished(result, level, elapsed) {
     return blackScreen({
                 hd: [
                   "You lose level " + (level + "!"),
-                  100
+                  0.4
                 ],
                 tl: {
                   hd: [
                     elapsed,
-                    160
+                    0.6
                   ],
                   tl: /* [] */0
                 }
@@ -122,12 +124,12 @@ function levelFinished(result, level, elapsed) {
     return blackScreen({
                 hd: [
                   "You win level" + (level + "!"),
-                  100
+                  0.4
                 ],
                 tl: {
                   hd: [
                     elapsed,
-                    160
+                    0.6
                   ],
                   tl: /* [] */0
                 }
