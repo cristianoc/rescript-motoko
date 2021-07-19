@@ -4,12 +4,12 @@ Based on [https://github.com/cristianoc/mareo](), with a frontend written in [Re
 The backend is used to load and save game state.
 
 
-Prerequisites:
+## Prerequisites
 
 - `dfx` command line from [Internet Computer SDK](https://sdk.dfinity.org/docs/quickstart/local-quickstart.html#download-and-install)
 - `node` installed
 
-To start working on the project right away:
+## Quick Start
 
 ```bash
 cd rescript-motoko
