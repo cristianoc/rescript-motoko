@@ -44,34 +44,32 @@ function clearCanvas(param) {
 function centerXText(txt, fontSize, y) {
   var ctx = Load.getContext(undefined);
   var match = Load.getCanvasData(undefined);
-  var fontSizeScaled = fontSize / Config.scale;
-  var fontTxt = String(fontSizeScaled | 0) + "px";
+  var fontTxt = String(fontSize | 0) + "px";
   ctx.font = fontTxt + "'Press Start 2P'";
-  var xCentered = (match.sizeScaled.widthScaled - fontSizeScaled * txt.length) / 2;
-  return ctx.fillText(txt, xCentered, y / Config.scale);
+  var xCentered = (match.sizeScaled.widthScaled - fontSize * txt.length) / 2;
+  return ctx.fillText(txt, xCentered, y);
 }
 
 function centerXYText(txt, fontSize) {
   var match = Load.getCanvasData(undefined);
   var yCentered = match.sizeScaled.heightScaled / 2;
-  return centerXText(txt, fontSize, yCentered * Config.scale);
+  return centerXText(txt, fontSize, yCentered);
 }
 
 function scoreAndCoins(score, coins) {
   var coin_string = String(coins);
   var context = Load.getContext(undefined);
-  var fontSizeScaled = 15 / Config.scale;
-  var fontTxt = String(fontSizeScaled | 0) + "px";
+  var fontTxt = String(10) + "px";
   context.font = fontTxt + " 'Press Start 2P'";
-  context.fillText("Cx" + coin_string, fontSizeScaled, fontSizeScaled * 2);
+  context.fillText("Cx" + coin_string, 10, 10 * 2);
   var match = Load.getCanvasData(undefined);
   var scoreTxt = String(score);
-  return context.fillText(scoreTxt, match.sizeScaled.widthScaled - (scoreTxt.length + 1 | 0) * fontSizeScaled, fontSizeScaled * 2);
+  return context.fillText(scoreTxt, match.sizeScaled.widthScaled - (scoreTxt.length + 1 | 0) * 10, 10 * 2);
 }
 
 function fps(fps_val) {
   var fps_str = String(fps_val | 0);
-  return centerXText(fps_str, 15, 15 * 2);
+  return centerXText(fps_str, 10, 10 * 2);
 }
 
 function loggingIn(loadOrSave) {
@@ -99,7 +97,7 @@ function blackScreen(texts) {
   ctx.fill();
   ctx.fillStyle = "white";
   Belt_List.forEach(texts, (function (param) {
-          return centerXText(param[0], 20, param[1]);
+          return centerXText(param[0], 20, param[1] / Config.scale);
         }));
   ctx.fillStyle = "black";
   

@@ -45,40 +45,38 @@ let clearCanvas = () => {
 let centerXText = (txt, ~fontSize, ~y) => {
   let ctx = Load.getContext()
   let {sizeScaled: {widthScaled}} = Load.getCanvasData()
-  let fontSizeScaled = fontSize /. Config.scale
-  let fontTxt = fontSizeScaled->int_of_float->string_of_int ++ "px"
+  let fontTxt = fontSize->int_of_float->string_of_int ++ "px"
   ctx.font = fontTxt ++ "'Press Start 2P'"
-  let xCentered = (widthScaled -. fontSizeScaled *. float_of_int(String.length(txt))) /. 2.
-  ctx.fillText(. txt, xCentered, y /. Config.scale)
+  let xCentered = (widthScaled -. fontSize *. float_of_int(String.length(txt))) /. 2.
+  ctx.fillText(. txt, xCentered, y)
 }
 
 let centerXYText = (txt, ~fontSize) => {
   let {sizeScaled: {heightScaled}} = Load.getCanvasData()
   let yCentered = heightScaled /. 2.
-  txt->centerXText(~fontSize, ~y=yCentered *. Config.scale)
+  txt->centerXText(~fontSize, ~y=yCentered)
 }
 
 // Displays the text for score and coins.
 let scoreAndCoins = (score, coins) => {
-  let fontSize = 15.
+  let fontSize = 10.
   let coin_string = coins->string_of_int
   let context = Load.getContext()
-  let fontSizeScaled = fontSize /. Config.scale
-  let fontTxt = fontSizeScaled->int_of_float->string_of_int ++ "px"
+  let fontTxt = fontSize->int_of_float->string_of_int ++ "px"
   context.font = fontTxt ++ " 'Press Start 2P'"
-  context.fillText(. "Cx" ++ coin_string, fontSizeScaled, fontSizeScaled *. 2.)
+  context.fillText(. "Cx" ++ coin_string, fontSize, fontSize *. 2.)
   let {sizeScaled: {widthScaled}} = Load.getCanvasData()
   let scoreTxt = string_of_int(score)
   context.fillText(.
     scoreTxt,
-    widthScaled -. float_of_int(String.length(scoreTxt) + 1) *. fontSizeScaled,
-    fontSizeScaled *. 2.,
+    widthScaled -. float_of_int(String.length(scoreTxt) + 1) *. fontSize,
+    fontSize *. 2.,
   )
 }
 
 // Displays the fps.
 let fps = fps_val => {
-  let fontSize = 15.
+  let fontSize = 10.
   let fps_str = int_of_float(fps_val) |> string_of_int
   fps_str->centerXText(~fontSize, ~y=fontSize *. 2.)
 }
@@ -111,7 +109,7 @@ let blackScreen = texts => {
   ctx.fill(.)
   ctx.fillStyle = "white"
   texts->List.forEach(((s, y)) => {
-    s->centerXText(~fontSize=20., ~y)
+    s->centerXText(~fontSize=20., ~y=y /. Config.scale)
   })
   ctx.fillStyle = "black"
 }
