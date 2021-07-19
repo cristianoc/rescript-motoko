@@ -38,11 +38,8 @@ let drawBgd = (state: State.t) => {
 
 // Used for animation updating. Canvas is cleared each frame and redrawn.
 let clearCanvas = () => {
-  let canvas = Load.getCanvas()
-  let context = Load.getContext()
-  let cwidth = float_of_int(canvas.width)
-  let cheight = float_of_int(canvas.height)
-  context.clearRect(. 0., 0., cwidth, cheight)
+  let {sizeScaled: {widthScaled, heightScaled}} = Load.getCanvasData()
+  Load.getContext().clearRect(. 0., 0., widthScaled, heightScaled)
 }
 
 let scoreString = score => {
