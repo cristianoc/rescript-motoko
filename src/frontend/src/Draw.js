@@ -37,11 +37,9 @@ function drawBgd(state) {
 }
 
 function clearCanvas(param) {
-  var canvas = Load.getCanvas(undefined);
-  var context = Load.getContext(undefined);
-  var cwidth = canvas.width;
-  var cheight = canvas.height;
-  return context.clearRect(0, 0, cwidth, cheight);
+  var match = Load.getCanvasData(undefined);
+  var match$1 = match.sizeScaled;
+  return Load.getContext(undefined).clearRect(0, 0, match$1.widthScaled, match$1.heightScaled);
 }
 
 function scoreString(score) {
