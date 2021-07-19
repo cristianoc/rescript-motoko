@@ -8,14 +8,14 @@ type t = {
 }
 
 let make = (~level) => {
-  let (vx, vy) = Load.getSizeScaled()
+  let {widthScaled, heightScaled} = Load.getSizeScaled()
   let (mx, my) = Config.mapDim(~level)
   {
     px: 0.,
     py: 0.,
     v_dim: {
-      x: vx,
-      y: vy,
+      x: widthScaled,
+      y: heightScaled,
     },
     m_dim: {
       x: mx,

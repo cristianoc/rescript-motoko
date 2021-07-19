@@ -11,8 +11,8 @@ function make(level) {
           px: 0,
           py: 0,
           v_dim: {
-            x: match[0],
-            y: match[1]
+            x: match.widthScaled,
+            y: match.heightScaled
           },
           m_dim: {
             x: match$1[0],

@@ -73,48 +73,59 @@ let fps = fps_val => {
   Load.getContext().fillText(. fps_str, 165., 18.)
 }
 
+let centerXText = (txt, ~fontSize, ~y) => {
+  let ctx = Load.getContext()
+  let {sizeScaled: {widthScaled}} = Load.getCanvasData()
+  let fontSizeScaled = fontSize /. Config.scale
+  let fontTxt = fontSizeScaled->int_of_float->string_of_int ++ "px"
+  ctx.font = fontTxt ++ "'Press Start 2P'"
+  let xCentered = (widthScaled -. fontSizeScaled *. float_of_int(String.length(txt))) /. 2.
+  ctx.fillText(. txt, xCentered, y /. Config.scale)
+}
+
+let centerXYText = (txt, ~fontSize) => {
+  let {sizeScaled: {heightScaled}} = Load.getCanvasData()
+  let yCentered = heightScaled /. 2.
+  txt->centerXText(~fontSize, ~y=yCentered *. Config.scale)
+}
+
 let loggingIn = (~loadOrSave: Keys.loadOrSave) => {
-  Load.getContext().fillText(.
-    "Logging in before " ++
-    switch loadOrSave {
-    | Load => "loading"
-    | Save => "saving"
-    },
-    45.,
-    90.,
-  )
+  let fontSize = 15.
+  ("Logging in before " ++
+  switch loadOrSave {
+  | Load => "loading"
+  | Save => "saving"
+  })->centerXYText(~fontSize)
 }
 
 let loading = () => {
-  Load.getContext().fillText(. "Loading...", 142., 90.)
+  "Loading..."->centerXYText(~fontSize=15.)
 }
 
 let saving = () => {
-  Load.getContext().fillText(. "Saving...", 142., 90.)
+  "Saving..."->centerXYText(~fontSize=15.)
 }
 
 let paused = () => {
-  Load.getContext().fillText(. "Paused", 142., 90.)
+  "Paused"->centerXYText(~fontSize=15.)
 }
 
 let blackScreen = texts => {
   let ctx = Load.getContext()
-  let fontSize = 20. /. Config.scale
-  let fontTxt = fontSize->int_of_float->string_of_int ++ "px"
   ctx.rect(. 0., 0., 512. /. Config.scale, 512. /. Config.scale)
   ctx.fillStyle = "black"
   ctx.fill(.)
   ctx.fillStyle = "white"
-  ctx.font = fontTxt ++ "'Press Start 2P'"
-  texts->List.forEach(((s, x, y)) => ctx.fillText(. s, x /. Config.scale, y /. Config.scale))
+  texts->List.forEach(((s, y)) => {
+    s->centerXText(~fontSize=20., ~y)
+  })
   ctx.fillStyle = "black"
 }
 
 let levelFinished = (result: Actors.levelResult, level, elapsed) =>
   switch result {
-  | Won => blackScreen(list{("You win level" ++ (level ++ "!"), 80., 100.), (elapsed, 230., 160.)})
-  | Lost =>
-    blackScreen(list{("You lose level " ++ (level ++ "!"), 90., 100.), (elapsed, 230., 160.)})
+  | Won => blackScreen(list{("You win level" ++ (level ++ "!"), 100.), (elapsed, 160.)})
+  | Lost => blackScreen(list{("You lose level " ++ (level ++ "!"), 100.), (elapsed, 160.)})
   }
 
 let particles = (particles: list<Particle.t>, ~viewport: Viewport.t) =>
