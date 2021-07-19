@@ -53,7 +53,7 @@ let centerXText = (txt, ~fontSize, ~y) => {
 
 let centerXYText = (txt, ~fontSize) => {
   let {sizeScaled: {heightScaled}} = Load.getCanvasData()
-  let yCentered = heightScaled /. 2.
+  let yCentered = 0.5 *. heightScaled
   txt->centerXText(~fontSize, ~y=yCentered)
 }
 
@@ -82,7 +82,7 @@ let fps = fps_val => {
 }
 
 let loggingIn = (~loadOrSave: Keys.loadOrSave) => {
-  let fontSize = 15.
+  let fontSize = 10.
   ("Logging in before " ++
   switch loadOrSave {
   | Load => "loading"
@@ -91,33 +91,34 @@ let loggingIn = (~loadOrSave: Keys.loadOrSave) => {
 }
 
 let loading = () => {
-  "Loading..."->centerXYText(~fontSize=15.)
+  "Loading..."->centerXYText(~fontSize=10.)
 }
 
 let saving = () => {
-  "Saving..."->centerXYText(~fontSize=15.)
+  "Saving..."->centerXYText(~fontSize=10.)
 }
 
 let paused = () => {
-  "Paused"->centerXYText(~fontSize=15.)
+  "Paused"->centerXYText(~fontSize=10.)
 }
 
 let blackScreen = texts => {
   let ctx = Load.getContext()
-  ctx.rect(. 0., 0., 512. /. Config.scale, 512. /. Config.scale)
+  let {sizeScaled: {widthScaled, heightScaled}} = Load.getCanvasData()
+  ctx.rect(. 0., 0., widthScaled, heightScaled)
   ctx.fillStyle = "black"
   ctx.fill(.)
   ctx.fillStyle = "white"
-  texts->List.forEach(((s, y)) => {
-    s->centerXText(~fontSize=20., ~y=y /. Config.scale)
+  texts->List.forEach(((s, yPct)) => {
+    s->centerXText(~fontSize=10., ~y=yPct *. heightScaled)
   })
   ctx.fillStyle = "black"
 }
 
 let levelFinished = (result: Actors.levelResult, level, elapsed) =>
   switch result {
-  | Won => blackScreen(list{("You win level" ++ (level ++ "!"), 100.), (elapsed, 160.)})
-  | Lost => blackScreen(list{("You lose level " ++ (level ++ "!"), 100.), (elapsed, 160.)})
+  | Won => blackScreen(list{("You win level" ++ (level ++ "!"), 0.4), (elapsed, 0.6)})
+  | Lost => blackScreen(list{("You lose level " ++ (level ++ "!"), 0.4), (elapsed, 0.6)})
   }
 
 let particles = (particles: list<Particle.t>, ~viewport: Viewport.t) =>
