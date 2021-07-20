@@ -8,8 +8,10 @@
         "allowJs": true, /* Allow javascript files to be compiled. */
         "jsx": "react", /* Specify JSX code generation: 'preserve', 'react-native', or 'react'. */
     },
+    "include": [
+        "src/frontend"
+    ],
     "exclude": [
-        "src/frontend/src/*",
-        "dist"
+        "src/frontend/src"
     ],
 }
