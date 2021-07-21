@@ -5,12 +5,6 @@
 import type {list} from '../../../src/frontend/src/shims/RescriptPervasives.shim';
 
 // tslint:disable-next-line:interface-over-type-literal
-export type loadOrSave = "Load" | "Save";
-
-// tslint:disable-next-line:interface-over-type-literal
-export type levelResult = "Won" | "Lost";
-
-// tslint:disable-next-line:interface-over-type-literal
 export type dir = "Left" | "Right";
 
 // tslint:disable-next-line:interface-over-type-literal
@@ -40,15 +34,6 @@ export type blockTyp =
   | "Cloud"
   | "Panel"
   | "Ground";
-
-// tslint:disable-next-line:interface-over-type-literal
-export type status = 
-    "Loading"
-  | "Paused"
-  | "Playing"
-  | "Saving"
-  | { tag: "LoggingIn"; value: loadOrSave }
-  | { tag: "Finished"; value: { readonly levelResult: levelResult; readonly restartTime: number } };
 
 // tslint:disable-next-line:interface-over-type-literal
 export type png = 
@@ -145,6 +130,5 @@ export type state = {
   readonly player1: obj; 
   readonly player2: obj; 
   score: number; 
-  status: status; 
   readonly viewport: viewport
 };

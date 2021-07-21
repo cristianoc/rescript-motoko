@@ -7,6 +7,7 @@ import * as State from "./State.js";
 import * as Config from "./Config.js";
 import * as $$Object from "./Object.js";
 import * as Sprite from "./Sprite.js";
+import * as Backend from "./Backend.js";
 import * as Particle from "./Particle.js";
 import * as Viewport from "./Viewport.js";
 import * as Belt_List from "rescript/lib/es6/belt_List.js";
@@ -152,6 +153,34 @@ function collEnemyEnemy(enemy1, s1, o1, enemy2, s2, o2, dir2) {
             undefined
           ];
   }
+}
+
+var $$global = {
+  state: State.$$new(1, 0),
+  status: /* Playing */2
+};
+
+function reset(level, score) {
+  $$global.state = State.$$new(level, score);
+  
+}
+
+var Global = {
+  $$global: $$global,
+  reset: reset
+};
+
+function loadState(principal) {
+  return Backend.actor.loadGameState(principal).then(function (json) {
+              if (json !== "") {
+                $$global.state = JSON.parse(json);
+              }
+              return Promise.resolve(undefined);
+            });
+}
+
+function saveState(principal) {
+  return Backend.actor.saveGameState(principal, JSON.stringify($$global.state));
 }
 
 function processCollision(dir2, obj, collid, state) {
@@ -356,7 +385,7 @@ function processCollision(dir2, obj, collid, state) {
                             ];
                     }
                   } else {
-                    state.status = {
+                    $$global.status = {
                       TAG: /* Finished */1,
                       levelResult: /* Won */0,
                       restartTime: Config.delayWhenFinished + performance.now()
@@ -409,7 +438,7 @@ function processCollision(dir2, obj, collid, state) {
                             ];
                     }
                 case /* Panel */6 :
-                    state.status = {
+                    $$global.status = {
                       TAG: /* Finished */1,
                       levelResult: /* Won */0,
                       restartTime: Config.delayWhenFinished + performance.now()
@@ -616,7 +645,7 @@ var auth = {
 function updateLoop(_param) {
   while(true) {
     var startLogin = function (onLogged, loadOrSave) {
-      State.current.contents.status = {
+      $$global.status = {
         TAG: /* LoggingIn */0,
         _0: loadOrSave
       };
@@ -627,7 +656,7 @@ function updateLoop(_param) {
               return Curry._1(onLogged, principal);
             }), (function (error) {
               console.log("error", AuthClient.$$Error.toString(error));
-              State.current.contents.status = /* Playing */2;
+              $$global.status = /* Playing */2;
               
             }), 30);
       
@@ -638,10 +667,10 @@ function updateLoop(_param) {
       if (match) {
         var doSave = function (principal) {
           console.log("saving...");
-          State.current.contents.status = /* Saving */3;
-          State.save(principal).then(function (param) {
+          $$global.status = /* Saving */3;
+          saveState(principal).then(function (param) {
                 console.log("saved");
-                State.current.contents.status = /* Playing */2;
+                $$global.status = /* Playing */2;
                 
               });
           
@@ -655,10 +684,10 @@ function updateLoop(_param) {
       } else {
         var doLoad = function (principal) {
           console.log("loading...");
-          State.current.contents.status = /* Loading */0;
-          State.load(principal).then(function (param) {
+          $$global.status = /* Loading */0;
+          loadState(principal).then(function (param) {
                 console.log("loaded");
-                State.current.contents.status = /* Playing */2;
+                $$global.status = /* Playing */2;
                 
               });
           
@@ -671,22 +700,22 @@ function updateLoop(_param) {
         }
       }
     } else if (Keys.pressedKeys.paused) {
-      State.current.contents.status = /* Paused */1;
-    } else if (State.current.contents.status === /* Paused */1) {
-      State.current.contents.status = /* Playing */2;
+      $$global.status = /* Paused */1;
+    } else if ($$global.status === /* Paused */1) {
+      $$global.status = /* Playing */2;
     }
-    var loadOrSave = State.current.contents.status;
+    var loadOrSave = $$global.status;
     if (typeof loadOrSave === "number") {
       switch (loadOrSave) {
         case /* Loading */0 :
-            Draw.drawState(State.current.contents, 0);
+            Draw.drawState($$global.state, 0);
             Draw.loading(undefined);
             requestAnimationFrame(function (param) {
                   return updateLoop(undefined);
                 });
             return ;
         case /* Paused */1 :
-            Draw.drawState(State.current.contents, 0);
+            Draw.drawState($$global.state, 0);
             Draw.paused(undefined);
             requestAnimationFrame(function (param) {
                   return updateLoop(undefined);
@@ -694,39 +723,39 @@ function updateLoop(_param) {
             return ;
         case /* Playing */2 :
             var fps = calcFps(undefined);
-            var oldObjects = State.current.contents.objects;
-            State.current.contents.objects = /* [] */0;
-            State.current.contents.particles = Belt_List.keep(State.current.contents.particles, updateParticle);
+            var oldObjects = $$global.state.objects;
+            $$global.state.objects = /* [] */0;
+            $$global.state.particles = Belt_List.keep($$global.state.particles, updateParticle);
             updateObject(Keys.checkTwoPlayers(undefined) ? ({
-                      hd: State.current.contents.player2,
+                      hd: $$global.state.player2,
                       tl: oldObjects
-                    }) : oldObjects, State.current.contents.player1, State.current.contents);
+                    }) : oldObjects, $$global.state.player1, $$global.state);
             if (Keys.checkTwoPlayers(undefined)) {
               updateObject({
-                    hd: State.current.contents.player1,
+                    hd: $$global.state.player1,
                     tl: oldObjects
-                  }, State.current.contents.player2, State.current.contents);
+                  }, $$global.state.player2, $$global.state);
             }
-            if (State.current.contents.player1.kill) {
-              State.current.contents.status = {
+            if ($$global.state.player1.kill) {
+              $$global.status = {
                 TAG: /* Finished */1,
                 levelResult: /* Lost */1,
                 restartTime: Config.delayWhenFinished + performance.now()
               };
             }
-            Viewport.update(State.current.contents.viewport, State.current.contents.player1.px, State.current.contents.player1.py);
+            Viewport.update($$global.state.viewport, $$global.state.player1.px, $$global.state.player1.py);
             Belt_List.forEach(oldObjects, (function(oldObjects){
                 return function (obj) {
-                  return updateObject(oldObjects, obj, State.current.contents);
+                  return updateObject(oldObjects, obj, $$global.state);
                 }
                 }(oldObjects)));
-            Draw.drawState(State.current.contents, fps);
+            Draw.drawState($$global.state, fps);
             requestAnimationFrame(function (param) {
                   return updateLoop(undefined);
                 });
             return ;
         case /* Saving */3 :
-            Draw.drawState(State.current.contents, 0);
+            Draw.drawState($$global.state, 0);
             Draw.saving(undefined);
             requestAnimationFrame(function (param) {
                   return updateLoop(undefined);
@@ -736,7 +765,7 @@ function updateLoop(_param) {
       }
     } else {
       if (loadOrSave.TAG === /* LoggingIn */0) {
-        Draw.drawState(State.current.contents, 0);
+        Draw.drawState($$global.state, 0);
         Draw.loggingIn(loadOrSave._0);
         requestAnimationFrame(function (param) {
               return updateLoop(undefined);
@@ -746,15 +775,15 @@ function updateLoop(_param) {
       var levelResult = loadOrSave.levelResult;
       var timeToStart = (loadOrSave.restartTime - performance.now()) / 1000;
       if (timeToStart > 0.9) {
-        Draw.levelFinished(levelResult, String(State.current.contents.level), String(timeToStart | 0));
+        Draw.levelFinished(levelResult, String($$global.state.level), String(timeToStart | 0));
         requestAnimationFrame(function (param) {
               return updateLoop(undefined);
             });
         return ;
       }
-      var level = levelResult === /* Won */0 ? State.current.contents.level + 1 | 0 : State.current.contents.level;
-      var score = levelResult === /* Won */0 ? State.current.contents.score : 0;
-      State.current.contents = State.$$new(level, score);
+      var level = levelResult === /* Won */0 ? $$global.state.level + 1 | 0 : $$global.state.level;
+      var score = levelResult === /* Won */0 ? $$global.state.score : 0;
+      reset(level, score);
       _param = undefined;
       continue ;
     }
@@ -766,6 +795,10 @@ export {
   playerAttackEnemy ,
   enemyAttackPlayer ,
   collEnemyEnemy ,
+  Global ,
+  $$global ,
+  loadState ,
+  saveState ,
   processCollision ,
   inViewport ,
   broadPhase ,
@@ -778,4 +811,4 @@ export {
   updateLoop ,
   
 }
-/* Draw Not a pure module */
+/* global Not a pure module */
