@@ -7,6 +7,12 @@
     "@rescript/react",
     "@ryyppy/rescript-promise"
   ],
+  "gentypeconfig": {
+    "language": "typescript",
+    "shims": {
+      "ReasonPervasives": "RescriptPervasives"
+    }
+  },
   "reason": {
     "react-jsx": 3
   },
