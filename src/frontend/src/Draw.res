@@ -124,7 +124,7 @@ let particles = (particles: list<Types.particle>, ~viewport: Types.viewport) =>
     render(part.sprite, x, y)
   })
 
-let object = (obj: Types.object, ~viewport: Types.viewport) => {
+let object = (obj: Types.obj, ~viewport: Types.viewport) => {
   let {x, y} = Viewport.fromCoord(viewport, obj.px, obj.py)
   obj.sprite->render(x, y)
   if Keys.checkBboxEnabled() {

@@ -118,7 +118,7 @@ type objTyp =
   | Item(itemTyp)
   | Block(blockTyp)
 
-type object = {
+type obj = {
   mutable objTyp: objTyp,
   mutable sprite: sprite,
   mutable hasGravity: bool,
@@ -138,6 +138,7 @@ type object = {
   mutable score: int,
 }
 
+@genType
 type particle = {
   sprite: sprite,
   mutable lifetime: int,
@@ -156,15 +157,16 @@ type viewport = {
 }
 
 // State of the game
+@genType
 type state = {
   bgd: sprite,
   mutable coins: int,
   level: int,
   mutable multiplier: int,
-  mutable objects: list<object>,
+  mutable objects: list<obj>,
   mutable particles: list<particle>,
-  player1: object,
-  player2: object,
+  player1: obj,
+  player2: obj,
   mutable score: int,
   mutable status: status,
   viewport: viewport,
