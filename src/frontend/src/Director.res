@@ -22,8 +22,14 @@ let calcFps = {
 // This causes the player to either kill the enemy or move the enemy, in the
 // case that the enemy is a shell. Invulnerability, jumping, and grounded
 // are used for fine tuning the movements.
-let playerAttackEnemy = (. o1, enemyTyp: Actors.enemyTyp, s2, o2, state: State.t) => {
-  o1.Object.invuln = 10
+let playerAttackEnemy = (.
+  o1: Types.object,
+  enemyTyp: Types.enemyTyp,
+  s2,
+  o2,
+  state: Types.state,
+) => {
+  o1.invuln = 10
   o1.jumping = false
   o1.grounded = true
   switch enemyTyp {
@@ -50,7 +56,7 @@ let playerAttackEnemy = (. o1, enemyTyp: Actors.enemyTyp, s2, o2, state: State.t
 }
 
 // enemyAttackPlayer is used when an enemy kills a player.
-let enemyAttackPlayer = (. enemy: Object.t, player: Object.t, level) => {
+let enemyAttackPlayer = (. enemy: Types.object, player: Types.object, level) => {
   switch enemy.objTyp {
   | Enemy((GKoopaShell | RKoopaShell) as enemyTyp) if enemy.vx == 0. =>
     // This only works if the player does not go faster than the shell
@@ -69,13 +75,13 @@ let enemyAttackPlayer = (. enemy: Object.t, player: Object.t, level) => {
 // in the case that one or more of the two enemies is a koopa shell, then
 // the koopa shell kills the other enemy.
 let collEnemyEnemy = (
-  enemy1: Actors.enemyTyp,
+  enemy1: Types.enemyTyp,
   s1,
   o1,
-  enemy2: Actors.enemyTyp,
+  enemy2: Types.enemyTyp,
   s2,
   o2,
-  dir: Actors.dir2d,
+  dir2: Types.dir2,
 ) =>
   switch (enemy1, enemy2) {
   | (GKoopaShell, GKoopaShell)
@@ -102,7 +108,7 @@ let collEnemyEnemy = (
       (None, None)
     }
   | (_, _) =>
-    switch dir {
+    switch dir2 {
     | West | East =>
       Object.revDir(o1, enemy1, s1)
       Object.revDir(o2, enemy2, s2)
@@ -117,8 +123,13 @@ let collEnemyEnemy = (
 // a new item spawned as a result of the first object. None indicates that
 // no new item should be spawned. Transformations to existing objects occur
 // mutably, as many changes are side-effectual.
-let processCollision = (. dir: Actors.dir2d, obj: Object.t, collid: Object.t, state: State.t) =>
-  switch (obj, collid, dir) {
+let processCollision = (.
+  dir2: Types.dir2,
+  obj: Types.object,
+  collid: Types.object,
+  state: Types.state,
+) =>
+  switch (obj, collid, dir2) {
   | ({objTyp: Player(_)}, {objTyp: Player(_)}, East | West) =>
     collid.vx = collid.vx +. obj.vx
     (None, None)
@@ -169,22 +180,22 @@ let processCollision = (. dir: Actors.dir2d, obj: Object.t, collid: Object.t, st
     Object.reverseLeftRight(obj)
     (None, None)
   | ({objTyp: Enemy(_)}, {objTyp: Block(_)}, _) | ({objTyp: Item(_)}, {objTyp: Block(_)}, _) =>
-    Object.collideBlock(dir, obj)
+    Object.collideBlock(dir2, obj)
     (None, None)
   | ({objTyp: Player(t1, _)}, {objTyp: Block(t)}, North) =>
     switch t {
     | QBlock(typ) =>
       let updatedBlock = Object.evolveBlock(. collid, state.level)
       let spawnedItem = Object.spawnAbove(. obj.dir, collid, typ, state.level)
-      Object.collideBlock(dir, obj)
+      Object.collideBlock(dir2, obj)
       (Some(spawnedItem), Some(updatedBlock))
     | Brick =>
       if t1 == BigM {
-        Object.collideBlock(dir, obj)
+        Object.collideBlock(dir2, obj)
         Object.decHealth(collid)
         (None, None)
       } else {
-        Object.collideBlock(dir, obj)
+        Object.collideBlock(dir2, obj)
         (None, None)
       }
     | Panel =>
@@ -194,7 +205,7 @@ let processCollision = (. dir: Actors.dir2d, obj: Object.t, collid: Object.t, st
       })
       (None, None)
     | _ =>
-      Object.collideBlock(dir, obj)
+      Object.collideBlock(dir2, obj)
       (None, None)
     }
   | ({objTyp: Player(_)}, {objTyp: Block(t)}, _) =>
@@ -206,20 +217,20 @@ let processCollision = (. dir: Actors.dir2d, obj: Object.t, collid: Object.t, st
       })
       (None, None)
     | _ =>
-      switch dir {
+      switch dir2 {
       | South =>
         state.multiplier = 1
-        Object.collideBlock(dir, obj)
+        Object.collideBlock(dir2, obj)
         (None, None)
       | _ =>
-        Object.collideBlock(dir, obj)
+        Object.collideBlock(dir2, obj)
         (None, None)
       }
     }
   | (_, _, _) => (None, None)
   }
 
-let inViewport = (obj: Object.t, ~viewport) =>
+let inViewport = (obj: Types.object, ~viewport) =>
   Viewport.inViewport(viewport, obj.px, obj.py) ||
   (Object.isPlayer(obj) ||
   Viewport.outOfViewportBelow(viewport, obj.py))
@@ -231,7 +242,7 @@ let broadPhase = (~allCollids, viewport) => allCollids->List.keep(o => o->inView
 // each of the collidable objects to constantly check if collisions are
 // occurring.
 let narrowPhase = (obj, ~state, ~visibleCollids) => {
-  let rec narrowHelper = (obj: Object.t, ~visibleCollids, ~acc) =>
+  let rec narrowHelper = (obj: Types.object, ~visibleCollids, ~acc) =>
     switch visibleCollids {
     | list{} => acc
     | list{collid, ...nextVisibleCollids} =>
@@ -264,8 +275,8 @@ let narrowPhase = (obj, ~state, ~visibleCollids) => {
 // is a collision, and process the collision.
 // This method returns a list of objects that are created, which should be
 // added to the list of objects for the next iteration.
-let checkCollisions = (obj, ~state: State.t, ~allCollids) =>
-  switch obj.Object.objTyp {
+let checkCollisions = (obj: Types.object, ~state: Types.state, ~allCollids) =>
+  switch obj.objTyp {
   | Block(_) => list{}
   | _ =>
     let visibleCollids = broadPhase(~allCollids, state.viewport)
@@ -274,7 +285,7 @@ let checkCollisions = (obj, ~state: State.t, ~allCollids) =>
 
 // primary update method for objects,
 // checking the collision, updating the object, and drawing to the canvas
-let findObjectsColliding = (obj: Object.t, ~allCollids, ~state: State.t) => {
+let findObjectsColliding = (obj: Types.object, ~allCollids, ~state: Types.state) => {
   /* TODO: optimize. Draw static elements only once */
   let sprite = obj.sprite
   obj.invuln = if obj.invuln > 0 {
@@ -300,7 +311,7 @@ let findObjectsColliding = (obj: Object.t, ~allCollids, ~state: State.t) => {
 // as a wrapper method. This method is necessary to differentiate between
 // the player collidable and the remaining collidables, as special operations
 // such as viewport centering only occur with the player
-let updateObject = (~allCollids, obj: Object.t, ~state) =>
+let updateObject = (~allCollids, obj: Types.object, ~state) =>
   switch obj.objTyp {
   | Player(_, playerNum) =>
     let keys = Keys.translateKeys(playerNum)

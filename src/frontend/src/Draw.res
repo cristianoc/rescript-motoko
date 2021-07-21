@@ -1,7 +1,6 @@
 open Belt
-open Sprite
 
-let renderBbox = (sprite, posx, posy) => {
+let renderBbox = (sprite: Types.sprite, posx, posy) => {
   let (bbox, bboy) = sprite.params.bboxOffset
   let (bbsx, bbsy) = sprite.params.bboxSize
   let context = Load.getContext()
@@ -10,14 +9,14 @@ let renderBbox = (sprite, posx, posy) => {
 }
 
 // Draws a sprite onto the canvas
-let render = (sprite, posx, posy) => {
+let render = (sprite: Types.sprite, posx, posy) => {
   let (sx, sy) = sprite.params.srcOffset
   let (sw, sh) = sprite.params.frameSize
   let (dx, dy) = (posx, posy)
   let (dw, dh) = sprite.params.frameSize
   let sx = sx +. float_of_int(sprite.frame) *. sw
   let context = Load.getContext()
-  context.drawImage(. sprite.params.png->Sprite.Png.toImg, sx, sy, sw, sh, dx, dy, dw, dh)
+  context.drawImage(. sprite.params.png->Png.toImg, sx, sy, sw, sh, dx, dy, dw, dh)
 }
 
 // Draws two background images, which needs to be done because of the
@@ -29,7 +28,7 @@ let drawBgd = (bgd, off_x) => {
 }
 
 /* Parallax background */
-let drawBgd = (state: State.t) => {
+let drawBgd = (state: Types.state) => {
   let vposXInt = int_of_float(state.viewport.px /. 5.)
   let bgdWidth = int_of_float(fst(state.bgd.params.frameSize))
   let off_x = @doesNotRaise float_of_int(mod(vposXInt, bgdWidth))
@@ -79,7 +78,7 @@ let fps = fps_val => {
   fps_str->centerXText(~y=Config.fontSize *. 2.)
 }
 
-let loggingIn = (~loadOrSave: Keys.loadOrSave) => {
+let loggingIn = (~loadOrSave: Types.loadOrSave) => {
   ("Logging in before " ++
   switch loadOrSave {
   | Load => "loading"
@@ -112,20 +111,20 @@ let blackScreen = texts => {
   ctx.fillStyle = "black"
 }
 
-let levelFinished = (result: Actors.levelResult, level, elapsed) =>
+let levelFinished = (result: Types.levelResult, level, elapsed) =>
   switch result {
   | Won => blackScreen(list{("You win level" ++ (level ++ "!"), 0.4), (elapsed, 0.6)})
   | Lost => blackScreen(list{("You lose level " ++ (level ++ "!"), 0.4), (elapsed, 0.6)})
   }
 
-let particles = (particles: list<Particle.t>, ~viewport: Viewport.t) =>
+let particles = (particles: list<Types.particle>, ~viewport: Types.viewport) =>
   particles->List.forEach(part => {
     let x = part.px -. viewport.px
     and y = part.py -. viewport.py
-    render(part.params.sprite, x, y)
+    render(part.sprite, x, y)
   })
 
-let object = (obj: Object.t, ~viewport: Viewport.t) => {
+let object = (obj: Types.object, ~viewport: Types.viewport) => {
   let {x, y} = Viewport.fromCoord(viewport, obj.px, obj.py)
   obj.sprite->render(x, y)
   if Keys.checkBboxEnabled() {
@@ -133,7 +132,7 @@ let object = (obj: Object.t, ~viewport: Viewport.t) => {
   }
 }
 
-let drawState = (state: State.t, ~fps as fps_) => {
+let drawState = (state: Types.state, ~fps as fps_) => {
   let objectsWithPlayers = {
     let objectsWihtPlayer1 = list{state.player1, ...state.objects}
     Keys.checkTwoPlayers() ? list{state.player2, ...objectsWihtPlayer1} : objectsWihtPlayer1

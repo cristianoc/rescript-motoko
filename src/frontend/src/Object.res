@@ -1,43 +1,15 @@
 open Belt
 
-open Actors
-
 type aabb = {
-  center: xy,
-  half: xy,
+  center: Types.xy,
+  half: Types.xy,
 }
 
 let idCounter = ref(min_int)
 
-type objTyp =
-  | Player(plTyp, playerNum)
-  | Enemy(enemyTyp)
-  | Item(itemTyp)
-  | Block(blockTyp)
-
-type t = {
-  mutable objTyp: objTyp,
-  mutable sprite: Sprite.t,
-  mutable hasGravity: bool,
-  mutable speed: float,
-  id: int,
-  mutable px: float, // x position
-  mutable py: float, // y position
-  mutable vx: float, // x velocity
-  mutable vy: float, // y velocity
-  mutable jumping: bool,
-  mutable grounded: bool,
-  mutable dir: Actors.dir1d,
-  mutable invuln: int,
-  mutable kill: bool,
-  mutable health: int,
-  mutable crouch: bool,
-  mutable score: int,
-}
-
 /* Sets an object's x velocity to the speed specified in its params based on
  * its direction */
-let setVelToSpeed = obj => {
+let setVelToSpeed = (obj: Types.object) => {
   let speed = obj.speed
   switch obj.dir {
   | Left => obj.vx = -.speed
@@ -48,17 +20,17 @@ let setVelToSpeed = obj => {
 /* The following make functions all set the objects' has_gravity and speed,
  * returning an [obj_params] that can be directly plugged into the [obj]
  * during creation. */
-let makePlayer = o => o.speed = Config.playerSpeed
+let makePlayer = (o: Types.object) => o.speed = Config.playerSpeed
 
-let makeItem = (o, t) =>
+let makeItem = (o: Types.object, t) =>
   switch t {
-  | Mushroom => ()
+  | Types.Mushroom => ()
   | Coin => o.hasGravity = false
   }
 
-let makeEnemy = (o, t, level) =>
+let makeEnemy = (o: Types.object, t, level) =>
   switch t {
-  | Goomba
+  | Types.Goomba
   | GKoopa
   | RKoopa =>
     o.speed = Config.levelSpeed(~level)
@@ -66,9 +38,9 @@ let makeEnemy = (o, t, level) =>
   | RKoopaShell => o.speed = 3.
   }
 
-let makeBlock = (o, t) =>
+let makeBlock = (o: Types.object, t) =>
   switch t {
-  | QBlock(_) | QBlockUsed | Brick | UnBBlock | Cloud | Panel | Ground => o.hasGravity = false
+  | Types.QBlock(_) | QBlockUsed | Brick | UnBBlock | Cloud | Panel | Ground => o.hasGravity = false
   }
 
 /* Used in object creation and to compare two objects. */
@@ -77,8 +49,17 @@ let newId = () => {
   idCounter.contents
 }
 
-let make = (~hasGravity=true, ~speed=1.0, ~dir=Left, ~level, ~objTyp, ~spriteParams, px, py) => {
-  let newObj = {
+let make = (
+  ~hasGravity=true,
+  ~speed=1.0,
+  ~dir=Types.Left,
+  ~level,
+  ~objTyp: Types.objTyp,
+  ~spriteParams,
+  px,
+  py,
+) => {
+  let newObj: Types.object = {
     objTyp: objTyp,
     sprite: spriteParams->Sprite.makeFromParams,
     hasGravity: hasGravity,
@@ -106,21 +87,21 @@ let make = (~hasGravity=true, ~speed=1.0, ~dir=Left, ~level, ~objTyp, ~spritePar
   newObj
 }
 
-let isPlayer = x =>
-  switch x {
+let isPlayer = (o: Types.object) =>
+  switch o {
   | {objTyp: Player(_)} => true
   | _ => false
   }
 
-let isEnemy = x =>
-  switch x {
+let isEnemy = (o: Types.object) =>
+  switch o {
   | {objTyp: Enemy(_)} => true
   | _ => false
   }
 
-let sameId = (o1, o2) => o1.id == o2.id
+let sameId = (o1: Types.object, o2: Types.object) => o1.id == o2.id
 
-let jump = player => {
+let jump = (player: Types.object) => {
   player.jumping = true
   player.grounded = false
   player.vy = max(
@@ -130,7 +111,7 @@ let jump = player => {
 }
 
 // Matches the controls being used and updates each of the player's params
-let updatePlayerKeys = (player: t, controls: controls): unit => {
+let updatePlayerKeys = (player: Types.object, controls: Types.controls): unit => {
   let lr_acc = player.vx *. 0.2
   switch controls {
   | CLeft =>
@@ -157,7 +138,7 @@ let updatePlayerKeys = (player: t, controls: controls): unit => {
 // Used for sprite changing. If sprites change to different dimensions as a result
 // of some action, the new sprite must be normalized so that things aren't
 // jumpy
-let normalizePos = (o, p1: Sprite.params, p2: Sprite.params) => {
+let normalizePos = (o: Types.object, p1: Types.spriteParams, p2: Types.spriteParams) => {
   let (box1, boy1) = p1.bboxOffset
   and (box2, boy2) = p2.bboxOffset
   let (bw1, bh1) = p1.bboxSize
@@ -168,7 +149,7 @@ let normalizePos = (o, p1: Sprite.params, p2: Sprite.params) => {
 
 // Update player is constantly being called to check for if big or small
 // Mario sprites should be used
-let updatePlayer = (player, playerNum, keys) => {
+let updatePlayer = (player: Types.object, playerNum, keys) => {
   let prev_jumping = player.jumping
   let prev_dir = player.dir
   and prev_vx = abs_float(player.vx)
@@ -187,13 +168,13 @@ let updatePlayer = (player, playerNum, keys) => {
   }
 
   let plSize = if player.health <= 1 {
-    SmallM
+    Types.SmallM
   } else {
     BigM
   }
 
   let playerTyp = if !prev_jumping && player.jumping {
-    Some(Jumping)
+    Some(Types.Jumping)
   } else if (
     prev_dir != player.dir || (prev_vx == 0. && abs_float(player.vx) > 0. && !player.jumping)
   ) {
@@ -220,14 +201,14 @@ let updatePlayer = (player, playerNum, keys) => {
 }
 
 // The following two helper methods update velocity and position of the player
-let updateVel = obj =>
+let updateVel = (obj: Types.object) =>
   if obj.grounded {
     obj.vy = 0.
   } else if obj.hasGravity {
     obj.vy = min(obj.vy +. Config.gravity +. abs_float(obj.vy) *. 0.01, Config.maxYVel)
   }
 
-let updatePos = obj => {
+let updatePos = (obj: Types.object) => {
   obj.px = obj.vx +. obj.px
   if obj.hasGravity {
     obj.py = obj.vy +. obj.py
@@ -244,9 +225,9 @@ let processObj = (obj, ~level) => {
 }
 
 // Check upon collision of block and updates the values of the object
-let collideBlock = (dir, obj) =>
-  switch dir {
-  | North => obj.vy = -0.001
+let collideBlock = (dir2, obj: Types.object) =>
+  switch dir2 {
+  | Types.North => obj.vy = -0.001
   | South =>
     obj.vy = 0.
     obj.grounded = true
@@ -257,12 +238,12 @@ let collideBlock = (dir, obj) =>
 // Simple helper method that reverses the direction in question
 let oppositeDir = dir =>
   switch dir {
-  | Left => Right
+  | Types.Left => Types.Right
   | Right => Left
   }
 
 // Used for enemy-enemy collisions
-let reverseLeftRight = obj => {
+let reverseLeftRight = (obj: Types.object) => {
   obj.vx = -.obj.vx
   obj.dir = oppositeDir(obj.dir)
 }
@@ -270,9 +251,9 @@ let reverseLeftRight = obj => {
 // Actually creates a new enemy and deletes the previous. The positions must be
 // normalized. This method is typically called when enemies are killed and a
 // new sprite must be used (i.e., koopa to koopa shell).
-let evolveEnemy = (. player_dir, typ, spr: Sprite.t, obj, level) =>
+let evolveEnemy = (. player_dir, typ, spr: Types.sprite, obj: Types.object, level) =>
   switch typ {
-  | GKoopa =>
+  | Types.GKoopa =>
     let newObj = make(
       ~speed=3.,
       ~level,
@@ -309,7 +290,7 @@ let evolveEnemy = (. player_dir, typ, spr: Sprite.t, obj, level) =>
   }
 
 // Update the direction of the sprite
-let revDir = (o, t, s: Sprite.t) => {
+let revDir = (o, t, s: Types.sprite) => {
   reverseLeftRight(o)
   let old_params = s.params
   Sprite.transformEnemy(t, s, o.dir)
@@ -317,7 +298,7 @@ let revDir = (o, t, s: Sprite.t) => {
 }
 
 // Used for killing enemies, or to make big Mario into small Mario
-let decHealth = obj => {
+let decHealth = (obj: Types.object) => {
   let health = obj.health - 1
   if health == 0 {
     obj.kill = true
@@ -345,10 +326,10 @@ let evolveBlock = (. obj, level) => {
 }
 
 // Used for spawning items above question mark blocks
-let spawnAbove = (. player_dir, obj, itemTyp, level) => {
+let spawnAbove = (. player_dir, obj: Types.object, itemTyp, level) => {
   let item = make(
     ~level,
-    ~hasGravity=itemTyp != Coin,
+    ~hasGravity=itemTyp != Types.Coin,
     ~dir=Left,
     ~objTyp=Item(itemTyp),
     ~spriteParams=Sprite.makeParams(itemTyp),
@@ -362,7 +343,7 @@ let spawnAbove = (. player_dir, obj, itemTyp, level) => {
 }
 
 // Used to get the bounding box
-let getAabb = obj => {
+let getAabb = (obj: Types.object) => {
   let sprParams = obj.sprite.params
   let (offx, offy) = sprParams.bboxOffset
   let (box, boy) = (obj.px +. offx, obj.py +. offy)
@@ -379,13 +360,13 @@ let getAabb = obj => {
   }
 }
 
-let colBypass = (c1, c2) =>
-  c1.kill ||
-  (c2.kill ||
-  switch (c1.objTyp, c2.objTyp) {
+let colBypass = (o1: Types.object, o2: Types.object) =>
+  o1.kill ||
+  (o2.kill ||
+  switch (o1.objTyp, o2.objTyp) {
   | (Item(_), Enemy(_)) | (Enemy(_), Item(_)) | (Item(_), Item(_)) => true
   | (Player(_), Enemy(_)) =>
-    if c1.invuln > 0 {
+    if o1.invuln > 0 {
       true
     } else {
       false
@@ -415,7 +396,7 @@ let checkCollision = (o1, o2) => {
           vy > 0.
         ) {
           o1.py = o1.py +. oy
-          Some(North)
+          Some(Types.North)
         } else {
           o1.py = o1.py -. oy
           Some(South)
@@ -434,7 +415,7 @@ let checkCollision = (o1, o2) => {
 }
 
 // "Kills" the matched object by setting certain parameters for each
-let kill = obj =>
+let kill = (obj: Types.object) =>
   switch obj.objTyp {
   | Enemy(t) =>
     let score = if obj.score > 0 {
@@ -450,10 +431,34 @@ let kill = obj =>
   | Block(t) =>
     switch t {
     | Brick =>
-      let p1 = Particle.make(~vel=(-5., -5.), ~acc=(0., 0.2), BrickChunkL, obj.px, obj.py)
-      let p2 = Particle.make(~vel=(-3., -4.), ~acc=(0., 0.2), BrickChunkL, obj.px, obj.py)
-      let p3 = Particle.make(~vel=(3., -4.), ~acc=(0., 0.2), BrickChunkR, obj.px, obj.py)
-      let p4 = Particle.make(~vel=(5., -5.), ~acc=(0., 0.2), BrickChunkR, obj.px, obj.py)
+      let p1 = Particle.make(
+        ~vel={x: -5., y: -5.},
+        ~acc={x: 0., y: 0.2},
+        BrickChunkL,
+        obj.px,
+        obj.py,
+      )
+      let p2 = Particle.make(
+        ~vel={x: -3., y: -4.},
+        ~acc={x: 0., y: 0.2},
+        BrickChunkL,
+        obj.px,
+        obj.py,
+      )
+      let p3 = Particle.make(
+        ~vel={x: 3., y: -4.},
+        ~acc={x: 0., y: 0.2},
+        BrickChunkR,
+        obj.px,
+        obj.py,
+      )
+      let p4 = Particle.make(
+        ~vel={x: 5., y: -5.},
+        ~acc={x: 0., y: 0.2},
+        BrickChunkR,
+        obj.px,
+        obj.py,
+      )
       list{p1, p2, p3, p4}
     | _ => list{}
     }

@@ -3,83 +3,6 @@
 import * as Caml_obj from "rescript/lib/es6/caml_obj.js";
 import * as Caml_int32 from "rescript/lib/es6/caml_int32.js";
 
-function create(src) {
-  var img = document.createElement("img");
-  img.src = src;
-  return img;
-}
-
-var bgd1 = create("./sprites/bgd-1.png");
-
-var blocks = create("./sprites/blocks.png");
-
-var chunks = create("./sprites/chunks.png");
-
-var enemies = create("./sprites/enemies.png");
-
-var ground = create("./sprites/ground.png");
-
-var items = create("./sprites/items.png");
-
-var marioSmall = create("./sprites/mario-small.png");
-
-var mario2Small = create("./sprites/mario2-small.png");
-
-var marioBig = create("./sprites/mario-big.png");
-
-var mario2Big = create("./sprites/mario2-big.png");
-
-var panel = create("./sprites/panel.png");
-
-var score = create("./sprites/score.png");
-
-function toImg(t) {
-  switch (t) {
-    case /* Bgd1 */0 :
-        return bgd1;
-    case /* Blocks */1 :
-        return blocks;
-    case /* Chunks */2 :
-        return chunks;
-    case /* Enemies */3 :
-        return enemies;
-    case /* Ground */4 :
-        return ground;
-    case /* Items */5 :
-        return items;
-    case /* MarioSmall */6 :
-        return marioSmall;
-    case /* Mario2Small */7 :
-        return mario2Small;
-    case /* MarioBig */8 :
-        return marioBig;
-    case /* Mario2Big */9 :
-        return mario2Big;
-    case /* Panel */10 :
-        return panel;
-    case /* Score */11 :
-        return score;
-    
-  }
-}
-
-var Png = {
-  create: create,
-  bgd1: bgd1,
-  blocks: blocks,
-  chunks: chunks,
-  enemies: enemies,
-  ground: ground,
-  items: items,
-  marioSmall: marioSmall,
-  mario2Small: mario2Small,
-  marioBig: marioBig,
-  mario2Big: mario2Big,
-  panel: panel,
-  score: score,
-  toImg: toImg
-};
-
 function spriteParams(bboxOffsetOpt, bboxSizeOpt, frameSizeOpt, maxTicksOpt, maxFramesOpt, srcOffset, png) {
   var bboxOffset = bboxOffsetOpt !== undefined ? bboxOffsetOpt : [
       0,
@@ -212,10 +135,10 @@ function smallPlayerParams(typ, dir, playerNum) {
   }
 }
 
-function bigPlayerParams(typ, dir, playerNum) {
+function bigPlayerParams(playerTyp, dir, playerNum) {
   var png = playerNum ? /* Mario2Big */9 : /* MarioBig */8;
   if (dir) {
-    switch (typ) {
+    switch (playerTyp) {
       case /* Standing */0 :
           return spriteParams([
                       1,
@@ -275,7 +198,7 @@ function bigPlayerParams(typ, dir, playerNum) {
       
     }
   } else {
-    switch (typ) {
+    switch (playerTyp) {
       case /* Standing */0 :
           return spriteParams([
                       2,
@@ -650,25 +573,24 @@ function makeParticle(ptyp) {
         };
 }
 
-function transformEnemy(enemy_typ, spr, dir) {
+function transformEnemy(enemy_typ, sprite, dir) {
   var params = enemyParams(enemy_typ, dir);
-  spr.params = params;
+  sprite.params = params;
   
 }
 
-function updateAnimation(spr) {
-  var curr_ticks = spr.ticks;
-  if (curr_ticks >= spr.params.maxTicks) {
-    spr.ticks = 0;
-    spr.frame = Caml_int32.mod_(spr.frame + 1 | 0, spr.params.maxFrames);
+function updateAnimation(sprite) {
+  var curr_ticks = sprite.ticks;
+  if (curr_ticks >= sprite.params.maxTicks) {
+    sprite.ticks = 0;
+    sprite.frame = Caml_int32.mod_(sprite.frame + 1 | 0, sprite.params.maxFrames);
   } else {
-    spr.ticks = curr_ticks + 1 | 0;
+    sprite.ticks = curr_ticks + 1 | 0;
   }
   
 }
 
 export {
-  Png ,
   spriteParams ,
   smallPlayerParams ,
   bigPlayerParams ,
@@ -691,4 +613,4 @@ export {
   updateAnimation ,
   
 }
-/* bgd1 Not a pure module */
+/* brickParams Not a pure module */

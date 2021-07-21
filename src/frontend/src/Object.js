@@ -95,8 +95,8 @@ function make(hasGravityOpt, speedOpt, dirOpt, level, objTyp, spriteParams, px, 
   return newObj;
 }
 
-function isPlayer(x) {
-  var match = x.objTyp;
+function isPlayer(o) {
+  var match = o.objTyp;
   if (match.TAG === /* Player */0) {
     return true;
   } else {
@@ -104,8 +104,8 @@ function isPlayer(x) {
   }
 }
 
-function isEnemy(x) {
-  var match = x.objTyp;
+function isEnemy(o) {
+  var match = o.objTyp;
   if (match.TAG === /* Enemy */1) {
     return true;
   } else {
@@ -240,9 +240,9 @@ function processObj(obj, level) {
   
 }
 
-function collideBlock(dir, obj) {
-  if (dir !== 1) {
-    if (dir !== 0) {
+function collideBlock(dir2, obj) {
+  if (dir2 !== 1) {
+    if (dir2 !== 0) {
       obj.vx = 0;
     } else {
       obj.vy = -0.001;
@@ -359,19 +359,19 @@ function getAabb(obj) {
         };
 }
 
-function colBypass(c1, c2) {
-  if (c1.kill) {
+function colBypass(o1, o2) {
+  if (o1.kill) {
     return true;
   }
-  if (c2.kill) {
+  if (o2.kill) {
     return true;
   }
-  var match = c1.objTyp;
-  var match$1 = c2.objTyp;
+  var match = o1.objTyp;
+  var match$1 = o2.objTyp;
   switch (match.TAG | 0) {
     case /* Player */0 :
         if (match$1.TAG === /* Enemy */1) {
-          return c1.invuln > 0;
+          return o1.invuln > 0;
         } else {
           return false;
         }
@@ -457,34 +457,34 @@ function kill(obj) {
         if (t._0 !== 1) {
           return /* [] */0;
         }
-        var p1 = Particle.make([
-              -5,
-              -5
-            ], [
-              0,
-              0.2
-            ], /* BrickChunkL */1, obj.px, obj.py);
-        var p2 = Particle.make([
-              -3,
-              -4
-            ], [
-              0,
-              0.2
-            ], /* BrickChunkL */1, obj.px, obj.py);
-        var p3 = Particle.make([
-              3,
-              -4
-            ], [
-              0,
-              0.2
-            ], /* BrickChunkR */2, obj.px, obj.py);
-        var p4 = Particle.make([
-              5,
-              -5
-            ], [
-              0,
-              0.2
-            ], /* BrickChunkR */2, obj.px, obj.py);
+        var p1 = Particle.make({
+              x: -5,
+              y: -5
+            }, {
+              x: 0,
+              y: 0.2
+            }, /* BrickChunkL */1, obj.px, obj.py);
+        var p2 = Particle.make({
+              x: -3,
+              y: -4
+            }, {
+              x: 0,
+              y: 0.2
+            }, /* BrickChunkL */1, obj.px, obj.py);
+        var p3 = Particle.make({
+              x: 3,
+              y: -4
+            }, {
+              x: 0,
+              y: 0.2
+            }, /* BrickChunkR */2, obj.px, obj.py);
+        var p4 = Particle.make({
+              x: 5,
+              y: -5
+            }, {
+              x: 0,
+              y: 0.2
+            }, /* BrickChunkR */2, obj.px, obj.py);
         return {
                 hd: p1,
                 tl: {

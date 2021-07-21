@@ -2,47 +2,25 @@
 
 import * as Sprite from "./Sprite.js";
 
-function pairToXy(pair) {
-  return {
-          x: pair[0],
-          y: pair[1]
-        };
-}
-
-function makeParams(sprite, lifetime) {
+function make(velOpt, accOpt, partType, px, py) {
+  var vel = velOpt !== undefined ? velOpt : ({
+        x: 0,
+        y: 0
+      });
+  var acc = accOpt !== undefined ? accOpt : ({
+        x: 0,
+        y: 0
+      });
+  var sprite = Sprite.makeParticle(partType);
+  var lifetime = partType === 2 || partType === 1 ? 300 : 30;
   return {
           sprite: sprite,
-          lifetime: lifetime
-        };
-}
-
-function makeType(typ) {
-  return {
-          sprite: Sprite.makeParticle(typ),
-          lifetime: typ === 2 || typ === 1 ? 300 : 30
-        };
-}
-
-function make(velOpt, accOpt, partType, px, py) {
-  var vel = velOpt !== undefined ? velOpt : [
-      0,
-      0
-    ];
-  var acc = accOpt !== undefined ? accOpt : [
-      0,
-      0
-    ];
-  var params = makeType(partType);
-  var vel$1 = pairToXy(vel);
-  var acc$1 = pairToXy(acc);
-  return {
-          params: params,
+          lifetime: lifetime,
           px: px,
           py: py,
-          vel: vel$1,
-          acc: acc$1,
-          kill: false,
-          life: params.lifetime
+          vel: vel,
+          acc: acc,
+          kill: false
         };
 }
 
@@ -66,10 +44,10 @@ function makeScore(score, pos) {
           score !== 100 && score >= 200 ? /* Score200 */4 : /* Score100 */3
         )
     );
-  var partial_arg = [
-    0.5,
-    -0.7
-  ];
+  var partial_arg = {
+    x: 0.5,
+    y: -0.7
+  };
   return function (param) {
     return make(partial_arg, undefined, t, pos, param);
   };
@@ -88,8 +66,8 @@ function updatePos(part) {
 }
 
 function $$process(part) {
-  part.life = part.life - 1 | 0;
-  if (part.life === 0) {
+  part.lifetime = part.lifetime - 1 | 0;
+  if (part.lifetime === 0) {
     part.kill = true;
   }
   updateVel(part);
@@ -97,9 +75,6 @@ function $$process(part) {
 }
 
 export {
-  pairToXy ,
-  makeParams ,
-  makeType ,
   make ,
   makeScore ,
   updateVel ,

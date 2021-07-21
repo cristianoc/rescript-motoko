@@ -1,17 +1,8 @@
-open Actors
-
-type t = {
-  mutable px: float,
-  mutable py: float,
-  v_dim: Actors.xy,
-  m_dim: Actors.xy,
-}
-
 let make = (~level) => {
   let {widthScaled, heightScaled} = Load.getSizeScaled()
   let (mx, my) = Config.mapDim(~level)
   {
-    px: 0.,
+    Types.px: 0.,
     py: 0.,
     v_dim: {
       x: widthScaled,
@@ -35,7 +26,7 @@ let calcViewportPoint = (cc, vc, mc) => {
 }
 
 // Return whether a coordinate pair [pos] is inside the viewport [v]
-let inViewport = (v, px, py) => {
+let inViewport = (v: Types.viewport, px, py) => {
   let margin = 32.
   let (v_min_x, v_max_x) = (v.px -. margin, v.px +. v.v_dim.x)
   let (v_min_y, v_max_y) = (v.py -. margin, v.py +. v.v_dim.y)
@@ -44,20 +35,20 @@ let inViewport = (v, px, py) => {
 
 // Return whether an object is outside of the viewport and below it. This is
 // useful for determining whether to process falling out of screen normally.
-let outOfViewportBelow = (v, y) => {
+let outOfViewportBelow = (v: Types.viewport, y) => {
   let vMaxY = v.v_dim.y *. 1.5
   y +. 20.0 >= vMaxY
 }
 
 // Convert a x,y [coord] pair in absolute coordinates to coordinates relative
 // to the viewport
-let fromCoord = (viewport, px, py) => {
-  x: px -. viewport.px,
+let fromCoord = (viewport: Types.viewport, px, py) => {
+  Types.x: px -. viewport.px,
   y: py -. viewport.py,
 }
 
 // Update the viewport [vpt] given the new center x,y coordinate pair [ctr]
-let update = (vpt, px, py) => {
+let update = (vpt: Types.viewport, px, py) => {
   let newX = calcViewportPoint(px, vpt.v_dim.x, vpt.m_dim.x)
   let newY = calcViewportPoint(py, vpt.v_dim.y, vpt.m_dim.y)
   vpt.px = newX
