@@ -124,15 +124,18 @@ let processCollision = (.
   state: Types.state,
 ) =>
   switch (obj, collid, dir2) {
-  | ({objTyp: Player(_)}, {objTyp: Player(_)}, East | West) =>
+  | ({objTyp: Player1(_) | Player2(_)}, {objTyp: Player1(_) | Player2(_)}, East | West) =>
     collid.vx = collid.vx +. obj.vx
     (None, None)
-  | ({objTyp: Player(_)}, {objTyp: Enemy(typ), sprite: s2}, South)
-  | ({objTyp: Enemy(typ), sprite: s2}, {objTyp: Player(_)}, North) =>
+  | ({objTyp: Player1(_) | Player2(_)}, {objTyp: Enemy(typ), sprite: s2}, South)
+  | ({objTyp: Enemy(typ), sprite: s2}, {objTyp: Player1(_) | Player2(_)}, North) =>
     playerAttackEnemy(. obj, typ, s2, collid, state)
-  | ({objTyp: Player(_)}, {objTyp: Enemy(_)}, _) => enemyAttackPlayer(. collid, obj, state.level)
-  | ({objTyp: Enemy(_)}, {objTyp: Player(_)}, _) => enemyAttackPlayer(. obj, collid, state.level)
-  | ({objTyp: Player(_)}, {objTyp: Item(t2)}, _) | ({objTyp: Item(t2)}, {objTyp: Player(_)}, _) =>
+  | ({objTyp: Player1(_) | Player2(_)}, {objTyp: Enemy(_)}, _) =>
+    enemyAttackPlayer(. collid, obj, state.level)
+  | ({objTyp: Enemy(_)}, {objTyp: Player1(_) | Player2(_)}, _) =>
+    enemyAttackPlayer(. obj, collid, state.level)
+  | ({objTyp: Player1(_) | Player2(_)}, {objTyp: Item(t2)}, _)
+  | ({objTyp: Item(t2)}, {objTyp: Player1(_) | Player2(_)}, _) =>
     switch t2 {
     | Mushroom =>
       Object.decHealth(collid)
@@ -161,9 +164,14 @@ let processCollision = (.
       Object.decHealth(collid)
       Object.reverseLeftRight(obj)
       (None, None)
-    | (RKoopaShell, QBlock(typ)) | (GKoopaShell, QBlock(typ)) =>
+    | (RKoopaShell | GKoopaShell, QBlockMushroom) =>
       let updatedBlock = Object.evolveBlock(. collid, state.level)
-      let spawnedItem = Object.spawnAbove(. obj.dir, collid, typ, state.level)
+      let spawnedItem = Object.spawnAbove(. obj.dir, collid, Mushroom, state.level)
+      Object.revDir(obj, t1, s1)
+      (Some(updatedBlock), Some(spawnedItem))
+    | (RKoopaShell | GKoopaShell, QBlockCoin) =>
+      let updatedBlock = Object.evolveBlock(. collid, state.level)
+      let spawnedItem = Object.spawnAbove(. obj.dir, collid, Coin, state.level)
       Object.revDir(obj, t1, s1)
       (Some(updatedBlock), Some(spawnedItem))
     | (_, _) =>
@@ -176,11 +184,16 @@ let processCollision = (.
   | ({objTyp: Enemy(_)}, {objTyp: Block(_)}, _) | ({objTyp: Item(_)}, {objTyp: Block(_)}, _) =>
     Object.collideBlock(dir2, obj)
     (None, None)
-  | ({objTyp: Player(t1, _)}, {objTyp: Block(t)}, North) =>
+  | ({objTyp: Player1(t1) | Player2(t1)}, {objTyp: Block(t)}, North) =>
     switch t {
-    | QBlock(typ) =>
+    | QBlockMushroom =>
       let updatedBlock = Object.evolveBlock(. collid, state.level)
-      let spawnedItem = Object.spawnAbove(. obj.dir, collid, typ, state.level)
+      let spawnedItem = Object.spawnAbove(. obj.dir, collid, Mushroom, state.level)
+      Object.collideBlock(dir2, obj)
+      (Some(spawnedItem), Some(updatedBlock))
+    | QBlockCoin =>
+      let updatedBlock = Object.evolveBlock(. collid, state.level)
+      let spawnedItem = Object.spawnAbove(. obj.dir, collid, Coin, state.level)
       Object.collideBlock(dir2, obj)
       (Some(spawnedItem), Some(updatedBlock))
     | Brick =>
@@ -202,7 +215,7 @@ let processCollision = (.
       Object.collideBlock(dir2, obj)
       (None, None)
     }
-  | ({objTyp: Player(_)}, {objTyp: Block(t)}, _) =>
+  | ({objTyp: Player1(_) | Player2(_)}, {objTyp: Block(t)}, _) =>
     switch t {
     | Panel =>
       state.status = Finished({
@@ -307,7 +320,11 @@ let findObjectsColliding = (obj: Types.obj, ~allCollids, ~state: Types.state) =>
 // such as viewport centering only occur with the player
 let updateObject = (~allCollids, obj: Types.obj, ~state) =>
   switch obj.objTyp {
-  | Player(_, playerNum) =>
+  | Player1(_) | Player2(_) =>
+    let playerNum: Types.playerNum = switch obj.objTyp {
+    | Player1(_) => One
+    | _ => Two
+    }
     let keys = Keys.translateKeys(playerNum)
     obj.crouch = false
     obj->Object.updatePlayer(playerNum, keys)

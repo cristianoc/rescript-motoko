@@ -424,21 +424,21 @@ var groundParams = spriteParams(undefined, undefined, undefined, undefined, unde
     ], /* Ground */4);
 
 function blockParams(x) {
-  if (typeof x !== "number") {
-    return qBlockParams;
-  }
   switch (x) {
-    case /* QBlockUsed */0 :
+    case /* QBlockMushroom */0 :
+    case /* QBlockCoin */1 :
+        return qBlockParams;
+    case /* QBlockUsed */2 :
         return qBlockUsedParams;
-    case /* Brick */1 :
+    case /* Brick */3 :
         return brickParams;
-    case /* UnBBlock */2 :
+    case /* UnBBlock */4 :
         return unBBlockParams;
-    case /* Cloud */3 :
+    case /* Cloud */5 :
         return cloudParams;
-    case /* Panel */4 :
+    case /* Panel */6 :
         return panelParams;
-    case /* Ground */5 :
+    case /* Ground */7 :
         return groundParams;
     
   }

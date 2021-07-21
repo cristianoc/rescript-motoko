@@ -41,7 +41,8 @@ type enemyTyp =
   | RKoopaShell
 
 type blockTyp =
-  | QBlock(itemTyp)
+  | QBlockMushroom
+  | QBlockCoin
   | QBlockUsed
   | Brick
   | UnBBlock
@@ -113,7 +114,8 @@ type sprite = {
 }
 
 type objTyp =
-  | Player(plTyp, playerNum)
+  | Player1(plTyp)
+  | Player2(plTyp)
   | Enemy(enemyTyp)
   | Item(itemTyp)
   | Block(blockTyp)
