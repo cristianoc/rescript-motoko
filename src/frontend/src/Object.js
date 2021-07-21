@@ -253,7 +253,7 @@ function reverseLeftRight(obj) {
   
 }
 
-function evolveEnemy(player_dir, typ, spr, obj, level) {
+function evolveEnemy(player_dir, typ, spr, obj, level, objects) {
   switch (typ) {
     case /* Goomba */0 :
         obj.kill = true;
@@ -264,12 +264,15 @@ function evolveEnemy(player_dir, typ, spr, obj, level) {
               _0: /* GKoopaShell */3
             }, Sprite.enemyParams(/* GKoopaShell */3, obj.dir), obj.px, obj.py);
         normalizePos(newObj, spr.params, newObj.sprite.params);
-        return newObj;
+        objects.push(newObj);
+        return ;
     case /* RKoopa */2 :
-        return make(undefined, 3, obj.dir, level, {
-                    TAG: /* Enemy */2,
-                    _0: /* RKoopaShell */4
-                  }, Sprite.enemyParams(/* RKoopaShell */4, obj.dir), obj.px, obj.py);
+        var newObj$1 = make(undefined, 3, obj.dir, level, {
+              TAG: /* Enemy */2,
+              _0: /* RKoopaShell */4
+            }, Sprite.enemyParams(/* RKoopaShell */4, obj.dir), obj.px, obj.py);
+        objects.push(newObj$1);
+        return ;
     case /* GKoopaShell */3 :
     case /* RKoopaShell */4 :
         break;
@@ -278,10 +281,10 @@ function evolveEnemy(player_dir, typ, spr, obj, level) {
   obj.dir = player_dir;
   if (obj.vx !== 0) {
     obj.vx = 0;
+    return ;
   } else {
-    setVelToSpeed(obj);
+    return setVelToSpeed(obj);
   }
-  
 }
 
 function revDir(o, t, s) {
@@ -304,15 +307,17 @@ function decHealth(obj) {
   
 }
 
-function evolveBlock(obj, level) {
+function evolveBlock(obj, level, objects) {
   decHealth(obj);
-  return make(false, undefined, obj.dir, level, {
-              TAG: /* Block */4,
-              _0: /* QBlockUsed */2
-            }, Sprite.blockParams(/* QBlockUsed */2), obj.px, obj.py);
+  var newObj = make(false, undefined, obj.dir, level, {
+        TAG: /* Block */4,
+        _0: /* QBlockUsed */2
+      }, Sprite.blockParams(/* QBlockUsed */2), obj.px, obj.py);
+  objects.push(newObj);
+  
 }
 
-function spawnAbove(player_dir, obj, itemTyp, level) {
+function spawnAbove(player_dir, obj, itemTyp, level, objects) {
   var item = make(itemTyp !== /* Coin */1, undefined, /* Left */0, level, {
         TAG: /* Item */3,
         _0: itemTyp
@@ -320,7 +325,8 @@ function spawnAbove(player_dir, obj, itemTyp, level) {
   item.py = item.py - item.sprite.params.frameSize[1];
   item.dir = player_dir ? /* Left */0 : /* Right */1;
   setVelToSpeed(item);
-  return item;
+  objects.push(item);
+  
 }
 
 function getAabb(obj) {

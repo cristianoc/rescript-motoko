@@ -165,9 +165,9 @@ function drawState(state, fps_) {
   if (Keys.checkTwoPlayers(undefined)) {
     drawObject(state.player2, state.viewport);
   }
-  Belt_List.forEach(state.objects, (function (obj) {
-          return drawObject(obj, state.viewport);
-        }));
+  state.objects.forEach(function (obj) {
+        return drawObject(obj, state.viewport);
+      });
   drawParticles(state.particles, state.viewport);
   fps(fps_);
   return scoreAndCoins(state.score, state.coins);

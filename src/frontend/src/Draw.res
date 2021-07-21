@@ -139,7 +139,7 @@ let drawState = (state: Types.state, ~fps as fps_) => {
   if Keys.checkTwoPlayers() {
     state.player2->drawObject(~viewport=state.viewport)
   }
-  state.objects->List.forEach(obj => obj->drawObject(~viewport=state.viewport))
+  state.objects->Js.Array2.forEach(obj => obj->drawObject(~viewport=state.viewport))
   state.particles->drawParticles(~viewport=state.viewport)
   fps(fps_)
   scoreAndCoins(state.score, state.coins)
