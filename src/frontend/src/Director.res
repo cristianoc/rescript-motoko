@@ -487,13 +487,13 @@ let rec updateLoop = () => {
   | Playing =>
     let fps = calcFps()
     let oldObjects = global.state.objects
-    global.state.objects = list{}
-    global.state.particles = global.state.particles->Belt.Array.keep(updateParticle)
     let players = Keys.checkTwoPlayers()
       ? list{global.state.player1, global.state.player2}
       : list{global.state.player1}
     let visibleCollids =
       players->Belt.List.concat(broadPhase(~allCollids=oldObjects, global.state.viewport))
+    global.state.objects = list{}
+    global.state.particles = global.state.particles->Belt.Array.keep(updateParticle)
     global.state.player1->updateObject(~visibleCollids, ~players, ~state=global.state)
     if Keys.checkTwoPlayers() {
       global.state.player2->updateObject(~visibleCollids, ~players, ~state=global.state)

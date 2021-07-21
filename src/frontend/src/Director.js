@@ -742,8 +742,6 @@ function updateLoop(_param) {
         case /* Playing */2 :
             var fps = calcFps(undefined);
             var oldObjects = $$global.state.objects;
-            $$global.state.objects = /* [] */0;
-            $$global.state.particles = Belt_Array.keep($$global.state.particles, updateParticle);
             var players = Keys.checkTwoPlayers(undefined) ? ({
                   hd: $$global.state.player1,
                   tl: {
@@ -755,6 +753,8 @@ function updateLoop(_param) {
                   tl: /* [] */0
                 });
             var visibleCollids = Belt_List.concat(players, broadPhase(oldObjects, $$global.state.viewport));
+            $$global.state.objects = /* [] */0;
+            $$global.state.particles = Belt_Array.keep($$global.state.particles, updateParticle);
             updateObject($$global.state.player1, visibleCollids, players, $$global.state);
             if (Keys.checkTwoPlayers(undefined)) {
               updateObject($$global.state.player2, visibleCollids, players, $$global.state);
