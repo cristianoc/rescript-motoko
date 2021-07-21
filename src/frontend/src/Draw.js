@@ -147,7 +147,7 @@ function drawParticles(particles, viewport) {
               }));
 }
 
-function object(obj, viewport) {
+function drawObject(obj, viewport) {
   var match = Viewport.fromCoord(viewport, obj.px, obj.py);
   var x = match.x;
   var y = match.y;
@@ -159,20 +159,14 @@ function object(obj, viewport) {
 }
 
 function drawState(state, fps_) {
-  var objectsWihtPlayer1_0 = state.player1;
-  var objectsWihtPlayer1_1 = state.objects;
-  var objectsWihtPlayer1 = {
-    hd: objectsWihtPlayer1_0,
-    tl: objectsWihtPlayer1_1
-  };
-  var objectsWithPlayers = Keys.checkTwoPlayers(undefined) ? ({
-        hd: state.player2,
-        tl: objectsWihtPlayer1
-      }) : objectsWihtPlayer1;
   clearCanvas(undefined);
   drawBgd(state);
-  Belt_List.forEach(objectsWithPlayers, (function (obj) {
-          return object(obj, state.viewport);
+  drawObject(state.player1, state.viewport);
+  if (Keys.checkTwoPlayers(undefined)) {
+    drawObject(state.player2, state.viewport);
+  }
+  Belt_List.forEach(state.objects, (function (obj) {
+          return drawObject(obj, state.viewport);
         }));
   drawParticles(state.particles, state.viewport);
   fps(fps_);
@@ -196,7 +190,7 @@ export {
   blackScreen ,
   levelFinished ,
   drawParticles ,
-  object ,
+  drawObject ,
   drawState ,
   
 }
