@@ -22,33 +22,6 @@ function setVelToSpeed(obj) {
   
 }
 
-function makePlayer(o) {
-  o.speed = Config.playerSpeed;
-  
-}
-
-function makeItem(o, t) {
-  if (t) {
-    o.hasGravity = false;
-    return ;
-  }
-  
-}
-
-function makeEnemy(o, t, level) {
-  if (t >= 3) {
-    o.speed = 3;
-  } else {
-    o.speed = Config.levelSpeed(level);
-  }
-  
-}
-
-function makeBlock(o, t) {
-  o.hasGravity = false;
-  
-}
-
 function newId(param) {
   idCounter.contents = idCounter.contents + 1 | 0;
   return idCounter.contents;
@@ -78,16 +51,23 @@ function make(hasGravityOpt, speedOpt, dirOpt, level, objTyp, spriteParams, px, 
     score: 0
   };
   switch (objTyp.TAG | 0) {
-    case /* Player */0 :
+    case /* Player1 */0 :
+    case /* Player2 */1 :
         newObj.speed = Config.playerSpeed;
         break;
-    case /* Enemy */1 :
-        makeEnemy(newObj, objTyp._0, level);
+    case /* Enemy */2 :
+        if (objTyp._0 >= 3) {
+          newObj.speed = 3;
+        } else {
+          newObj.speed = Config.levelSpeed(level);
+        }
         break;
-    case /* Item */2 :
-        makeItem(newObj, objTyp._0);
+    case /* Item */3 :
+        if (objTyp._0) {
+          newObj.hasGravity = false;
+        }
         break;
-    case /* Block */3 :
+    case /* Block */4 :
         newObj.hasGravity = false;
         break;
     
@@ -97,16 +77,18 @@ function make(hasGravityOpt, speedOpt, dirOpt, level, objTyp, spriteParams, px, 
 
 function isPlayer(o) {
   var match = o.objTyp;
-  if (match.TAG === /* Player */0) {
-    return true;
-  } else {
-    return false;
+  switch (match.TAG | 0) {
+    case /* Player1 */0 :
+    case /* Player2 */1 :
+        return true;
+    default:
+      return false;
   }
 }
 
 function isEnemy(o) {
   var match = o.objTyp;
-  if (match.TAG === /* Enemy */1) {
+  if (match.TAG === /* Enemy */2) {
     return true;
   } else {
     return false;
@@ -200,11 +182,13 @@ function updatePlayer(player, playerNum, keys) {
   }
   var newSprite = Sprite.makeFromParams(Sprite.playerParams(plSize, playerTyp, player.dir, playerNum));
   normalizePos(player, player.sprite.params, newSprite.params);
-  player.objTyp = {
-    TAG: /* Player */0,
-    _0: plSize,
-    _1: playerNum
-  };
+  player.objTyp = playerNum ? ({
+        TAG: /* Player2 */1,
+        _0: plSize
+      }) : ({
+        TAG: /* Player1 */0,
+        _0: plSize
+      });
   player.sprite = newSprite;
   
 }
@@ -276,14 +260,14 @@ function evolveEnemy(player_dir, typ, spr, obj, level) {
         return ;
     case /* GKoopa */1 :
         var newObj = make(undefined, 3, obj.dir, level, {
-              TAG: /* Enemy */1,
+              TAG: /* Enemy */2,
               _0: /* GKoopaShell */3
             }, Sprite.enemyParams(/* GKoopaShell */3, obj.dir), obj.px, obj.py);
         normalizePos(newObj, spr.params, newObj.sprite.params);
         return newObj;
     case /* RKoopa */2 :
         return make(undefined, 3, obj.dir, level, {
-                    TAG: /* Enemy */1,
+                    TAG: /* Enemy */2,
                     _0: /* RKoopaShell */4
                   }, Sprite.enemyParams(/* RKoopaShell */4, obj.dir), obj.px, obj.py);
     case /* GKoopaShell */3 :
@@ -323,14 +307,14 @@ function decHealth(obj) {
 function evolveBlock(obj, level) {
   decHealth(obj);
   return make(false, undefined, obj.dir, level, {
-              TAG: /* Block */3,
-              _0: /* QBlockUsed */0
-            }, Sprite.blockParams(/* QBlockUsed */0), obj.px, obj.py);
+              TAG: /* Block */4,
+              _0: /* QBlockUsed */2
+            }, Sprite.blockParams(/* QBlockUsed */2), obj.px, obj.py);
 }
 
 function spawnAbove(player_dir, obj, itemTyp, level) {
   var item = make(itemTyp !== /* Coin */1, undefined, /* Left */0, level, {
-        TAG: /* Item */2,
+        TAG: /* Item */3,
         _0: itemTyp
       }, Sprite.makeParams(itemTyp), obj.px, obj.py);
   item.py = item.py - item.sprite.params.frameSize[1];
@@ -369,31 +353,31 @@ function colBypass(o1, o2) {
   var match = o1.objTyp;
   var match$1 = o2.objTyp;
   switch (match.TAG | 0) {
-    case /* Player */0 :
-        if (match$1.TAG === /* Enemy */1) {
-          return o1.invuln > 0;
-        } else {
-          return false;
-        }
-    case /* Enemy */1 :
-        if (match$1.TAG === /* Item */2) {
+    case /* Player1 */0 :
+    case /* Player2 */1 :
+        break;
+    case /* Enemy */2 :
+        if (match$1.TAG === /* Item */3) {
           return true;
         } else {
           return false;
         }
-    case /* Item */2 :
+    case /* Item */3 :
         switch (match$1.TAG | 0) {
-          case /* Enemy */1 :
-          case /* Item */2 :
+          case /* Enemy */2 :
+          case /* Item */3 :
               return true;
-          case /* Player */0 :
-          case /* Block */3 :
-              return false;
-          
+          default:
+            return false;
         }
-    case /* Block */3 :
+    case /* Block */4 :
         return false;
     
+  }
+  if (match$1.TAG === /* Enemy */2) {
+    return o1.invuln > 0;
+  } else {
+    return false;
   }
 }
 
@@ -432,9 +416,10 @@ function checkCollision(o1, o2) {
 function kill(obj) {
   var t = obj.objTyp;
   switch (t.TAG | 0) {
-    case /* Player */0 :
+    case /* Player1 */0 :
+    case /* Player2 */1 :
         return /* [] */0;
-    case /* Enemy */1 :
+    case /* Enemy */2 :
         var score = obj.score > 0 ? ({
               hd: Particle.makeScore(obj.score, obj.px)(obj.py),
               tl: /* [] */0
@@ -444,7 +429,7 @@ function kill(obj) {
               tl: /* [] */0
             });
         return Pervasives.$at(score, remains);
-    case /* Item */2 :
+    case /* Item */3 :
         if (t._0) {
           return /* [] */0;
         } else {
@@ -453,8 +438,8 @@ function kill(obj) {
                   tl: /* [] */0
                 };
         }
-    case /* Block */3 :
-        if (t._0 !== 1) {
+    case /* Block */4 :
+        if (t._0 !== 3) {
           return /* [] */0;
         }
         var p1 = Particle.make({
@@ -505,10 +490,6 @@ function kill(obj) {
 export {
   idCounter ,
   setVelToSpeed ,
-  makePlayer ,
-  makeItem ,
-  makeEnemy ,
-  makeBlock ,
   newId ,
   make ,
   isPlayer ,

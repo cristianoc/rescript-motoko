@@ -16,7 +16,6 @@ var lazyCanvasData = {
         document.addEventListener("keydown", Keys.keydown, true);
         document.addEventListener("keyup", Keys.keyup, true);
         return {
-                canvasElement: el,
                 sizeScaled: {
                   widthScaled: width / Config.scale,
                   heightScaled: height / Config.scale
@@ -29,7 +28,7 @@ var lazyCanvasData = {
             RE_EXN_ID: "Assert_failure",
             _1: [
               "Load.res",
-              13,
+              12,
               4
             ],
             Error: new Error()
@@ -39,10 +38,6 @@ var lazyCanvasData = {
 
 function getCanvasData(param) {
   return CamlinternalLazy.force(lazyCanvasData);
-}
-
-function getCanvas(param) {
-  return CamlinternalLazy.force(lazyCanvasData).canvasElement;
 }
 
 function getContext(param) {
@@ -56,7 +51,6 @@ function getSizeScaled(param) {
 export {
   lazyCanvasData ,
   getCanvasData ,
-  getCanvas ,
   getContext ,
   getSizeScaled ,
   

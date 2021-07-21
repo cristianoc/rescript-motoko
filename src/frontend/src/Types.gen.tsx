@@ -32,16 +32,14 @@ export type enemyTyp =
 
 // tslint:disable-next-line:interface-over-type-literal
 export type blockTyp = 
-    "QBlockUsed"
+    "QBlockMushroom"
+  | "QBlockCoin"
+  | "QBlockUsed"
   | "Brick"
   | "UnBBlock"
   | "Cloud"
   | "Panel"
-  | "Ground"
-  | { tag: "QBlock"; value: itemTyp };
-
-// tslint:disable-next-line:interface-over-type-literal
-export type playerNum = "One" | "Two";
+  | "Ground";
 
 // tslint:disable-next-line:interface-over-type-literal
 export type status = 
@@ -90,7 +88,8 @@ export type sprite = {
 
 // tslint:disable-next-line:interface-over-type-literal
 export type objTyp = 
-    { tag: "Player"; value: [plTyp, playerNum] }
+    { tag: "Player1"; value: plTyp }
+  | { tag: "Player2"; value: plTyp }
   | { tag: "Enemy"; value: enemyTyp }
   | { tag: "Item"; value: itemTyp }
   | { tag: "Block"; value: blockTyp };

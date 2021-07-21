@@ -39,7 +39,7 @@ let convertCoinToObj = ((_, x, y), ~level) => {
 let addCoins = (objects, x, y0, ~level) => {
   let y = y0 -. 16.
   if Random.bool() && (trimEdge(x, y, ~level) && !(objects.contents->memPos(x, y))) {
-    objects := list{(Types.QBlock(Coin), x, y)->convertCoinToObj(~level), ...objects.contents}
+    objects := list{(Types.QBlockCoin, x, y)->convertCoinToObj(~level), ...objects.contents}
   }
 }
 
@@ -149,7 +149,7 @@ let chooseBlockPattern = (cbx: float, cby: float, blocks: ref<list<Types.obj>>, 
     let stairTyp = randomStairTyp()
     let lifeBlock = Random.int(5) == 0
     let middleBlock = if lifeBlock {
-      Types.QBlock(Mushroom)
+      Types.QBlockMushroom
     } else {
       stairTyp
     }
@@ -281,9 +281,12 @@ let generateHelper = (~level): list<Types.obj> => {
   list{panel, ...objects.contents}
 }
 
-let newPlayer = playerNum =>
+let newPlayer = (playerNum: Types.playerNum) =>
   Object.make(
-    ~objTyp=Player(SmallM, playerNum),
+    ~objTyp=switch playerNum {
+    | One => Player1(SmallM)
+    | Two => Player2(SmallM)
+    },
     ~spriteParams=Sprite.playerParams(SmallM, Standing, Left, ~playerNum),
     100.,
     224.,

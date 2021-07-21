@@ -282,7 +282,7 @@ let blockParams = x =>
   /* 16x16 grid with 0x0 offset */
   switch x {
   | Types.Brick => brickParams
-  | QBlock(_) => qBlockParams
+  | QBlockMushroom | QBlockCoin => qBlockParams
   | QBlockUsed => qBlockUsedParams
   | UnBBlock => unBBlockParams
   | Cloud => cloudParams

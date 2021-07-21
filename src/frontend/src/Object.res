@@ -17,32 +17,6 @@ let setVelToSpeed = (obj: Types.obj) => {
   }
 }
 
-/* The following make functions all set the objects' has_gravity and speed,
- * returning an [obj_params] that can be directly plugged into the [obj]
- * during creation. */
-let makePlayer = (o: Types.obj) => o.speed = Config.playerSpeed
-
-let makeItem = (o: Types.obj, t) =>
-  switch t {
-  | Types.Mushroom => ()
-  | Coin => o.hasGravity = false
-  }
-
-let makeEnemy = (o: Types.obj, t, level) =>
-  switch t {
-  | Types.Goomba
-  | GKoopa
-  | RKoopa =>
-    o.speed = Config.levelSpeed(~level)
-  | GKoopaShell => o.speed = 3.
-  | RKoopaShell => o.speed = 3.
-  }
-
-let makeBlock = (o: Types.obj, t) =>
-  switch t {
-  | Types.QBlock(_) | QBlockUsed | Brick | UnBBlock | Cloud | Panel | Ground => o.hasGravity = false
-  }
-
 /* Used in object creation and to compare two objects. */
 let newId = () => {
   idCounter := idCounter.contents + 1
@@ -79,17 +53,29 @@ let make = (
     score: 0,
   }
   switch objTyp {
-  | Player(_) => newObj->makePlayer
-  | Item(item) => newObj->makeItem(item)
-  | Enemy(t) => newObj->makeEnemy(t, level)
-  | Block(t) => newObj->makeBlock(t)
+  | Player1(_) | Player2(_) => newObj.speed = Config.playerSpeed
+  | Item(item) =>
+    switch item {
+    | Types.Mushroom => ()
+    | Coin => newObj.hasGravity = false
+    }
+  | Enemy(t) =>
+    switch t {
+    | Types.Goomba
+    | GKoopa
+    | RKoopa =>
+      newObj.speed = Config.levelSpeed(~level)
+    | GKoopaShell => newObj.speed = 3.
+    | RKoopaShell => newObj.speed = 3.
+    }
+  | Block(_) => newObj.hasGravity = false
   }
   newObj
 }
 
 let isPlayer = (o: Types.obj) =>
   switch o {
-  | {objTyp: Player(_)} => true
+  | {objTyp: Player1(_) | Player2(_)} => true
   | _ => false
   }
 
@@ -194,7 +180,10 @@ let updatePlayer = (player: Types.obj, playerNum, keys) => {
       Sprite.playerParams(plSize, playerTyp, player.dir, ~playerNum)->Sprite.makeFromParams
     let newTyp = plSize
     normalizePos(player, player.sprite.params, newSprite.params)
-    player.objTyp = Player(newTyp, playerNum)
+    player.objTyp = switch playerNum {
+    | One => Player1(newTyp)
+    | Two => Player2(newTyp)
+    }
     player.sprite = newSprite
   | None => ()
   }
@@ -365,7 +354,7 @@ let colBypass = (o1: Types.obj, o2: Types.obj) =>
   (o2.kill ||
   switch (o1.objTyp, o2.objTyp) {
   | (Item(_), Enemy(_)) | (Enemy(_), Item(_)) | (Item(_), Item(_)) => true
-  | (Player(_), Enemy(_)) =>
+  | (Player1(_) | Player2(_), Enemy(_)) =>
     if o1.invuln > 0 {
       true
     } else {

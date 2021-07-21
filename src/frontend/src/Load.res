@@ -1,7 +1,6 @@
 type sizeScaled = {widthScaled: float, heightScaled: float}
 
 type canvasData = {
-  canvasElement: Html.canvasElement,
   sizeScaled: sizeScaled,
   context: Html.canvasRenderingContext2D,
 }
@@ -20,7 +19,6 @@ let lazyCanvasData = lazy (
     Html.addEventListener(Html.document, "keydown", Keys.keydown, true)
     Html.addEventListener(Html.document, "keyup", Keys.keyup, true)
     {
-      canvasElement: canvasElement,
       context: context,
       sizeScaled: {widthScaled: width /. Config.scale, heightScaled: height /. Config.scale},
     }
@@ -28,8 +26,6 @@ let lazyCanvasData = lazy (
 )
 
 let getCanvasData = () => Lazy.force(lazyCanvasData)
-
-let getCanvas = () => getCanvasData().canvasElement
 
 let getContext = () => getCanvasData().context
 

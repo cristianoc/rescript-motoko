@@ -31,7 +31,7 @@ function trimEdge(x, y, level) {
 
 function convertCoinToObj(param, level) {
   return $$Object.make(false, undefined, undefined, level, {
-              TAG: /* Item */2,
+              TAG: /* Item */3,
               _0: /* Coin */1
             }, Sprite.makeParams(/* Coin */1), param[1], param[2]);
 }
@@ -41,9 +41,7 @@ function addCoins(objects, x, y0, level) {
   if (Random.bool(undefined) && trimEdge(x, y, level) && !memPos(objects.contents, x, y)) {
     objects.contents = {
       hd: convertCoinToObj([
-            /* QBlock */{
-              _0: /* Coin */1
-            },
+            /* QBlockCoin */1,
             x,
             y
           ], level),
@@ -57,7 +55,7 @@ function addCoins(objects, x, y0, level) {
 function convertEnemyToObj(param, level) {
   var enemyTyp = param[0];
   var obj = $$Object.make(undefined, undefined, undefined, level, {
-        TAG: /* Enemy */1,
+        TAG: /* Enemy */2,
         _0: enemyTyp
       }, Sprite.enemyParams(enemyTyp, /* Left */0), param[1], param[2]);
   $$Object.setVelToSpeed(obj);
@@ -100,7 +98,7 @@ function addBlock(objects, blockTyp, xBlock, yBlock, level) {
     return ;
   }
   var obj = $$Object.make(undefined, undefined, undefined, level, {
-        TAG: /* Block */3,
+        TAG: /* Block */4,
         _0: blockTyp
       }, Sprite.blockParams(blockTyp), x, y);
   objects.contents = {
@@ -160,9 +158,9 @@ function generateClouds(_cbx, cby, typ, _num, blocks, level) {
 
 function randomStairTyp(param) {
   if (Random.bool(undefined)) {
-    return /* UnBBlock */2;
+    return /* UnBBlock */4;
   } else {
-    return /* Brick */1;
+    return /* Brick */3;
   }
 }
 
@@ -172,9 +170,7 @@ function chooseBlockPattern(cbx, cby, blocks, level) {
   }
   var stairTyp = randomStairTyp(undefined);
   var lifeBlock = Random.$$int(5) === 0;
-  var middleBlock = lifeBlock ? /* QBlock */({
-        _0: /* Mushroom */0
-      }) : stairTyp;
+  var middleBlock = lifeBlock ? /* QBlockMushroom */0 : stairTyp;
   var match = Random.$$int(5);
   switch (match) {
     case 0 :
@@ -184,7 +180,7 @@ function chooseBlockPattern(cbx, cby, blocks, level) {
     case 1 :
         var numClouds = Random.$$int(5) + 5 | 0;
         if (cby < 5) {
-          return generateClouds(cbx, cby, /* Cloud */3, numClouds, blocks, level);
+          return generateClouds(cbx, cby, /* Cloud */5, numClouds, blocks, level);
         } else {
           return ;
         }
@@ -195,7 +191,7 @@ function chooseBlockPattern(cbx, cby, blocks, level) {
           return ;
         }
     case 3 :
-        if (stairTyp === /* Brick */1 && Config.blockh(level) - cby > 3) {
+        if (stairTyp === /* Brick */3 && Config.blockh(level) - cby > 3) {
           return generateAirdownStairs(cbx, cby, stairTyp, blocks, level);
         } else if (Config.blockh(level) - cby > 2) {
           return generateAirupStairs(cbx, cby, stairTyp, blocks, level);
@@ -273,9 +269,9 @@ function generateBlocks(objects, _cbx, _cby, level) {
 
 function generatePanel(level) {
   return $$Object.make(undefined, undefined, undefined, level, {
-              TAG: /* Block */3,
-              _0: /* Panel */4
-            }, Sprite.blockParams(/* Panel */4), Config.blockw(level) * 16 - 256, Config.blockh(level) * 16 * 2 / 3);
+              TAG: /* Block */4,
+              _0: /* Panel */6
+            }, Sprite.blockParams(/* Panel */6), Config.blockw(level) * 16 - 256, Config.blockh(level) * 16 * 2 / 3);
 }
 
 function convertBlockToObj(param) {
@@ -283,7 +279,7 @@ function convertBlockToObj(param) {
   var x = param[1];
   var blockTyp = param[0];
   var arg = {
-    TAG: /* Block */3,
+    TAG: /* Block */4,
     _0: blockTyp
   };
   var arg$1 = Sprite.blockParams(blockTyp);
@@ -306,7 +302,7 @@ function generateGround(objects, _inc, level) {
       }
       objects.contents = {
         hd: convertBlockToObj([
-                /* Ground */5,
+                /* Ground */7,
                 inc * 16,
                 Config.blockh(level) * 16
               ])(level),
@@ -317,7 +313,7 @@ function generateGround(objects, _inc, level) {
     }
     objects.contents = {
       hd: convertBlockToObj([
-              /* Ground */5,
+              /* Ground */7,
               inc * 16,
               Config.blockh(level) * 16
             ])(level),
@@ -343,11 +339,13 @@ function generateHelper(level) {
 }
 
 function newPlayer(playerNum) {
-  var arg = {
-    TAG: /* Player */0,
-    _0: /* SmallM */1,
-    _1: playerNum
-  };
+  var arg = playerNum ? ({
+        TAG: /* Player2 */1,
+        _0: /* SmallM */1
+      }) : ({
+        TAG: /* Player1 */0,
+        _0: /* SmallM */1
+      });
   var arg$1 = Sprite.playerParams(/* SmallM */1, /* Standing */0, /* Left */0, playerNum);
   return function (param) {
     return $$Object.make(undefined, undefined, undefined, param, arg, arg$1, 100, 224);
