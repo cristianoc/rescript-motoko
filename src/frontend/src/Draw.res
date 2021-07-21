@@ -117,7 +117,7 @@ let levelFinished = (result: Types.levelResult, level, elapsed) =>
   | Lost => blackScreen(list{("You lose level " ++ (level ++ "!"), 0.4), (elapsed, 0.6)})
   }
 
-let particles = (particles: array<Types.particle>, ~viewport: Types.viewport) =>
+let drawParticles = (particles: array<Types.particle>, ~viewport: Types.viewport) =>
   particles->Belt.Array.forEach(part => {
     let x = part.px -. viewport.px
     and y = part.py -. viewport.py
@@ -141,7 +141,7 @@ let drawState = (state: Types.state, ~fps as fps_) => {
   clearCanvas()
   drawBgd(state)
   objectsWithPlayers->List.forEach(obj => obj->object(~viewport=state.viewport))
-  state.particles->particles(~viewport=state.viewport)
+  state.particles->drawParticles(~viewport=state.viewport)
   fps(fps_)
   scoreAndCoins(state.score, state.coins)
 }

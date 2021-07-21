@@ -413,32 +413,32 @@ function checkCollision(o1, o2) {
   }
 }
 
-function kill(obj) {
+function kill(obj, state) {
   var t = obj.objTyp;
   switch (t.TAG | 0) {
     case /* Player1 */0 :
     case /* Player2 */1 :
-        return [];
+        return ;
     case /* Enemy */2 :
-        var killed = [];
         if (obj.score > 0) {
-          killed.push(Particle.makeScore(obj.score, obj.px)(obj.py));
+          state.particles.push(Particle.makeScore(obj.score, obj.px)(obj.py));
         }
         if (t._0 !== 0) {
-          
+          return ;
         } else {
-          killed.push(Particle.make(undefined, undefined, /* GoombaSquish */0, obj.px, obj.py));
+          state.particles.push(Particle.make(undefined, undefined, /* GoombaSquish */0, obj.px, obj.py));
+          return ;
         }
-        return killed;
     case /* Item */3 :
         if (t._0) {
-          return [];
+          return ;
         } else {
-          return [Particle.makeScore(obj.score, obj.px)(obj.py)];
+          state.particles.push(Particle.makeScore(obj.score, obj.px)(obj.py));
+          return ;
         }
     case /* Block */4 :
         if (t._0 !== 3) {
-          return [];
+          return ;
         }
         var p1 = Particle.make({
               x: -5,
@@ -468,12 +468,8 @@ function kill(obj) {
               x: 0,
               y: 0.2
             }, /* BrickChunkR */2, obj.px, obj.py);
-        return [
-                p1,
-                p2,
-                p3,
-                p4
-              ];
+        state.particles.push(p1, p2, p3, p4);
+        return ;
     
   }
 }

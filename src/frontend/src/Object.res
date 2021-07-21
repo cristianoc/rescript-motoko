@@ -404,18 +404,16 @@ let checkCollision = (o1, o2) => {
 }
 
 // "Kills" the matched object by setting certain parameters for each
-let kill = (obj: Types.obj) =>
+let kill = (obj: Types.obj, ~state: Types.state) =>
   switch obj.objTyp {
   | Enemy(t) =>
-    let killed = []
     if obj.score > 0 {
-      killed->Js.Array2.push(Particle.makeScore(obj.score, obj.px, obj.py))->ignore
+      state.particles->Js.Array2.push(Particle.makeScore(obj.score, obj.px, obj.py))->ignore
     }
     switch t {
-    | Goomba => killed->Js.Array2.push(Particle.make(GoombaSquish, obj.px, obj.py))->ignore
+    | Goomba => state.particles->Js.Array2.push(Particle.make(GoombaSquish, obj.px, obj.py))->ignore
     | _ => ()
     }
-    killed
   | Block(t) =>
     switch t {
     | Brick =>
@@ -447,13 +445,14 @@ let kill = (obj: Types.obj) =>
         obj.px,
         obj.py,
       )
-      [p1, p2, p3, p4]
-    | _ => []
+      state.particles->Js.Array2.pushMany([p1, p2, p3, p4])->ignore
+    | _ => ()
     }
   | Item(t) =>
     switch t {
-    | Mushroom => [Particle.makeScore(obj.score, obj.px, obj.py)]
-    | _ => []
+    | Mushroom =>
+      state.particles->Js.Array2.push(Particle.makeScore(obj.score, obj.px, obj.py))->ignore
+    | _ => ()
     }
-  | _ => []
+  | _ => ()
   }

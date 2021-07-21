@@ -376,12 +376,9 @@ let updateObject = (~allCollids, obj: Types.obj, ~state) =>
     if !obj.kill {
       state.objects = list{obj, ...\"@"(objectsColliding, state.objects)}
     }
-    let newParts = if obj.kill {
-      Object.kill(obj)
-    } else {
-      []
+    if obj.kill {
+      obj->Object.kill(~state)
     }
-    state.particles->Js.Array2.pushMany(newParts)->ignore
   }
 
 // Primary update function to update and persist a particle
