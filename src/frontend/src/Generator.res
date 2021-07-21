@@ -1,16 +1,14 @@
-open Actors
-
 open Belt
 
 // Note: Canvas is 512 by 256 (w*h) -> 32 by 16 blocks
 // Holds obj typ and its coordinates. (int, (x-coord, y-coord))
-type blockCoord = (Actors.blockTyp, float, float)
-type enemyCoord = (Actors.enemyTyp, float, float)
+type blockCoord = (Types.blockTyp, float, float)
+type enemyCoord = (Types.enemyTyp, float, float)
 
-let rec memPos = (objs: list<_>, x, y): bool =>
+let rec memPos = (objs: list<Types.object>, x, y): bool =>
   switch objs {
   | list{} => false
-  | list{{Object.px: px, py}, ...t} =>
+  | list{{px, py}, ...t} =>
     if x == px && y == py {
       true
     } else {
@@ -41,7 +39,7 @@ let convertCoinToObj = ((_, x, y), ~level) => {
 let addCoins = (objects, x, y0, ~level) => {
   let y = y0 -. 16.
   if Random.bool() && (trimEdge(x, y, ~level) && !(objects.contents->memPos(x, y))) {
-    objects := list{(QBlock(Coin), x, y)->convertCoinToObj(~level), ...objects.contents}
+    objects := list{(Types.QBlock(Coin), x, y)->convertCoinToObj(~level), ...objects.contents}
   }
 }
 
@@ -59,7 +57,7 @@ let convertEnemyToObj = ((enemyTyp, x, y), ~level) => {
 
 let randomEnemyTyp = () =>
   switch Random.int(3) {
-  | 0 => RKoopa
+  | 0 => Types.RKoopa
   | 1 => GKoopa
   | _ => Goomba
   }
@@ -134,7 +132,7 @@ let rec generateClouds = (cbx, cby, typ, num, blocks, ~level) =>
     generateClouds(cbx +. 1., cby, typ, num - 1, blocks, ~level)
   }
 
-let randomStairTyp = () => Random.bool() ? UnBBlock : Brick
+let randomStairTyp = () => Random.bool() ? Types.UnBBlock : Brick
 
 // Choose the form of the blocks to be placed.
 // When called, leaves a 1 block gap from canvas size.
@@ -144,14 +142,14 @@ let randomStairTyp = () => Random.bool() ? UnBBlock : Brick
 // of the level map, prevent any objects from being initialized.
 // 3. Else call helper methods to created block formations and return objCoord
 // slist.
-let chooseBlockPattern = (cbx: float, cby: float, blocks: ref<list<Object.t>>, ~level) =>
+let chooseBlockPattern = (cbx: float, cby: float, blocks: ref<list<Types.object>>, ~level) =>
   if cbx > Config.blockw(~level) || cby > Config.blockh(~level) {
     ()
   } else {
     let stairTyp = randomStairTyp()
     let lifeBlock = Random.int(5) == 0
     let middleBlock = if lifeBlock {
-      QBlock(Mushroom)
+      Types.QBlock(Mushroom)
     } else {
       stairTyp
     }
@@ -229,7 +227,7 @@ let rec generateBlocks = (objects, cbx: float, cby: float, ~level) =>
 
 // Generate the ending item panel at the end of the level. Games ends upon
 // collision with player.
-let generatePanel = (~level): Object.t => {
+let generatePanel = (~level): Types.object => {
   let obj = Object.make(
     ~level,
     ~objTyp=Block(Panel),
@@ -274,7 +272,7 @@ let rec generateGround = (objects, inc: float, ~level) =>
 // Procedurally generate a list of objects given canvas width, height and
 // context. Arguments block width (blockw) and block height (blockh) are in
 // block form, not pixels.
-let generateHelper = (~level): list<Object.t> => {
+let generateHelper = (~level): list<Types.object> => {
   let objects = ref(list{})
   objects->generateBlocks(0., 0., ~level)
   objects->generateGround(0., ~level)
@@ -294,7 +292,7 @@ let newPlayer = playerNum =>
 // Main function called to procedurally generate the level map. w and h args
 // are in pixel form. Converts to block form to call generateHelper. Spawns
 // the list of objects received from generateHelper to display on canvas.
-let generate = (~level): list<Object.t> => {
+let generate = (~level): list<Types.object> => {
   Random.init(Config.randomSeed(~level))
   let initial = Html.performance.now(.)
   let objects = generateHelper(~level)

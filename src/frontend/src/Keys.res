@@ -1,7 +1,5 @@
 open Belt
 
-type loadOrSave = Load | Save
-
 /* Represents the values of relevant key bindings. */
 type keys = {
   mutable bbox: bool,
@@ -10,7 +8,7 @@ type keys = {
   mutable left1: bool,
   mutable left2: bool,
   mutable paused: bool,
-  mutable pendingStateOperations: option<loadOrSave>,
+  mutable pendingStateOperations: option<Types.loadOrSave>,
   mutable right1: bool,
   mutable right2: bool,
   mutable twoPlayers: bool,
@@ -82,9 +80,9 @@ let checkTwoPlayers = () => pressedKeys.twoPlayers
  * to be processed each frame. */
 let translateKeys = playerNum => {
   let k = pressedKeys
-  let ctrls1 = list{(k.left1, Actors.CLeft), (k.right1, CRight), (k.up1, CUp), (k.down1, CDown)}
-  let ctrls2 = list{(k.left2, Actors.CLeft), (k.right2, CRight), (k.up2, CUp), (k.down2, CDown)}
-  List.reduce(playerNum == Actors.One ? ctrls1 : ctrls2, list{}, (a, x) =>
+  let ctrls1 = list{(k.left1, Types.CLeft), (k.right1, CRight), (k.up1, CUp), (k.down1, CDown)}
+  let ctrls2 = list{(k.left2, Types.CLeft), (k.right2, CRight), (k.up2, CUp), (k.down2, CDown)}
+  List.reduce(playerNum == Types.One ? ctrls1 : ctrls2, list{}, (a, x) =>
     if fst(x) {
       list{snd(x), ...a}
     } else {
