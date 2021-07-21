@@ -27,7 +27,7 @@ actor Main {
   type flatVariant = Nat32;
   
   // Variant with only unary cases whose payload is a flat variant
-  type unaryFlatVariant = { tag: Text; value: flatVariant };
+  type unaryFlatVariant = { TAG: Nat32; _0: flatVariant };
   
   type float2 = (float, float);
 
