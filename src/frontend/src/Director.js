@@ -14,7 +14,6 @@ import * as Belt_List from "rescript/lib/es6/belt_List.js";
 import * as AuthClient from "./AuthClient.js";
 import * as Belt_Array from "rescript/lib/es6/belt_Array.js";
 import * as Pervasives from "rescript/lib/es6/pervasives.js";
-import * as Caml_splice_call from "rescript/lib/es6/caml_splice_call.js";
 
 var lastTime = {
   contents: 0
@@ -635,9 +634,11 @@ function updateObject(allCollids, obj, state) {
           tl: Pervasives.$at(objectsColliding, state.objects)
         };
       }
-      var newParts = obj.kill ? $$Object.kill(obj) : [];
-      Caml_splice_call.spliceObjApply(state.particles, "push", [newParts]);
-      return ;
+      if (obj.kill) {
+        return $$Object.kill(obj, state);
+      } else {
+        return ;
+      }
   }
   var match$1 = obj.objTyp;
   var playerNum;

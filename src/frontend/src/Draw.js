@@ -139,8 +139,8 @@ function levelFinished(result, level, elapsed) {
   }
 }
 
-function particles(particles$1, viewport) {
-  return Belt_Array.forEach(particles$1, (function (part) {
+function drawParticles(particles, viewport) {
+  return Belt_Array.forEach(particles, (function (part) {
                 var x = part.px - viewport.px;
                 var y = part.py - viewport.py;
                 return render(part.sprite, x, y);
@@ -174,7 +174,7 @@ function drawState(state, fps_) {
   Belt_List.forEach(objectsWithPlayers, (function (obj) {
           return object(obj, state.viewport);
         }));
-  particles(state.particles, state.viewport);
+  drawParticles(state.particles, state.viewport);
   fps(fps_);
   return scoreAndCoins(state.score, state.coins);
 }
@@ -195,7 +195,7 @@ export {
   paused ,
   blackScreen ,
   levelFinished ,
-  particles ,
+  drawParticles ,
   object ,
   drawState ,
   
