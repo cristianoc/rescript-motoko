@@ -117,8 +117,8 @@ let levelFinished = (result: Types.levelResult, level, elapsed) =>
   | Lost => blackScreen(list{("You lose level " ++ (level ++ "!"), 0.4), (elapsed, 0.6)})
   }
 
-let particles = (particles: list<Types.particle>, ~viewport: Types.viewport) =>
-  particles->List.forEach(part => {
+let particles = (particles: array<Types.particle>, ~viewport: Types.viewport) =>
+  particles->Belt.Array.forEach(part => {
     let x = part.px -. viewport.px
     and y = part.py -. viewport.py
     render(part.sprite, x, y)

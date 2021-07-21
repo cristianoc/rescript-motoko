@@ -407,16 +407,15 @@ let checkCollision = (o1, o2) => {
 let kill = (obj: Types.obj) =>
   switch obj.objTyp {
   | Enemy(t) =>
-    let score = if obj.score > 0 {
-      list{Particle.makeScore(obj.score, obj.px, obj.py)}
-    } else {
-      list{}
+    let killed = []
+    if obj.score > 0 {
+      killed->Js.Array2.push(Particle.makeScore(obj.score, obj.px, obj.py))->ignore
     }
-    let remains = switch t {
-    | Goomba => list{Particle.make(GoombaSquish, obj.px, obj.py)}
-    | _ => list{}
+    switch t {
+    | Goomba => killed->Js.Array2.push(Particle.make(GoombaSquish, obj.px, obj.py))->ignore
+    | _ => ()
     }
-    \"@"(score, remains)
+    killed
   | Block(t) =>
     switch t {
     | Brick =>
@@ -448,13 +447,13 @@ let kill = (obj: Types.obj) =>
         obj.px,
         obj.py,
       )
-      list{p1, p2, p3, p4}
-    | _ => list{}
+      [p1, p2, p3, p4]
+    | _ => []
     }
   | Item(t) =>
     switch t {
-    | Mushroom => list{Particle.makeScore(obj.score, obj.px, obj.py)}
-    | _ => list{}
+    | Mushroom => [Particle.makeScore(obj.score, obj.px, obj.py)]
+    | _ => []
     }
-  | _ => list{}
+  | _ => []
   }

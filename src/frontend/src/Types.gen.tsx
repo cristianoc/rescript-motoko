@@ -126,7 +126,7 @@ export type state = {
   readonly level: number; 
   multiplier: number; 
   objects: list<obj>; 
-  particles: list<particle>; 
+  particles: particle[]; 
   readonly player1: obj; 
   readonly player2: obj; 
   score: number; 
