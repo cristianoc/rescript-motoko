@@ -9,7 +9,7 @@ let idCounter = ref(min_int)
 
 /* Sets an object's x velocity to the speed specified in its params based on
  * its direction */
-let setVelToSpeed = (obj: Types.object) => {
+let setVelToSpeed = (obj: Types.obj) => {
   let speed = obj.speed
   switch obj.dir {
   | Left => obj.vx = -.speed
@@ -20,15 +20,15 @@ let setVelToSpeed = (obj: Types.object) => {
 /* The following make functions all set the objects' has_gravity and speed,
  * returning an [obj_params] that can be directly plugged into the [obj]
  * during creation. */
-let makePlayer = (o: Types.object) => o.speed = Config.playerSpeed
+let makePlayer = (o: Types.obj) => o.speed = Config.playerSpeed
 
-let makeItem = (o: Types.object, t) =>
+let makeItem = (o: Types.obj, t) =>
   switch t {
   | Types.Mushroom => ()
   | Coin => o.hasGravity = false
   }
 
-let makeEnemy = (o: Types.object, t, level) =>
+let makeEnemy = (o: Types.obj, t, level) =>
   switch t {
   | Types.Goomba
   | GKoopa
@@ -38,7 +38,7 @@ let makeEnemy = (o: Types.object, t, level) =>
   | RKoopaShell => o.speed = 3.
   }
 
-let makeBlock = (o: Types.object, t) =>
+let makeBlock = (o: Types.obj, t) =>
   switch t {
   | Types.QBlock(_) | QBlockUsed | Brick | UnBBlock | Cloud | Panel | Ground => o.hasGravity = false
   }
@@ -59,7 +59,7 @@ let make = (
   px,
   py,
 ) => {
-  let newObj: Types.object = {
+  let newObj: Types.obj = {
     objTyp: objTyp,
     sprite: spriteParams->Sprite.makeFromParams,
     hasGravity: hasGravity,
@@ -87,21 +87,21 @@ let make = (
   newObj
 }
 
-let isPlayer = (o: Types.object) =>
+let isPlayer = (o: Types.obj) =>
   switch o {
   | {objTyp: Player(_)} => true
   | _ => false
   }
 
-let isEnemy = (o: Types.object) =>
+let isEnemy = (o: Types.obj) =>
   switch o {
   | {objTyp: Enemy(_)} => true
   | _ => false
   }
 
-let sameId = (o1: Types.object, o2: Types.object) => o1.id == o2.id
+let sameId = (o1: Types.obj, o2: Types.obj) => o1.id == o2.id
 
-let jump = (player: Types.object) => {
+let jump = (player: Types.obj) => {
   player.jumping = true
   player.grounded = false
   player.vy = max(
@@ -111,7 +111,7 @@ let jump = (player: Types.object) => {
 }
 
 // Matches the controls being used and updates each of the player's params
-let updatePlayerKeys = (player: Types.object, controls: Types.controls): unit => {
+let updatePlayerKeys = (player: Types.obj, controls: Types.controls): unit => {
   let lr_acc = player.vx *. 0.2
   switch controls {
   | CLeft =>
@@ -138,7 +138,7 @@ let updatePlayerKeys = (player: Types.object, controls: Types.controls): unit =>
 // Used for sprite changing. If sprites change to different dimensions as a result
 // of some action, the new sprite must be normalized so that things aren't
 // jumpy
-let normalizePos = (o: Types.object, p1: Types.spriteParams, p2: Types.spriteParams) => {
+let normalizePos = (o: Types.obj, p1: Types.spriteParams, p2: Types.spriteParams) => {
   let (box1, boy1) = p1.bboxOffset
   and (box2, boy2) = p2.bboxOffset
   let (bw1, bh1) = p1.bboxSize
@@ -149,7 +149,7 @@ let normalizePos = (o: Types.object, p1: Types.spriteParams, p2: Types.spritePar
 
 // Update player is constantly being called to check for if big or small
 // Mario sprites should be used
-let updatePlayer = (player: Types.object, playerNum, keys) => {
+let updatePlayer = (player: Types.obj, playerNum, keys) => {
   let prev_jumping = player.jumping
   let prev_dir = player.dir
   and prev_vx = abs_float(player.vx)
@@ -201,14 +201,14 @@ let updatePlayer = (player: Types.object, playerNum, keys) => {
 }
 
 // The following two helper methods update velocity and position of the player
-let updateVel = (obj: Types.object) =>
+let updateVel = (obj: Types.obj) =>
   if obj.grounded {
     obj.vy = 0.
   } else if obj.hasGravity {
     obj.vy = min(obj.vy +. Config.gravity +. abs_float(obj.vy) *. 0.01, Config.maxYVel)
   }
 
-let updatePos = (obj: Types.object) => {
+let updatePos = (obj: Types.obj) => {
   obj.px = obj.vx +. obj.px
   if obj.hasGravity {
     obj.py = obj.vy +. obj.py
@@ -225,7 +225,7 @@ let processObj = (obj, ~level) => {
 }
 
 // Check upon collision of block and updates the values of the object
-let collideBlock = (dir2, obj: Types.object) =>
+let collideBlock = (dir2, obj: Types.obj) =>
   switch dir2 {
   | Types.North => obj.vy = -0.001
   | South =>
@@ -243,7 +243,7 @@ let oppositeDir = dir =>
   }
 
 // Used for enemy-enemy collisions
-let reverseLeftRight = (obj: Types.object) => {
+let reverseLeftRight = (obj: Types.obj) => {
   obj.vx = -.obj.vx
   obj.dir = oppositeDir(obj.dir)
 }
@@ -251,7 +251,7 @@ let reverseLeftRight = (obj: Types.object) => {
 // Actually creates a new enemy and deletes the previous. The positions must be
 // normalized. This method is typically called when enemies are killed and a
 // new sprite must be used (i.e., koopa to koopa shell).
-let evolveEnemy = (. player_dir, typ, spr: Types.sprite, obj: Types.object, level) =>
+let evolveEnemy = (. player_dir, typ, spr: Types.sprite, obj: Types.obj, level) =>
   switch typ {
   | Types.GKoopa =>
     let newObj = make(
@@ -298,7 +298,7 @@ let revDir = (o, t, s: Types.sprite) => {
 }
 
 // Used for killing enemies, or to make big Mario into small Mario
-let decHealth = (obj: Types.object) => {
+let decHealth = (obj: Types.obj) => {
   let health = obj.health - 1
   if health == 0 {
     obj.kill = true
@@ -326,7 +326,7 @@ let evolveBlock = (. obj, level) => {
 }
 
 // Used for spawning items above question mark blocks
-let spawnAbove = (. player_dir, obj: Types.object, itemTyp, level) => {
+let spawnAbove = (. player_dir, obj: Types.obj, itemTyp, level) => {
   let item = make(
     ~level,
     ~hasGravity=itemTyp != Types.Coin,
@@ -343,7 +343,7 @@ let spawnAbove = (. player_dir, obj: Types.object, itemTyp, level) => {
 }
 
 // Used to get the bounding box
-let getAabb = (obj: Types.object) => {
+let getAabb = (obj: Types.obj) => {
   let sprParams = obj.sprite.params
   let (offx, offy) = sprParams.bboxOffset
   let (box, boy) = (obj.px +. offx, obj.py +. offy)
@@ -360,7 +360,7 @@ let getAabb = (obj: Types.object) => {
   }
 }
 
-let colBypass = (o1: Types.object, o2: Types.object) =>
+let colBypass = (o1: Types.obj, o2: Types.obj) =>
   o1.kill ||
   (o2.kill ||
   switch (o1.objTyp, o2.objTyp) {
@@ -415,7 +415,7 @@ let checkCollision = (o1, o2) => {
 }
 
 // "Kills" the matched object by setting certain parameters for each
-let kill = (obj: Types.object) =>
+let kill = (obj: Types.obj) =>
   switch obj.objTyp {
   | Enemy(t) =>
     let score = if obj.score > 0 {

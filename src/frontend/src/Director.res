@@ -22,13 +22,7 @@ let calcFps = {
 // This causes the player to either kill the enemy or move the enemy, in the
 // case that the enemy is a shell. Invulnerability, jumping, and grounded
 // are used for fine tuning the movements.
-let playerAttackEnemy = (.
-  o1: Types.object,
-  enemyTyp: Types.enemyTyp,
-  s2,
-  o2,
-  state: Types.state,
-) => {
+let playerAttackEnemy = (. o1: Types.obj, enemyTyp: Types.enemyTyp, s2, o2, state: Types.state) => {
   o1.invuln = 10
   o1.jumping = false
   o1.grounded = true
@@ -56,7 +50,7 @@ let playerAttackEnemy = (.
 }
 
 // enemyAttackPlayer is used when an enemy kills a player.
-let enemyAttackPlayer = (. enemy: Types.object, player: Types.object, level) => {
+let enemyAttackPlayer = (. enemy: Types.obj, player: Types.obj, level) => {
   switch enemy.objTyp {
   | Enemy((GKoopaShell | RKoopaShell) as enemyTyp) if enemy.vx == 0. =>
     // This only works if the player does not go faster than the shell
@@ -125,8 +119,8 @@ let collEnemyEnemy = (
 // mutably, as many changes are side-effectual.
 let processCollision = (.
   dir2: Types.dir2,
-  obj: Types.object,
-  collid: Types.object,
+  obj: Types.obj,
+  collid: Types.obj,
   state: Types.state,
 ) =>
   switch (obj, collid, dir2) {
@@ -230,7 +224,7 @@ let processCollision = (.
   | (_, _, _) => (None, None)
   }
 
-let inViewport = (obj: Types.object, ~viewport) =>
+let inViewport = (obj: Types.obj, ~viewport) =>
   Viewport.inViewport(viewport, obj.px, obj.py) ||
   (Object.isPlayer(obj) ||
   Viewport.outOfViewportBelow(viewport, obj.py))
@@ -242,7 +236,7 @@ let broadPhase = (~allCollids, viewport) => allCollids->List.keep(o => o->inView
 // each of the collidable objects to constantly check if collisions are
 // occurring.
 let narrowPhase = (obj, ~state, ~visibleCollids) => {
-  let rec narrowHelper = (obj: Types.object, ~visibleCollids, ~acc) =>
+  let rec narrowHelper = (obj: Types.obj, ~visibleCollids, ~acc) =>
     switch visibleCollids {
     | list{} => acc
     | list{collid, ...nextVisibleCollids} =>
@@ -275,7 +269,7 @@ let narrowPhase = (obj, ~state, ~visibleCollids) => {
 // is a collision, and process the collision.
 // This method returns a list of objects that are created, which should be
 // added to the list of objects for the next iteration.
-let checkCollisions = (obj: Types.object, ~state: Types.state, ~allCollids) =>
+let checkCollisions = (obj: Types.obj, ~state: Types.state, ~allCollids) =>
   switch obj.objTyp {
   | Block(_) => list{}
   | _ =>
@@ -285,7 +279,7 @@ let checkCollisions = (obj: Types.object, ~state: Types.state, ~allCollids) =>
 
 // primary update method for objects,
 // checking the collision, updating the object, and drawing to the canvas
-let findObjectsColliding = (obj: Types.object, ~allCollids, ~state: Types.state) => {
+let findObjectsColliding = (obj: Types.obj, ~allCollids, ~state: Types.state) => {
   /* TODO: optimize. Draw static elements only once */
   let sprite = obj.sprite
   obj.invuln = if obj.invuln > 0 {
@@ -311,7 +305,7 @@ let findObjectsColliding = (obj: Types.object, ~allCollids, ~state: Types.state)
 // as a wrapper method. This method is necessary to differentiate between
 // the player collidable and the remaining collidables, as special operations
 // such as viewport centering only occur with the player
-let updateObject = (~allCollids, obj: Types.object, ~state) =>
+let updateObject = (~allCollids, obj: Types.obj, ~state) =>
   switch obj.objTyp {
   | Player(_, playerNum) =>
     let keys = Keys.translateKeys(playerNum)

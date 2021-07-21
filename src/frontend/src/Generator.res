@@ -5,7 +5,7 @@ open Belt
 type blockCoord = (Types.blockTyp, float, float)
 type enemyCoord = (Types.enemyTyp, float, float)
 
-let rec memPos = (objs: list<Types.object>, x, y): bool =>
+let rec memPos = (objs: list<Types.obj>, x, y): bool =>
   switch objs {
   | list{} => false
   | list{{px, py}, ...t} =>
@@ -142,7 +142,7 @@ let randomStairTyp = () => Random.bool() ? Types.UnBBlock : Brick
 // of the level map, prevent any objects from being initialized.
 // 3. Else call helper methods to created block formations and return objCoord
 // slist.
-let chooseBlockPattern = (cbx: float, cby: float, blocks: ref<list<Types.object>>, ~level) =>
+let chooseBlockPattern = (cbx: float, cby: float, blocks: ref<list<Types.obj>>, ~level) =>
   if cbx > Config.blockw(~level) || cby > Config.blockh(~level) {
     ()
   } else {
@@ -227,7 +227,7 @@ let rec generateBlocks = (objects, cbx: float, cby: float, ~level) =>
 
 // Generate the ending item panel at the end of the level. Games ends upon
 // collision with player.
-let generatePanel = (~level): Types.object => {
+let generatePanel = (~level): Types.obj => {
   let obj = Object.make(
     ~level,
     ~objTyp=Block(Panel),
@@ -272,7 +272,7 @@ let rec generateGround = (objects, inc: float, ~level) =>
 // Procedurally generate a list of objects given canvas width, height and
 // context. Arguments block width (blockw) and block height (blockh) are in
 // block form, not pixels.
-let generateHelper = (~level): list<Types.object> => {
+let generateHelper = (~level): list<Types.obj> => {
   let objects = ref(list{})
   objects->generateBlocks(0., 0., ~level)
   objects->generateGround(0., ~level)
@@ -292,7 +292,7 @@ let newPlayer = playerNum =>
 // Main function called to procedurally generate the level map. w and h args
 // are in pixel form. Converts to block form to call generateHelper. Spawns
 // the list of objects received from generateHelper to display on canvas.
-let generate = (~level): list<Types.object> => {
+let generate = (~level): list<Types.obj> => {
   Random.init(Config.randomSeed(~level))
   let initial = Html.performance.now(.)
   let objects = generateHelper(~level)
