@@ -10,10 +10,8 @@ import * as Sprite from "./Sprite.js";
 import * as Backend from "./Backend.js";
 import * as Particle from "./Particle.js";
 import * as Viewport from "./Viewport.js";
-import * as Belt_List from "rescript/lib/es6/belt_List.js";
 import * as AuthClient from "./AuthClient.js";
 import * as Belt_Array from "rescript/lib/es6/belt_Array.js";
-import * as Caml_splice_call from "rescript/lib/es6/caml_splice_call.js";
 
 var lastTime = {
   contents: 0
@@ -394,8 +392,8 @@ function broadPhase(objects, viewport) {
               }));
 }
 
-function narrowPhase(obj, objects, state, visibleCollids) {
-  visibleCollids.forEach(function (collid) {
+function narrowPhase(obj, objects, state, collids) {
+  collids.forEach(function (collid) {
         if ($$Object.sameId(obj, collid)) {
           return ;
         }
@@ -408,16 +406,16 @@ function narrowPhase(obj, objects, state, visibleCollids) {
   
 }
 
-function checkCollisions(obj, objects, state, visibleCollids) {
+function checkCollisions(obj, objects, otherCollids, state, visibleCollids) {
   var match = obj.objTyp;
   if (match.TAG === /* Block */4) {
     return ;
-  } else {
-    return narrowPhase(obj, objects, state, visibleCollids);
   }
+  narrowPhase(obj, objects, state, visibleCollids);
+  return narrowPhase(obj, objects, state, otherCollids);
 }
 
-function findObjectsColliding(obj, objects, state, visibleCollids) {
+function findObjectsColliding(obj, objects, otherCollids, state, visibleCollids) {
   var sprite = obj.sprite;
   obj.invuln = obj.invuln > 0 ? obj.invuln - 1 | 0 : 0;
   if (!((!obj.kill || $$Object.isPlayer(obj)) && inViewport(obj, state.viewport))) {
@@ -425,21 +423,21 @@ function findObjectsColliding(obj, objects, state, visibleCollids) {
   }
   obj.grounded = false;
   $$Object.processObj(obj, state.level);
-  var objectsColliding = checkCollisions(obj, objects, state, visibleCollids);
+  var objectsColliding = checkCollisions(obj, objects, otherCollids, state, visibleCollids);
   if (obj.vx !== 0 || !$$Object.isEnemy(obj)) {
     Sprite.updateAnimation(sprite);
   }
   return objectsColliding;
 }
 
-function updateObject(obj, objects, state, visibleCollids) {
+function updateObject(obj, objects, otherCollids, state, visibleCollids) {
   var match = obj.objTyp;
   switch (match.TAG | 0) {
     case /* Player1 */0 :
     case /* Player2 */1 :
         break;
     default:
-      findObjectsColliding(obj, objects, state, visibleCollids);
+      findObjectsColliding(obj, objects, otherCollids, state, visibleCollids);
       if (!obj.kill) {
         $$global.state.objects.push(obj);
       }
@@ -455,7 +453,7 @@ function updateObject(obj, objects, state, visibleCollids) {
   var keys = Keys.translateKeys(playerNum);
   obj.crouch = false;
   $$Object.updatePlayer(obj, playerNum, keys);
-  return findObjectsColliding(obj, objects, state, visibleCollids);
+  return findObjectsColliding(obj, objects, otherCollids, state, visibleCollids);
 }
 
 function updateParticle(part) {
@@ -549,23 +547,12 @@ function updateLoop(_param) {
         case /* Playing */2 :
             var fps = calcFps(undefined);
             var oldObjects = $$global.state.objects;
-            var players = Keys.checkTwoPlayers(undefined) ? ({
-                  hd: $$global.state.player1,
-                  tl: {
-                    hd: $$global.state.player2,
-                    tl: /* [] */0
-                  }
-                }) : ({
-                  hd: $$global.state.player1,
-                  tl: /* [] */0
-                });
             var visibleCollids = broadPhase(oldObjects, $$global.state.viewport);
-            Caml_splice_call.spliceObjApply(visibleCollids, "push", [Belt_List.toArray(players)]);
             $$global.state.objects = [];
             $$global.state.particles = Belt_Array.keep($$global.state.particles, updateParticle);
-            updateObject($$global.state.player1, $$global.state.objects, $$global.state, visibleCollids);
+            updateObject($$global.state.player1, $$global.state.objects, Keys.checkTwoPlayers(undefined) ? [$$global.state.player2] : [], $$global.state, visibleCollids);
             if (Keys.checkTwoPlayers(undefined)) {
-              updateObject($$global.state.player2, $$global.state.objects, $$global.state, visibleCollids);
+              updateObject($$global.state.player2, $$global.state.objects, [$$global.state.player1], $$global.state, visibleCollids);
             }
             if ($$global.state.player1.kill) {
               $$global.status = {
@@ -577,7 +564,7 @@ function updateLoop(_param) {
             Viewport.update($$global.state.viewport, $$global.state.player1.px, $$global.state.player1.py);
             oldObjects.forEach((function(visibleCollids){
                 return function (obj) {
-                  return updateObject(obj, $$global.state.objects, $$global.state, visibleCollids);
+                  return updateObject(obj, $$global.state.objects, [], $$global.state, visibleCollids);
                 }
                 }(visibleCollids)));
             Draw.drawState($$global.state, fps);
