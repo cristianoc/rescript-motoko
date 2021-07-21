@@ -111,6 +111,32 @@ let collEnemyEnemy = (
     }
   }
 
+module Global = {
+  type status =
+    | Loading
+    | LoggingIn(Types.loadOrSave)
+    | Paused
+    | Playing
+    | Finished({levelResult: Types.levelResult, restartTime: float})
+    | Saving
+  type global = {mutable state: Types.state, mutable status: status}
+  let global = {state: State.new(~level=1, ~score=0), status: Playing}
+  let reset = (~level, ~score) => global.state = State.new(~level, ~score)
+}
+let global = Global.global
+
+let loadState = (~principal) => {
+  Backend.actor.loadGameState(. principal)->Promise.then(json => {
+    if json != "" {
+      global.state = json->Js.Json.parseExn->Obj.magic
+    }
+    Promise.resolve()
+  })
+}
+
+let saveState = (~principal) =>
+  Backend.actor.saveGameState(. principal, global.state->Obj.magic->Js.Json.stringify)
+
 // Process collision is called to match each of the possible collisions that
 // may occur. Returns a pair of options, representing objects that
 // were created from the existing ones. That is, the first element represents
@@ -206,7 +232,7 @@ let processCollision = (.
         (None, None)
       }
     | Panel =>
-      state.status = Finished({
+      global.status = Finished({
         levelResult: Won,
         restartTime: Config.delayWhenFinished +. Html.performance.now(.),
       })
@@ -218,7 +244,7 @@ let processCollision = (.
   | ({objTyp: Player1(_) | Player2(_)}, {objTyp: Block(t)}, _) =>
     switch t {
     | Panel =>
-      state.status = Finished({
+      global.status = Finished({
         levelResult: Won,
         restartTime: Config.delayWhenFinished +. Html.performance.now(.),
       })
@@ -357,7 +383,7 @@ let auth = ref(LoggedOut)
 // update each of the objects in the game.
 let rec updateLoop = () => {
   let startLogin = (~onLogged, ~loadOrSave) => {
-    State.current.contents.status = LoggingIn(loadOrSave)
+    global.status = LoggingIn(loadOrSave)
     AuthClient.authenticate(
       ~onSuccess=(~principal) => {
         auth := LoggedIn(principal)
@@ -365,7 +391,7 @@ let rec updateLoop = () => {
       },
       ~onError=error => {
         Js.log2("error", error->AuthClient.Error.toString)
-        State.current.contents.status = Playing
+        global.status = Playing
       },
       ~timeoutInSeconds=30.,
     )->ignore
@@ -375,11 +401,11 @@ let rec updateLoop = () => {
     Keys.pressedKeys.pendingStateOperations = None
     let doLoad = (~principal) => {
       Js.log("loading...")
-      State.current.contents.status = Loading
-      State.load(~principal)
+      global.status = Loading
+      loadState(~principal)
       ->Promise.thenResolve(() => {
         Js.log("loaded")
-        State.current.contents.status = Playing
+        global.status = Playing
       })
       ->ignore
     }
@@ -391,11 +417,11 @@ let rec updateLoop = () => {
     Keys.pressedKeys.pendingStateOperations = None
     let doSave = (~principal) => {
       Js.log("saving...")
-      State.current.contents.status = Saving
-      State.save(~principal)
+      global.status = Saving
+      saveState(~principal)
       ->Promise.thenResolve(() => {
         Js.log("saved")
-        State.current.contents.status = Playing
+        global.status = Playing
       })
       ->ignore
     }
@@ -405,30 +431,30 @@ let rec updateLoop = () => {
     }
   | None =>
     if Keys.pressedKeys.paused {
-      State.current.contents.status = Paused
-    } else if State.current.contents.status == Paused {
-      State.current.contents.status = Playing
+      global.status = Paused
+    } else if global.status == Paused {
+      global.status = Playing
     }
   }
 
-  switch State.current.contents.status {
+  switch global.status {
   | LoggingIn(loadOrSave) =>
-    State.current.contents->Draw.drawState(~fps=0.)
+    global.state->Draw.drawState(~fps=0.)
     Draw.loggingIn(~loadOrSave)
     Html.requestAnimationFrame(_ => updateLoop())
 
   | Loading =>
-    State.current.contents->Draw.drawState(~fps=0.)
+    global.state->Draw.drawState(~fps=0.)
     Draw.loading()
     Html.requestAnimationFrame(_ => updateLoop())
 
   | Saving =>
-    State.current.contents->Draw.drawState(~fps=0.)
+    global.state->Draw.drawState(~fps=0.)
     Draw.saving()
     Html.requestAnimationFrame(_ => updateLoop())
 
   | Paused =>
-    State.current.contents->Draw.drawState(~fps=0.)
+    global.state->Draw.drawState(~fps=0.)
     Draw.paused()
     Html.requestAnimationFrame(_ => updateLoop())
 
@@ -437,51 +463,42 @@ let rec updateLoop = () => {
     if timeToStart > 0.9 /* briefly show 0 */ {
       Draw.levelFinished(
         levelResult,
-        State.current.contents.level->string_of_int,
+        global.state.level->string_of_int,
         timeToStart->int_of_float->string_of_int,
       )
       Html.requestAnimationFrame(_ => updateLoop())
     } else {
-      let level =
-        levelResult == Won ? State.current.contents.level + 1 : State.current.contents.level
-      let score = levelResult == Won ? State.current.contents.score : 0
-      State.current := State.new(~level, ~score)
+      let level = levelResult == Won ? global.state.level + 1 : global.state.level
+      let score = levelResult == Won ? global.state.score : 0
+      Global.reset(~level, ~score)
       updateLoop()
     }
 
   | Playing =>
     let fps = calcFps()
-    let oldObjects = State.current.contents.objects
-    State.current.contents.objects = list{}
-    State.current.contents.particles = State.current.contents.particles->List.keep(updateParticle)
-    State.current.contents.player1->updateObject(
-      ~allCollids=Keys.checkTwoPlayers()
-        ? list{State.current.contents.player2, ...oldObjects}
-        : oldObjects,
-      ~state=State.current.contents,
+    let oldObjects = global.state.objects
+    global.state.objects = list{}
+    global.state.particles = global.state.particles->List.keep(updateParticle)
+    global.state.player1->updateObject(
+      ~allCollids=Keys.checkTwoPlayers() ? list{global.state.player2, ...oldObjects} : oldObjects,
+      ~state=global.state,
     )
     if Keys.checkTwoPlayers() {
-      State.current.contents.player2->updateObject(
-        ~allCollids=list{State.current.contents.player1, ...oldObjects},
-        ~state=State.current.contents,
+      global.state.player2->updateObject(
+        ~allCollids=list{global.state.player1, ...oldObjects},
+        ~state=global.state,
       )
     }
-    if State.current.contents.player1.kill {
-      State.current.contents.status = Finished({
+    if global.state.player1.kill {
+      global.status = Finished({
         levelResult: Lost,
         restartTime: Config.delayWhenFinished +. Html.performance.now(.),
       })
     }
-    Viewport.update(
-      State.current.contents.viewport,
-      State.current.contents.player1.px,
-      State.current.contents.player1.py,
-    )
-    oldObjects->List.forEach(obj =>
-      obj->updateObject(~allCollids=oldObjects, ~state=State.current.contents)
-    )
+    Viewport.update(global.state.viewport, global.state.player1.px, global.state.player1.py)
+    oldObjects->List.forEach(obj => obj->updateObject(~allCollids=oldObjects, ~state=global.state))
 
-    State.current.contents->Draw.drawState(~fps)
+    global.state->Draw.drawState(~fps)
     Html.requestAnimationFrame(_ => updateLoop())
   }
 }

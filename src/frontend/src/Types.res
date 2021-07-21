@@ -73,14 +73,6 @@ type partTyp =
   | Score4000
   | Score8000
 
-type status =
-  | Loading
-  | LoggingIn(loadOrSave)
-  | Paused
-  | Playing
-  | Finished({levelResult: levelResult, restartTime: float})
-  | Saving
-
 type png =
   | Bgd1
   | Blocks
@@ -170,6 +162,5 @@ type state = {
   player1: obj,
   player2: obj,
   mutable score: int,
-  mutable status: status,
   viewport: viewport,
 }
