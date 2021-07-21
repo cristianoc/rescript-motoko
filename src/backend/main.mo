@@ -21,8 +21,8 @@ actor Main {
   };
 
   type float = Float;
-  type int = Int32;
- 
+  type int_ = Int32;
+
   // Variant with only zero-ary cases
   type flatVariant = Nat32;
   
@@ -37,8 +37,8 @@ actor Main {
   type png = flatVariant;
 
   type spriteParams = {
-    maxFrames: int;
-    maxTicks: int;
+    maxFrames: int_;
+    maxTicks: int_;
     png: png;
     frameSize: float2;
     srcOffset: float2;
@@ -48,8 +48,8 @@ actor Main {
 
   type sprite = {
     params: spriteParams;
-    frame: int;
-    ticks: int;
+    frame: int_;
+    ticks: int_;
   };
 
   type objTyp = unaryFlatVariant;
@@ -61,7 +61,7 @@ actor Main {
     sprite: sprite;
     hasGravity: bool;
     speed: float;
-    id: int;
+    id: int_;
     px: float; // x position
     py: float; // y position
     vx: float; // x velocity
@@ -69,11 +69,11 @@ actor Main {
     jumping: bool;
     grounded: bool;
     dir: dir;
-    invuln: int;
+    invuln: int_;
     kill: bool;
-    health: int;
+    health: int_;
     crouch: bool;
-    score: int;
+    score: int_;
   };
 
   type xy = {
@@ -83,7 +83,7 @@ actor Main {
 
   type particle = {
     sprite: sprite;
-    lifetime: int;
+    lifetime: int_;
     px: float;
     py: float;
     vel: xy;
@@ -100,14 +100,14 @@ actor Main {
 
   type state = {
     bgd: sprite;
-    coins: int;
-    level: int;
-    multiplier: int;
+    coins: int_;
+    level: int_;
+    multiplier: int_;
     objects: [obj];
     particles: [particle];
     player1: obj;
     player2: obj;
-    score: int;
+    score: int_;
     viewport: viewport;
   };
 
