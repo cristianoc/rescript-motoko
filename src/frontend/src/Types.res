@@ -158,7 +158,7 @@ type state = {
   level: int,
   mutable multiplier: int,
   mutable objects: list<obj>,
-  mutable particles: list<particle>,
+  mutable particles: array<particle>,
   player1: obj,
   player2: obj,
   mutable score: int,

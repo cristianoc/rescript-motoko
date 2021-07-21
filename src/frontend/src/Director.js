@@ -12,7 +12,9 @@ import * as Particle from "./Particle.js";
 import * as Viewport from "./Viewport.js";
 import * as Belt_List from "rescript/lib/es6/belt_List.js";
 import * as AuthClient from "./AuthClient.js";
+import * as Belt_Array from "rescript/lib/es6/belt_Array.js";
 import * as Pervasives from "rescript/lib/es6/pervasives.js";
+import * as Caml_splice_call from "rescript/lib/es6/caml_splice_call.js";
 
 var lastTime = {
   contents: 0
@@ -156,12 +158,13 @@ function collEnemyEnemy(enemy1, s1, o1, enemy2, s2, o2, dir2) {
 }
 
 var $$global = {
-  state: State.$$new(1, 0),
+  state: State.$$new(20, 0),
   status: /* Playing */2
 };
 
 function reset(level, score) {
   $$global.state = State.$$new(level, score);
+  $$global.status = /* Playing */2;
   
 }
 
@@ -181,6 +184,20 @@ function loadState(principal) {
 
 function saveState(principal) {
   return Backend.actor.saveGameState(principal, JSON.stringify($$global.state));
+}
+
+function loadStateBinary(principal) {
+  return Backend.actor.loadGameStateNative(principal).then(function (arr) {
+              if (arr.length === 1) {
+                var state = arr[0];
+                $$global.state = state;
+              }
+              return Promise.resolve(undefined);
+            });
+}
+
+function saveStateBinary(principal) {
+  return Backend.actor.saveGameStateNative(principal, $$global.state);
 }
 
 function processCollision(dir2, obj, collid, state) {
@@ -618,8 +635,8 @@ function updateObject(allCollids, obj, state) {
           tl: Pervasives.$at(objectsColliding, state.objects)
         };
       }
-      var newParts = obj.kill ? $$Object.kill(obj) : /* [] */0;
-      state.particles = Pervasives.$at(newParts, state.particles);
+      var newParts = obj.kill ? $$Object.kill(obj) : [];
+      Caml_splice_call.spliceObjApply(state.particles, "push", [newParts]);
       return ;
   }
   var match$1 = obj.objTyp;
@@ -668,7 +685,7 @@ function updateLoop(_param) {
         var doSave = function (principal) {
           console.log("saving...");
           $$global.status = /* Saving */3;
-          saveState(principal).then(function (param) {
+          saveStateBinary(principal).then(function (param) {
                 console.log("saved");
                 $$global.status = /* Playing */2;
                 
@@ -685,7 +702,7 @@ function updateLoop(_param) {
         var doLoad = function (principal) {
           console.log("loading...");
           $$global.status = /* Loading */0;
-          loadState(principal).then(function (param) {
+          loadStateBinary(principal).then(function (param) {
                 console.log("loaded");
                 $$global.status = /* Playing */2;
                 
@@ -725,7 +742,7 @@ function updateLoop(_param) {
             var fps = calcFps(undefined);
             var oldObjects = $$global.state.objects;
             $$global.state.objects = /* [] */0;
-            $$global.state.particles = Belt_List.keep($$global.state.particles, updateParticle);
+            $$global.state.particles = Belt_Array.keep($$global.state.particles, updateParticle);
             updateObject(Keys.checkTwoPlayers(undefined) ? ({
                       hd: $$global.state.player2,
                       tl: oldObjects
@@ -799,6 +816,8 @@ export {
   $$global ,
   loadState ,
   saveState ,
+  loadStateBinary ,
+  saveStateBinary ,
   processCollision ,
   inViewport ,
   broadPhase ,

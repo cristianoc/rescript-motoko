@@ -418,29 +418,27 @@ function kill(obj) {
   switch (t.TAG | 0) {
     case /* Player1 */0 :
     case /* Player2 */1 :
-        return /* [] */0;
+        return [];
     case /* Enemy */2 :
-        var score = obj.score > 0 ? ({
-              hd: Particle.makeScore(obj.score, obj.px)(obj.py),
-              tl: /* [] */0
-            }) : /* [] */0;
-        var remains = t._0 !== 0 ? /* [] */0 : ({
-              hd: Particle.make(undefined, undefined, /* GoombaSquish */0, obj.px, obj.py),
-              tl: /* [] */0
-            });
-        return Pervasives.$at(score, remains);
+        var killed = [];
+        if (obj.score > 0) {
+          killed.push(Particle.makeScore(obj.score, obj.px)(obj.py));
+        }
+        if (t._0 !== 0) {
+          
+        } else {
+          killed.push(Particle.make(undefined, undefined, /* GoombaSquish */0, obj.px, obj.py));
+        }
+        return killed;
     case /* Item */3 :
         if (t._0) {
-          return /* [] */0;
+          return [];
         } else {
-          return {
-                  hd: Particle.makeScore(obj.score, obj.px)(obj.py),
-                  tl: /* [] */0
-                };
+          return [Particle.makeScore(obj.score, obj.px)(obj.py)];
         }
     case /* Block */4 :
         if (t._0 !== 3) {
-          return /* [] */0;
+          return [];
         }
         var p1 = Particle.make({
               x: -5,
@@ -470,19 +468,12 @@ function kill(obj) {
               x: 0,
               y: 0.2
             }, /* BrickChunkR */2, obj.px, obj.py);
-        return {
-                hd: p1,
-                tl: {
-                  hd: p2,
-                  tl: {
-                    hd: p3,
-                    tl: {
-                      hd: p4,
-                      tl: /* [] */0
-                    }
-                  }
-                }
-              };
+        return [
+                p1,
+                p2,
+                p3,
+                p4
+              ];
     
   }
 }

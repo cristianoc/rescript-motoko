@@ -5,6 +5,8 @@ module Candid = {
     type t = {
       loadGameState: (. principal) => Js.Promise.t<string>,
       saveGameState: (. principal, string) => Js.Promise.t<unit>,
+      loadGameStateNative: (. principal) => Js.Promise.t<array<Types.state>>,
+      saveGameStateNative: (. principal, Types.state) => Js.Promise.t<unit>,
     }
   }
 }

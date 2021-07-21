@@ -6,6 +6,7 @@ import * as Load from "./Load.js";
 import * as Config from "./Config.js";
 import * as Viewport from "./Viewport.js";
 import * as Belt_List from "rescript/lib/es6/belt_List.js";
+import * as Belt_Array from "rescript/lib/es6/belt_Array.js";
 import * as Caml_int32 from "rescript/lib/es6/caml_int32.js";
 
 function renderBbox(sprite, posx, posy) {
@@ -139,7 +140,7 @@ function levelFinished(result, level, elapsed) {
 }
 
 function particles(particles$1, viewport) {
-  return Belt_List.forEach(particles$1, (function (part) {
+  return Belt_Array.forEach(particles$1, (function (part) {
                 var x = part.px - viewport.px;
                 var y = part.py - viewport.py;
                 return render(part.sprite, x, y);

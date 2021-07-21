@@ -10,7 +10,7 @@ let new = (~level, ~score) => {
     level: level,
     multiplier: 1,
     objects: objects,
-    particles: list{},
+    particles: [],
     player1: player1,
     player2: player2,
     score: score,

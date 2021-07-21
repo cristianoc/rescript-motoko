@@ -120,8 +120,11 @@ module Global = {
     | Finished({levelResult: Types.levelResult, restartTime: float})
     | Saving
   type global = {mutable state: Types.state, mutable status: status}
-  let global = {state: State.new(~level=1, ~score=0), status: Playing}
-  let reset = (~level, ~score) => global.state = State.new(~level, ~score)
+  let global = {state: State.new(~level=20, ~score=0), status: Playing}
+  let reset = (~level, ~score) => {
+    global.state = State.new(~level, ~score)
+    global.status = Playing
+  }
 }
 let global = Global.global
 
@@ -136,6 +139,18 @@ let loadState = (~principal) => {
 
 let saveState = (~principal) =>
   Backend.actor.saveGameState(. principal, global.state->Obj.magic->Js.Json.stringify)
+
+let loadStateBinary = (~principal) => {
+  Backend.actor.loadGameStateNative(. principal)->Promise.then(arr => {
+    switch arr {
+    | [state] => global.state = state
+    | _ => ()
+    }
+    Promise.resolve()
+  })
+}
+
+let saveStateBinary = (~principal) => Backend.actor.saveGameStateNative(. principal, global.state)
 
 // Process collision is called to match each of the possible collisions that
 // may occur. Returns a pair of options, representing objects that
@@ -364,9 +379,9 @@ let updateObject = (~allCollids, obj: Types.obj, ~state) =>
     let newParts = if obj.kill {
       Object.kill(obj)
     } else {
-      list{}
+      []
     }
-    state.particles = \"@"(newParts, state.particles)
+    state.particles->Js.Array2.pushMany(newParts)->ignore
   }
 
 // Primary update function to update and persist a particle
@@ -402,7 +417,7 @@ let rec updateLoop = () => {
     let doLoad = (~principal) => {
       Js.log("loading...")
       global.status = Loading
-      loadState(~principal)
+      loadStateBinary(~principal)
       ->Promise.thenResolve(() => {
         Js.log("loaded")
         global.status = Playing
@@ -418,7 +433,7 @@ let rec updateLoop = () => {
     let doSave = (~principal) => {
       Js.log("saving...")
       global.status = Saving
-      saveState(~principal)
+      saveStateBinary(~principal)
       ->Promise.thenResolve(() => {
         Js.log("saved")
         global.status = Playing
@@ -478,7 +493,7 @@ let rec updateLoop = () => {
     let fps = calcFps()
     let oldObjects = global.state.objects
     global.state.objects = list{}
-    global.state.particles = global.state.particles->List.keep(updateParticle)
+    global.state.particles = global.state.particles->Belt.Array.keep(updateParticle)
     global.state.player1->updateObject(
       ~allCollids=Keys.checkTwoPlayers() ? list{global.state.player2, ...oldObjects} : oldObjects,
       ~state=global.state,
