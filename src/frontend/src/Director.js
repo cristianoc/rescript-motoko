@@ -157,7 +157,7 @@ function collEnemyEnemy(enemy1, s1, o1, enemy2, s2, o2, dir2) {
 }
 
 var $$global = {
-  state: State.$$new(20, 0),
+  state: State.$$new(3, 0),
   status: /* Playing */2
 };
 

@@ -120,7 +120,7 @@ module Global = {
     | Finished({levelResult: Types.levelResult, restartTime: float})
     | Saving
   type global = {mutable state: Types.state, mutable status: status}
-  let global = {state: State.new(~level=20, ~score=0), status: Playing}
+  let global = {state: State.new(~level=3, ~score=0), status: Playing}
   let reset = (~level, ~score) => {
     global.state = State.new(~level, ~score)
     global.status = Playing

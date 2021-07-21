@@ -124,7 +124,7 @@ let drawParticles = (particles: array<Types.particle>, ~viewport: Types.viewport
     render(part.sprite, x, y)
   })
 
-let object = (obj: Types.obj, ~viewport: Types.viewport) => {
+let drawObject = (obj: Types.obj, ~viewport: Types.viewport) => {
   let {x, y} = Viewport.fromCoord(viewport, obj.px, obj.py)
   obj.sprite->render(x, y)
   if Keys.checkBboxEnabled() {
@@ -133,14 +133,13 @@ let object = (obj: Types.obj, ~viewport: Types.viewport) => {
 }
 
 let drawState = (state: Types.state, ~fps as fps_) => {
-  let objectsWithPlayers = {
-    let objectsWihtPlayer1 = list{state.player1, ...state.objects}
-    Keys.checkTwoPlayers() ? list{state.player2, ...objectsWihtPlayer1} : objectsWihtPlayer1
-  }
-
   clearCanvas()
   drawBgd(state)
-  objectsWithPlayers->List.forEach(obj => obj->object(~viewport=state.viewport))
+  state.player1->drawObject(~viewport=state.viewport)
+  if Keys.checkTwoPlayers() {
+    state.player2->drawObject(~viewport=state.viewport)
+  }
+  state.objects->List.forEach(obj => obj->drawObject(~viewport=state.viewport))
   state.particles->drawParticles(~viewport=state.viewport)
   fps(fps_)
   scoreAndCoins(state.score, state.coins)
