@@ -1,20 +1,10 @@
-open Belt
-
 // Note: Canvas is 512 by 256 (w*h) -> 32 by 16 blocks
 // Holds obj typ and its coordinates. (int, (x-coord, y-coord))
 type blockCoord = (Types.blockTyp, float, float)
 type enemyCoord = (Types.enemyTyp, float, float)
 
-let rec memPos = (objs: list<Types.obj>, x, y): bool =>
-  switch objs {
-  | list{} => false
-  | list{{px, py}, ...t} =>
-    if x == px && y == py {
-      true
-    } else {
-      memPos(t, x, y)
-    }
-  }
+let memPos = (objs: array<Types.obj>, x, y): bool =>
+  objs->Js.Array2.some(({px, py}) => x == px && y == py)
 
 // Get rid of objects with coordinates in the ending frame, within 128 pixels of
 // the start, at the very top, and two blocks from the ground.
@@ -38,8 +28,8 @@ let convertCoinToObj = ((_, x, y), ~level) => {
 
 let addCoins = (objects, x, y0, ~level) => {
   let y = y0 -. 16.
-  if Random.bool() && (trimEdge(x, y, ~level) && !(objects.contents->memPos(x, y))) {
-    objects := list{(Types.QBlockCoin, x, y)->convertCoinToObj(~level), ...objects.contents}
+  if Random.bool() && (trimEdge(x, y, ~level) && !(objects->memPos(x, y))) {
+    objects->Js.Array2.push((Types.QBlockCoin, x, y)->convertCoinToObj(~level))->ignore
   }
 }
 
@@ -64,15 +54,15 @@ let randomEnemyTyp = () =>
 
 let addEnemyOnBlock = (objects, x, y, ~level) => {
   let placeEnemy = Random.int(Config.enemyDensity(~level))
-  if placeEnemy == 0 && !(objects.contents->memPos(x, y -. 16.)) {
-    objects := list{(randomEnemyTyp(), x, y -. 16.)->convertEnemyToObj(~level), ...objects.contents}
+  if placeEnemy == 0 && !(objects->memPos(x, y -. 16.)) {
+    objects->Js.Array2.push((randomEnemyTyp(), x, y -. 16.)->convertEnemyToObj(~level))->ignore
   }
 }
 
 let addBlock = (objects, blockTyp, xBlock, yBlock, ~level) => {
   let x = xBlock *. 16.
   let y = yBlock *. 16.
-  if !(objects.contents->memPos(x, y)) && trimEdge(x, y, ~level) {
+  if !(objects->memPos(x, y)) && trimEdge(x, y, ~level) {
     let obj = Object.make(
       ~level,
       ~objTyp=Block(blockTyp),
@@ -80,7 +70,7 @@ let addBlock = (objects, blockTyp, xBlock, yBlock, ~level) => {
       x,
       y,
     )
-    objects := list{obj, ...objects.contents}
+    objects->Js.Array2.push(obj)->ignore
     objects->addCoins(x, y, ~level)
     objects->addEnemyOnBlock(x, y, ~level)
   }
@@ -142,7 +132,7 @@ let randomStairTyp = () => Random.bool() ? Types.UnBBlock : Brick
 // of the level map, prevent any objects from being initialized.
 // 3. Else call helper methods to created block formations and return objCoord
 // slist.
-let chooseBlockPattern = (cbx: float, cby: float, blocks: ref<list<Types.obj>>, ~level) =>
+let chooseBlockPattern = (cbx: float, cby: float, objects: array<Types.obj>, ~level) =>
   if cbx > Config.blockw(~level) || cby > Config.blockh(~level) {
     ()
   } else {
@@ -155,40 +145,40 @@ let chooseBlockPattern = (cbx: float, cby: float, blocks: ref<list<Types.obj>>, 
     }
     switch Random.int(5) {
     | 0 =>
-      blocks->addBlock(stairTyp, cbx, cby, ~level)
-      blocks->addBlock(middleBlock, cbx +. 1., cby, ~level)
-      blocks->addBlock(stairTyp, cbx +. 2., cby, ~level)
+      objects->addBlock(stairTyp, cbx, cby, ~level)
+      objects->addBlock(middleBlock, cbx +. 1., cby, ~level)
+      objects->addBlock(stairTyp, cbx +. 2., cby, ~level)
     | 1 =>
       let numClouds = Random.int(5) + 5
       if cby < 5. {
-        generateClouds(cbx, cby, Cloud, numClouds, blocks, ~level)
+        generateClouds(cbx, cby, Cloud, numClouds, objects, ~level)
       } else {
         ()
       }
     | 2 =>
       if Config.blockh(~level) -. cby == 1. {
-        generateGroundStairs(cbx, cby, stairTyp, blocks, ~level)
+        generateGroundStairs(cbx, cby, stairTyp, objects, ~level)
       } else {
         ()
       }
     | 3 =>
       if stairTyp == Brick && Config.blockh(~level) -. cby > 3. {
-        generateAirdownStairs(cbx, cby, stairTyp, blocks, ~level)
+        generateAirdownStairs(cbx, cby, stairTyp, objects, ~level)
       } else if Config.blockh(~level) -. cby > 2. {
-        generateAirupStairs(cbx, cby, stairTyp, blocks, ~level)
+        generateAirupStairs(cbx, cby, stairTyp, objects, ~level)
       } else {
-        blocks->addBlock(stairTyp, cbx, cby, ~level)
+        objects->addBlock(stairTyp, cbx, cby, ~level)
       }
     | _ =>
       if cby +. 3. -. Config.blockh(~level) == 2. {
-        blocks->addBlock(stairTyp, cbx, cby, ~level)
+        objects->addBlock(stairTyp, cbx, cby, ~level)
       } else if cby +. 3. -. Config.blockh(~level) == 1. {
-        blocks->addBlock(stairTyp, cbx, cby, ~level)
-        blocks->addBlock(stairTyp, cbx, cby +. 1., ~level)
+        objects->addBlock(stairTyp, cbx, cby, ~level)
+        objects->addBlock(stairTyp, cbx, cby +. 1., ~level)
       } else {
-        blocks->addBlock(stairTyp, cbx, cby, ~level)
-        blocks->addBlock(stairTyp, cbx, cby +. 1., ~level)
-        blocks->addBlock(stairTyp, cbx, cby +. 2., ~level)
+        objects->addBlock(stairTyp, cbx, cby, ~level)
+        objects->addBlock(stairTyp, cbx, cby +. 1., ~level)
+        objects->addBlock(stairTyp, cbx, cby +. 2., ~level)
       }
     }
   }
@@ -202,11 +192,9 @@ let rec generateEnemiesOnGround = (objects, cbx: float, cby: float, ~level) =>
   } else if cby == 0. || (Config.blockh(~level) -. 1. != cby || Random.int(10) != 0) {
     generateEnemiesOnGround(objects, cbx, cby +. 1., ~level)
   } else {
-    objects :=
-      list{
-        (randomEnemyTyp(), cbx *. 16., cby *. 16.)->convertEnemyToObj(~level),
-        ...objects.contents,
-      }
+    objects
+    ->Js.Array2.push((randomEnemyTyp(), cbx *. 16., cby *. 16.)->convertEnemyToObj(~level))
+    ->ignore
     generateEnemiesOnGround(objects, cbx, cby +. 1., ~level)
   }
 
@@ -216,7 +204,7 @@ let rec generateBlocks = (objects, cbx: float, cby: float, ~level) =>
     ()
   } else if cby > Config.blockh(~level) -. 1. {
     generateBlocks(objects, cbx +. 1., 0., ~level)
-  } else if objects.contents->memPos(cbx, cby) || cby == 0. {
+  } else if objects->memPos(cbx, cby) || cby == 0. {
     generateBlocks(objects, cbx, cby +. 1., ~level)
   } else if Random.int(20) == 0 {
     chooseBlockPattern(cbx, cby, objects, ~level)
@@ -253,32 +241,31 @@ let rec generateGround = (objects, inc: float, ~level) =>
     if skip == 7 && Config.blockw(~level) -. inc > 32. {
       generateGround(objects, inc +. 1., ~level)
     } else {
-      objects :=
-        list{
-          (Ground, inc *. 16., Config.blockh(~level) *. 16.)->convertBlockToObj(~level),
-          ...objects.contents,
-        }
+      objects
+      ->Js.Array2.push(
+        (Ground, inc *. 16., Config.blockh(~level) *. 16.)->convertBlockToObj(~level),
+      )
+      ->ignore
       generateGround(objects, inc +. 1., ~level)
     }
   } else {
-    objects :=
-      list{
-        (Ground, inc *. 16., Config.blockh(~level) *. 16.)->convertBlockToObj(~level),
-        ...objects.contents,
-      }
+    objects
+    ->Js.Array2.push((Ground, inc *. 16., Config.blockh(~level) *. 16.)->convertBlockToObj(~level))
+    ->ignore
     generateGround(objects, inc +. 1., ~level)
   }
 
 // Procedurally generate a list of objects given canvas width, height and
 // context. Arguments block width (blockw) and block height (blockh) are in
 // block form, not pixels.
-let generateHelper = (~level): list<Types.obj> => {
-  let objects = ref(list{})
+let generateHelper = (~level) => {
+  let objects = []
   objects->generateBlocks(0., 0., ~level)
   objects->generateGround(0., ~level)
   objects->generateEnemiesOnGround(0., 0., ~level)
   let panel = generatePanel(~level)
-  list{panel, ...objects.contents}
+  objects->Js.Array2.push(panel)->ignore
+  objects
 }
 
 let newPlayer = (playerNum: Types.playerNum) =>
@@ -295,14 +282,14 @@ let newPlayer = (playerNum: Types.playerNum) =>
 // Main function called to procedurally generate the level map. w and h args
 // are in pixel form. Converts to block form to call generateHelper. Spawns
 // the list of objects received from generateHelper to display on canvas.
-let generate = (~level): list<Types.obj> => {
+let generate = (~level): array<Types.obj> => {
   Random.init(Config.randomSeed(~level))
   let initial = Html.performance.now(.)
   let objects = generateHelper(~level)
   let elapsed = Html.performance.now(.) -. initial
   Js.log3(
     "generated",
-    objects |> List.length,
+    objects |> Js.Array2.length,
     "objects in " ++ (Js.Float.toString(elapsed) ++ " milliseconds"),
   )
   objects

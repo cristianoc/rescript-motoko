@@ -240,7 +240,7 @@ let reverseLeftRight = (obj: Types.obj) => {
 // Actually creates a new enemy and deletes the previous. The positions must be
 // normalized. This method is typically called when enemies are killed and a
 // new sprite must be used (i.e., koopa to koopa shell).
-let evolveEnemy = (. player_dir, typ, spr: Types.sprite, obj: Types.obj, level) =>
+let evolveEnemy = (. player_dir, typ, spr: Types.sprite, obj: Types.obj, level, objects) =>
   switch typ {
   | Types.GKoopa =>
     let newObj = make(
@@ -253,7 +253,7 @@ let evolveEnemy = (. player_dir, typ, spr: Types.sprite, obj: Types.obj, level) 
       obj.py,
     )
     normalizePos(newObj, spr.params, newObj.sprite.params)
-    Some(newObj)
+    objects->Js.Array2.push(newObj)->ignore
   | RKoopa =>
     let newObj = make(
       ~level,
@@ -264,7 +264,7 @@ let evolveEnemy = (. player_dir, typ, spr: Types.sprite, obj: Types.obj, level) 
       obj.px,
       obj.py,
     )
-    Some(newObj)
+    objects->Js.Array2.push(newObj)->ignore
   | GKoopaShell | RKoopaShell =>
     obj.dir = player_dir
     if obj.vx != 0. {
@@ -272,10 +272,7 @@ let evolveEnemy = (. player_dir, typ, spr: Types.sprite, obj: Types.obj, level) 
     } else {
       setVelToSpeed(obj)
     }
-    None
-  | _ =>
-    obj.kill = true
-    None
+  | _ => obj.kill = true
   }
 
 // Update the direction of the sprite
@@ -300,7 +297,7 @@ let decHealth = (obj: Types.obj) => {
 }
 
 // Used for deleting a block and replacing it with a used block
-let evolveBlock = (. obj, level) => {
+let evolveBlock = (. obj, level, objects) => {
   decHealth(obj)
   let newObj = make(
     ~level,
@@ -311,11 +308,11 @@ let evolveBlock = (. obj, level) => {
     obj.px,
     obj.py,
   )
-  newObj
+  objects->Js.Array2.push(newObj)->ignore
 }
 
 // Used for spawning items above question mark blocks
-let spawnAbove = (. player_dir, obj: Types.obj, itemTyp, level) => {
+let spawnAbove = (. player_dir, obj: Types.obj, itemTyp, level, objects) => {
   let item = make(
     ~level,
     ~hasGravity=itemTyp != Types.Coin,
@@ -328,7 +325,7 @@ let spawnAbove = (. player_dir, obj: Types.obj, itemTyp, level) => {
   item.py = item.py -. snd(item.sprite.params.frameSize)
   item.dir = oppositeDir(player_dir)
   setVelToSpeed(item)
-  item
+  objects->Js.Array2.push(item)->ignore
 }
 
 // Used to get the bounding box

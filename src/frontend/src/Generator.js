@@ -4,23 +4,17 @@ import * as Config from "./Config.js";
 import * as $$Object from "./Object.js";
 import * as Random from "rescript/lib/es6/random.js";
 import * as Sprite from "./Sprite.js";
-import * as Belt_List from "rescript/lib/es6/belt_List.js";
 
-function memPos(_objs, x, y) {
-  while(true) {
-    var objs = _objs;
-    if (!objs) {
-      return false;
-    }
-    var match = objs.hd;
-    var px = match.px;
-    var py = match.py;
-    if (x === px && y === py) {
-      return true;
-    }
-    _objs = objs.tl;
-    continue ;
-  };
+function memPos(objs, x, y) {
+  return objs.some(function (param) {
+              var px = param.px;
+              var py = param.py;
+              if (x === px) {
+                return y === py;
+              } else {
+                return false;
+              }
+            });
 }
 
 function trimEdge(x, y, level) {
@@ -38,15 +32,12 @@ function convertCoinToObj(param, level) {
 
 function addCoins(objects, x, y0, level) {
   var y = y0 - 16;
-  if (Random.bool(undefined) && trimEdge(x, y, level) && !memPos(objects.contents, x, y)) {
-    objects.contents = {
-      hd: convertCoinToObj([
-            /* QBlockCoin */1,
-            x,
-            y
-          ], level),
-      tl: objects.contents
-    };
+  if (Random.bool(undefined) && trimEdge(x, y, level) && !memPos(objects, x, y)) {
+    objects.push(convertCoinToObj([
+              /* QBlockCoin */1,
+              x,
+              y
+            ], level));
     return ;
   }
   
@@ -77,15 +68,12 @@ function randomEnemyTyp(param) {
 
 function addEnemyOnBlock(objects, x, y, level) {
   var placeEnemy = Random.$$int(Config.enemyDensity(level));
-  if (placeEnemy === 0 && !memPos(objects.contents, x, y - 16)) {
-    objects.contents = {
-      hd: convertEnemyToObj([
-            randomEnemyTyp(undefined),
-            x,
-            y - 16
-          ], level),
-      tl: objects.contents
-    };
+  if (placeEnemy === 0 && !memPos(objects, x, y - 16)) {
+    objects.push(convertEnemyToObj([
+              randomEnemyTyp(undefined),
+              x,
+              y - 16
+            ], level));
     return ;
   }
   
@@ -94,17 +82,14 @@ function addEnemyOnBlock(objects, x, y, level) {
 function addBlock(objects, blockTyp, xBlock, yBlock, level) {
   var x = xBlock * 16;
   var y = yBlock * 16;
-  if (!(!memPos(objects.contents, x, y) && trimEdge(x, y, level))) {
+  if (!(!memPos(objects, x, y) && trimEdge(x, y, level))) {
     return ;
   }
   var obj = $$Object.make(undefined, undefined, undefined, level, {
         TAG: /* Block */4,
         _0: blockTyp
       }, Sprite.blockParams(blockTyp), x, y);
-  objects.contents = {
-    hd: obj,
-    tl: objects.contents
-  };
+  objects.push(obj);
   addCoins(objects, x, y, level);
   return addEnemyOnBlock(objects, x, y, level);
 }
@@ -164,7 +149,7 @@ function randomStairTyp(param) {
   }
 }
 
-function chooseBlockPattern(cbx, cby, blocks, level) {
+function chooseBlockPattern(cbx, cby, objects, level) {
   if (cbx > Config.blockw(level) || cby > Config.blockh(level)) {
     return ;
   }
@@ -174,40 +159,40 @@ function chooseBlockPattern(cbx, cby, blocks, level) {
   var match = Random.$$int(5);
   switch (match) {
     case 0 :
-        addBlock(blocks, stairTyp, cbx, cby, level);
-        addBlock(blocks, middleBlock, cbx + 1, cby, level);
-        return addBlock(blocks, stairTyp, cbx + 2, cby, level);
+        addBlock(objects, stairTyp, cbx, cby, level);
+        addBlock(objects, middleBlock, cbx + 1, cby, level);
+        return addBlock(objects, stairTyp, cbx + 2, cby, level);
     case 1 :
         var numClouds = Random.$$int(5) + 5 | 0;
         if (cby < 5) {
-          return generateClouds(cbx, cby, /* Cloud */5, numClouds, blocks, level);
+          return generateClouds(cbx, cby, /* Cloud */5, numClouds, objects, level);
         } else {
           return ;
         }
     case 2 :
         if (Config.blockh(level) - cby === 1) {
-          return generateGroundStairs(cbx, cby, stairTyp, blocks, level);
+          return generateGroundStairs(cbx, cby, stairTyp, objects, level);
         } else {
           return ;
         }
     case 3 :
         if (stairTyp === /* Brick */3 && Config.blockh(level) - cby > 3) {
-          return generateAirdownStairs(cbx, cby, stairTyp, blocks, level);
+          return generateAirdownStairs(cbx, cby, stairTyp, objects, level);
         } else if (Config.blockh(level) - cby > 2) {
-          return generateAirupStairs(cbx, cby, stairTyp, blocks, level);
+          return generateAirupStairs(cbx, cby, stairTyp, objects, level);
         } else {
-          return addBlock(blocks, stairTyp, cbx, cby, level);
+          return addBlock(objects, stairTyp, cbx, cby, level);
         }
     default:
       if (cby + 3 - Config.blockh(level) === 2) {
-        return addBlock(blocks, stairTyp, cbx, cby, level);
+        return addBlock(objects, stairTyp, cbx, cby, level);
       } else if (cby + 3 - Config.blockh(level) === 1) {
-        addBlock(blocks, stairTyp, cbx, cby, level);
-        return addBlock(blocks, stairTyp, cbx, cby + 1, level);
+        addBlock(objects, stairTyp, cbx, cby, level);
+        return addBlock(objects, stairTyp, cbx, cby + 1, level);
       } else {
-        addBlock(blocks, stairTyp, cbx, cby, level);
-        addBlock(blocks, stairTyp, cbx, cby + 1, level);
-        return addBlock(blocks, stairTyp, cbx, cby + 2, level);
+        addBlock(objects, stairTyp, cbx, cby, level);
+        addBlock(objects, stairTyp, cbx, cby + 1, level);
+        return addBlock(objects, stairTyp, cbx, cby + 2, level);
       }
   }
 }
@@ -228,14 +213,11 @@ function generateEnemiesOnGround(objects, _cbx, _cby, level) {
       _cby = cby + 1;
       continue ;
     }
-    objects.contents = {
-      hd: convertEnemyToObj([
-            randomEnemyTyp(undefined),
-            cbx * 16,
-            cby * 16
-          ], level),
-      tl: objects.contents
-    };
+    objects.push(convertEnemyToObj([
+              randomEnemyTyp(undefined),
+              cbx * 16,
+              cby * 16
+            ], level));
     _cby = cby + 1;
     continue ;
   };
@@ -253,7 +235,7 @@ function generateBlocks(objects, _cbx, _cby, level) {
       _cbx = cbx + 1;
       continue ;
     }
-    if (memPos(objects.contents, cbx, cby) || cby === 0) {
+    if (memPos(objects, cbx, cby) || cby === 0) {
       _cby = cby + 1;
       continue ;
     }
@@ -300,42 +282,32 @@ function generateGround(objects, _inc, level) {
         _inc = inc + 1;
         continue ;
       }
-      objects.contents = {
-        hd: convertBlockToObj([
-                /* Ground */7,
-                inc * 16,
-                Config.blockh(level) * 16
-              ])(level),
-        tl: objects.contents
-      };
+      objects.push(convertBlockToObj([
+                  /* Ground */7,
+                  inc * 16,
+                  Config.blockh(level) * 16
+                ])(level));
       _inc = inc + 1;
       continue ;
     }
-    objects.contents = {
-      hd: convertBlockToObj([
-              /* Ground */7,
-              inc * 16,
-              Config.blockh(level) * 16
-            ])(level),
-      tl: objects.contents
-    };
+    objects.push(convertBlockToObj([
+                /* Ground */7,
+                inc * 16,
+                Config.blockh(level) * 16
+              ])(level));
     _inc = inc + 1;
     continue ;
   };
 }
 
 function generateHelper(level) {
-  var objects = {
-    contents: /* [] */0
-  };
+  var objects = [];
   generateBlocks(objects, 0, 0, level);
   generateGround(objects, 0, level);
   generateEnemiesOnGround(objects, 0, 0, level);
   var panel = generatePanel(level);
-  return {
-          hd: panel,
-          tl: objects.contents
-        };
+  objects.push(panel);
+  return objects;
 }
 
 function newPlayer(playerNum) {
@@ -357,7 +329,7 @@ function generate(level) {
   var initial = performance.now();
   var objects = generateHelper(level);
   var elapsed = performance.now() - initial;
-  console.log("generated", Belt_List.length(objects), "objects in " + (elapsed.toString() + " milliseconds"));
+  console.log("generated", objects.length, "objects in " + (elapsed.toString() + " milliseconds"));
   return objects;
 }
 

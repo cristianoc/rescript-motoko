@@ -2,8 +2,6 @@
 /* eslint-disable import/first */
 
 
-import type {list} from '../../../src/frontend/src/shims/RescriptPervasives.shim';
-
 // tslint:disable-next-line:interface-over-type-literal
 export type dir = "Left" | "Right";
 
@@ -125,7 +123,7 @@ export type state = {
   coins: number; 
   readonly level: number; 
   multiplier: number; 
-  objects: list<obj>; 
+  objects: obj[]; 
   particles: particle[]; 
   readonly player1: obj; 
   readonly player2: obj; 
