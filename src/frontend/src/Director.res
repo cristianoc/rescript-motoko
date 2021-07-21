@@ -265,8 +265,8 @@ let broadPhase = (~objects, viewport) => objects->Array.keep(o => o->inViewport(
 // narrowPhase of collision is used in order to continuously loop through
 // each of the collidable objects to constantly check if collisions are
 // occurring.
-let narrowPhase = (obj, ~objects, ~state, ~visibleCollids) => {
-  visibleCollids->Js.Array2.forEach(collid =>
+let narrowPhase = (obj, ~objects, ~state, ~collids) => {
+  collids->Js.Array2.forEach(collid =>
     if !Object.sameId(obj, collid) {
       switch Object.checkCollision(obj, collid) {
       | None => ()
@@ -286,15 +286,29 @@ let narrowPhase = (obj, ~objects, ~state, ~visibleCollids) => {
 // is a collision, and process the collision.
 // This method returns a list of objects that are created, which should be
 // added to the list of objects for the next iteration.
-let checkCollisions = (obj: Types.obj, ~objects, ~state: Types.state, ~visibleCollids) =>
+let checkCollisions = (
+  obj: Types.obj,
+  ~objects,
+  ~otherCollids,
+  ~state: Types.state,
+  ~visibleCollids,
+) =>
   switch obj.objTyp {
   | Block(_) => ()
-  | _ => obj->narrowPhase(~objects, ~state, ~visibleCollids)
+  | _ =>
+    obj->narrowPhase(~objects, ~state, ~collids=visibleCollids)
+    obj->narrowPhase(~objects, ~state, ~collids=otherCollids)
   }
 
 // primary update method for objects,
 // checking the collision, updating the object, and drawing to the canvas
-let findObjectsColliding = (obj: Types.obj, ~objects, ~state: Types.state, ~visibleCollids) => {
+let findObjectsColliding = (
+  obj: Types.obj,
+  ~objects,
+  ~otherCollids,
+  ~state: Types.state,
+  ~visibleCollids,
+) => {
   /* TODO: optimize. Draw static elements only once */
   let sprite = obj.sprite
   obj.invuln = if obj.invuln > 0 {
@@ -306,13 +320,11 @@ let findObjectsColliding = (obj: Types.obj, ~objects, ~state: Types.state, ~visi
     obj.grounded = false
     obj->Object.processObj(~level=state.level)
     // Run collision detection if moving object
-    let objectsColliding = obj->checkCollisions(~objects, ~state, ~visibleCollids)
+    let objectsColliding = obj->checkCollisions(~objects, ~otherCollids, ~state, ~visibleCollids)
     if obj.vx != 0. || !Object.isEnemy(obj) {
       Sprite.updateAnimation(sprite)
     }
     objectsColliding
-  } else {
-    ()
   }
 }
 
@@ -320,7 +332,7 @@ let findObjectsColliding = (obj: Types.obj, ~objects, ~state: Types.state, ~visi
 // as a wrapper method. This method is necessary to differentiate between
 // the player collidable and the remaining collidables, as special operations
 // such as viewport centering only occur with the player
-let updateObject = (obj: Types.obj, ~objects, ~state, ~visibleCollids) =>
+let updateObject = (obj: Types.obj, ~objects, ~otherCollids, ~state, ~visibleCollids) =>
   switch obj.objTyp {
   | Player1(_) | Player2(_) =>
     let playerNum: Types.playerNum = switch obj.objTyp {
@@ -330,9 +342,9 @@ let updateObject = (obj: Types.obj, ~objects, ~state, ~visibleCollids) =>
     let keys = Keys.translateKeys(playerNum)
     obj.crouch = false
     obj->Object.updatePlayer(playerNum, keys)
-    obj->findObjectsColliding(~objects, ~state, ~visibleCollids)
+    obj->findObjectsColliding(~objects, ~otherCollids, ~state, ~visibleCollids)
   | _ =>
-    obj->findObjectsColliding(~objects, ~state, ~visibleCollids)
+    obj->findObjectsColliding(~objects, ~otherCollids, ~state, ~visibleCollids)
     if !obj.kill {
       global.state.objects->Js.Array2.push(obj)->ignore
     }
@@ -449,21 +461,19 @@ let rec updateLoop = () => {
   | Playing =>
     let fps = calcFps()
     let oldObjects = global.state.objects
-    let players = Keys.checkTwoPlayers()
-      ? list{global.state.player1, global.state.player2}
-      : list{global.state.player1}
     let visibleCollids = broadPhase(~objects=oldObjects, global.state.viewport)
-    visibleCollids->Js.Array2.pushMany(players->List.toArray)->ignore
     global.state.objects = []
     global.state.particles = global.state.particles->Belt.Array.keep(updateParticle)
     global.state.player1->updateObject(
       ~objects=global.state.objects,
+      ~otherCollids=Keys.checkTwoPlayers() ? [global.state.player2] : [],
       ~state=global.state,
       ~visibleCollids,
     )
     if Keys.checkTwoPlayers() {
       global.state.player2->updateObject(
         ~objects=global.state.objects,
+        ~otherCollids=[global.state.player1],
         ~state=global.state,
         ~visibleCollids,
       )
@@ -476,7 +486,12 @@ let rec updateLoop = () => {
     }
     Viewport.update(global.state.viewport, global.state.player1.px, global.state.player1.py)
     oldObjects->Js.Array2.forEach(obj =>
-      obj->updateObject(~objects=global.state.objects, ~state=global.state, ~visibleCollids)
+      obj->updateObject(
+        ~objects=global.state.objects,
+        ~otherCollids=[],
+        ~state=global.state,
+        ~visibleCollids,
+      )
     )
 
     global.state->Draw.drawState(~fps)
