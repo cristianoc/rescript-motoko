@@ -4,23 +4,37 @@ import * as Sprite from "./Sprite.js";
 import * as Viewport from "./Viewport.js";
 import * as Generator from "./Generator.js";
 
-function $$new(idCounter, level, score) {
-  var player1 = Generator.newPlayer(/* One */0, idCounter, level);
-  var player2 = Generator.newPlayer(/* Two */1, idCounter, level);
+function $$new(level, score) {
   var viewport = Viewport.make(level);
+  var incompleteState = {
+    bgd: Sprite.makeBgd(undefined),
+    coins: 0,
+    idCounter: 0,
+    level: level,
+    multiplier: 1,
+    objects: [],
+    particles: [],
+    player1: 0,
+    player2: 0,
+    score: score,
+    viewport: viewport
+  };
+  var player1 = Generator.newPlayer(/* One */0, incompleteState);
+  var player2 = Generator.newPlayer(/* Two */1, incompleteState);
   Viewport.update(viewport, player1.px, player1.py);
-  var objects = Generator.generate(idCounter, level);
+  Generator.generate(incompleteState);
   return {
-          bgd: Sprite.makeBgd(undefined),
-          coins: 0,
-          level: level,
-          multiplier: 1,
-          objects: objects,
-          particles: [],
+          bgd: incompleteState.bgd,
+          coins: incompleteState.coins,
+          idCounter: incompleteState.idCounter,
+          level: incompleteState.level,
+          multiplier: incompleteState.multiplier,
+          objects: incompleteState.objects,
+          particles: incompleteState.particles,
           player1: player1,
           player2: player2,
-          score: score,
-          viewport: viewport
+          score: incompleteState.score,
+          viewport: incompleteState.viewport
         };
 }
 

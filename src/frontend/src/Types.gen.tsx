@@ -121,6 +121,7 @@ export type viewport = {
 export type state = {
   readonly bgd: sprite; 
   coins: number; 
+  idCounter: number; 
   readonly level: number; 
   multiplier: number; 
   objects: obj[]; 

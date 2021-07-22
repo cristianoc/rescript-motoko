@@ -155,6 +155,7 @@ type viewport = {
 type state = {
   bgd: sprite,
   mutable coins: int,
+  mutable idCounter: int,
   level: int,
   mutable multiplier: int,
   mutable objects: array<obj>,

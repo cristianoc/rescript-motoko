@@ -22,21 +22,13 @@ let calcFps = {
 // This causes the player to either kill the enemy or move the enemy, in the
 // case that the enemy is a shell. Invulnerability, jumping, and grounded
 // are used for fine tuning the movements.
-let playerAttackEnemy = (.
-  o1: Types.obj,
-  enemyTyp: Types.enemyTyp,
-  s2,
-  o2,
-  idCounter,
-  state: Types.state,
-  objects,
-) => {
+let playerAttackEnemy = (. o1: Types.obj, enemyTyp: Types.enemyTyp, s2, o2, state: Types.state) => {
   o1.invuln = 10
   o1.jumping = false
   o1.grounded = true
   switch enemyTyp {
   | GKoopaShell | RKoopaShell =>
-    Object.evolveEnemy(. o1.dir, enemyTyp, s2, o2, idCounter, state.level, objects)
+    Object.evolveEnemy(. o1.dir, enemyTyp, s2, o2, state)
     o1.vy = -.Config.dampenJump
     o1.py = o1.py -. 5.
   | _ =>
@@ -45,24 +37,24 @@ let playerAttackEnemy = (.
     if state.multiplier == 8 {
       state->State.updateScore(800)
       o2.score = 800
-      Object.evolveEnemy(. o1.dir, enemyTyp, s2, o2, idCounter, state.level, objects)
+      Object.evolveEnemy(. o1.dir, enemyTyp, s2, o2, state)
     } else {
       let score = 100 * state.multiplier
       state->State.updateScore(score)
       o2.score = score
       state.multiplier = state.multiplier * 2
-      Object.evolveEnemy(. o1.dir, enemyTyp, s2, o2, idCounter, state.level, objects)
+      Object.evolveEnemy(. o1.dir, enemyTyp, s2, o2, state)
     }
   }
 }
 
 // enemyAttackPlayer is used when an enemy kills a player.
-let enemyAttackPlayer = (. enemy: Types.obj, player: Types.obj, idCounter, level, objects) => {
+let enemyAttackPlayer = (. enemy: Types.obj, player: Types.obj, state) => {
   switch enemy.objTyp {
   | Enemy((GKoopaShell | RKoopaShell) as enemyTyp) if enemy.vx == 0. =>
     // This only works if the player does not go faster than the shell
     // Otherwise it can try to overtake and touch it when it has non-zero velocity
-    Object.evolveEnemy(. player.dir, enemyTyp, enemy.sprite, enemy, idCounter, level, objects)
+    Object.evolveEnemy(. player.dir, enemyTyp, enemy.sprite, enemy, state)
   | _ =>
     Object.decHealth(player)
     player.invuln = Config.invuln
@@ -118,7 +110,6 @@ module Global = {
     | Saving
   type initialObj = {obj: Types.obj, mutable missing: bool}
   type global = {
-    idCounter: ref<int>,
     mutable state: Types.state,
     mutable status: status,
     mutable initialObjects: Hashtbl.t<int, initialObj>,
@@ -132,18 +123,15 @@ module Global = {
     initialObjects
   }
   let global = () => {
-    let idCounter = ref(0)
-    let state = State.new(~idCounter, ~level=1, ~score=0)
+    let state = State.new(~level=1, ~score=0)
     {
-      idCounter: idCounter,
       state: state,
       status: Playing,
       initialObjects: state.objects->createInitialObjects,
     }
   }
   let reset = (global, ~level, ~score) => {
-    global.idCounter := 0
-    global.state = State.new(~idCounter=global.idCounter, ~level, ~score)
+    global.state = State.new(~level, ~score)
     global.status = Playing
     global.initialObjects = global.state.objects->createInitialObjects
   }
@@ -245,20 +233,18 @@ let processCollision = (.
   dir2: Types.dir2,
   obj: Types.obj,
   collid: Types.obj,
-  idCounter,
   state: Types.state,
-  objects: Js.Array2.t<Types.obj>,
 ) =>
   switch (obj, collid, dir2) {
   | ({objTyp: Player1(_) | Player2(_)}, {objTyp: Player1(_) | Player2(_)}, East | West) =>
     collid.vx = collid.vx +. obj.vx
   | ({objTyp: Player1(_) | Player2(_)}, {objTyp: Enemy(typ), sprite: s2}, South)
   | ({objTyp: Enemy(typ), sprite: s2}, {objTyp: Player1(_) | Player2(_)}, North) =>
-    playerAttackEnemy(. obj, typ, s2, collid, idCounter, state, objects)
+    playerAttackEnemy(. obj, typ, s2, collid, state)
   | ({objTyp: Player1(_) | Player2(_)}, {objTyp: Enemy(_)}, _) =>
-    enemyAttackPlayer(. collid, obj, idCounter, state.level, objects)
+    enemyAttackPlayer(. collid, obj, state)
   | ({objTyp: Enemy(_)}, {objTyp: Player1(_) | Player2(_)}, _) =>
-    enemyAttackPlayer(. obj, collid, idCounter, state.level, objects)
+    enemyAttackPlayer(. obj, collid, state)
   | ({objTyp: Player1(_) | Player2(_)}, {objTyp: Item(t2)}, _)
   | ({objTyp: Item(t2)}, {objTyp: Player1(_) | Player2(_)}, _) =>
     switch t2 {
@@ -287,12 +273,12 @@ let processCollision = (.
       Object.decHealth(collid)
       Object.reverseLeftRight(obj)
     | (RKoopaShell | GKoopaShell, QBlockMushroom) =>
-      Object.evolveBlock(. collid, idCounter, state.level, objects)
-      Object.spawnAbove(. obj.dir, collid, Mushroom, idCounter, state.level, objects)
+      Object.evolveBlock(. collid, state)
+      Object.spawnAbove(. obj.dir, collid, Mushroom, state)
       Object.revDir(obj, t1, s1)
     | (RKoopaShell | GKoopaShell, QBlockCoin) =>
-      Object.evolveBlock(. collid, idCounter, state.level, objects)
-      Object.spawnAbove(. obj.dir, collid, Coin, idCounter, state.level, objects)
+      Object.evolveBlock(. collid, state)
+      Object.spawnAbove(. obj.dir, collid, Coin, state)
       Object.revDir(obj, t1, s1)
     | (_, _) => Object.revDir(obj, t1, s1)
     }
@@ -303,12 +289,12 @@ let processCollision = (.
   | ({objTyp: Player1(t1) | Player2(t1)}, {objTyp: Block(t)}, North) =>
     switch t {
     | QBlockMushroom =>
-      Object.evolveBlock(. collid, idCounter, state.level, objects)
-      Object.spawnAbove(. obj.dir, collid, Mushroom, idCounter, state.level, objects)
+      Object.evolveBlock(. collid, state)
+      Object.spawnAbove(. obj.dir, collid, Mushroom, state)
       Object.collideBlock(dir2, obj)
     | QBlockCoin =>
-      Object.evolveBlock(. collid, idCounter, state.level, objects)
-      Object.spawnAbove(. obj.dir, collid, Coin, idCounter, state.level, objects)
+      Object.evolveBlock(. collid, state)
+      Object.spawnAbove(. obj.dir, collid, Coin, state)
       Object.collideBlock(dir2, obj)
     | Brick =>
       if t1 == BigM {
@@ -353,12 +339,12 @@ let broadPhase = (~objects, viewport) => objects->Array.keep(o => o->inViewport(
 // narrowPhase of collision is used in order to continuously loop through
 // each of the collidable objects to constantly check if collisions are
 // occurring.
-let narrowPhase = (obj, ~idCounter, ~objects, ~state, ~collids) => {
+let narrowPhase = (obj, ~state, ~collids) => {
   collids->Js.Array2.forEach(collid =>
     if !Object.sameId(obj, collid) {
       switch Object.checkCollision(obj, collid) {
       | None => ()
-      | Some(dir) => processCollision(. dir, obj, collid, idCounter, state, objects)
+      | Some(dir) => processCollision(. dir, obj, collid, state)
       }
     }
   )
@@ -374,27 +360,18 @@ let narrowPhase = (obj, ~idCounter, ~objects, ~state, ~collids) => {
 // is a collision, and process the collision.
 // This method returns a list of objects that are created, which should be
 // added to the list of objects for the next iteration.
-let checkCollisions = (
-  obj: Types.obj,
-  ~idCounter,
-  ~objects,
-  ~otherCollids,
-  ~state: Types.state,
-  ~visibleCollids,
-) =>
+let checkCollisions = (obj: Types.obj, ~otherCollids, ~state: Types.state, ~visibleCollids) =>
   switch obj.objTyp {
   | Block(_) => ()
   | _ =>
-    obj->narrowPhase(~idCounter, ~objects, ~state, ~collids=visibleCollids)
-    obj->narrowPhase(~idCounter, ~objects, ~state, ~collids=otherCollids)
+    obj->narrowPhase(~state, ~collids=visibleCollids)
+    obj->narrowPhase(~state, ~collids=otherCollids)
   }
 
 // primary update method for objects,
 // checking the collision, updating the object, and drawing to the canvas
 let findObjectsColliding = (
   obj: Types.obj,
-  ~idCounter,
-  ~objects,
   ~otherCollids,
   ~state: Types.state,
   ~visibleCollids,
@@ -410,8 +387,7 @@ let findObjectsColliding = (
     obj.grounded = false
     obj->Object.processObj(~level=state.level)
     // Run collision detection if moving object
-    let objectsColliding =
-      obj->checkCollisions(~idCounter, ~objects, ~otherCollids, ~state, ~visibleCollids)
+    let objectsColliding = obj->checkCollisions(~otherCollids, ~state, ~visibleCollids)
     if obj.vx != 0. || !Object.isEnemy(obj) {
       Sprite.updateAnimation(sprite)
     }
@@ -423,7 +399,7 @@ let findObjectsColliding = (
 // as a wrapper method. This method is necessary to differentiate between
 // the player collidable and the remaining collidables, as special operations
 // such as viewport centering only occur with the player
-let updateObject = (obj: Types.obj, ~idCounter, ~objects, ~otherCollids, ~state, ~visibleCollids) =>
+let updateObject = (obj: Types.obj, ~otherCollids, ~state, ~visibleCollids) =>
   switch obj.objTyp {
   | Player1(_) | Player2(_) =>
     let playerNum: Types.playerNum = switch obj.objTyp {
@@ -433,9 +409,9 @@ let updateObject = (obj: Types.obj, ~idCounter, ~objects, ~otherCollids, ~state,
     let keys = Keys.translateKeys(playerNum)
     obj.crouch = false
     obj->Object.updatePlayer(playerNum, keys)
-    obj->findObjectsColliding(~idCounter, ~objects, ~otherCollids, ~state, ~visibleCollids)
+    obj->findObjectsColliding(~otherCollids, ~state, ~visibleCollids)
   | _ =>
-    obj->findObjectsColliding(~idCounter, ~objects, ~otherCollids, ~state, ~visibleCollids)
+    obj->findObjectsColliding(~otherCollids, ~state, ~visibleCollids)
     if !obj.kill {
       global.state.objects->Js.Array2.push(obj)->ignore
     }
@@ -560,16 +536,12 @@ let rec updateLoop = () => {
     global.state.objects = []
     global.state.particles = global.state.particles->Belt.Array.keep(updateParticle)
     global.state.player1->updateObject(
-      ~idCounter=global.idCounter,
-      ~objects=global.state.objects,
       ~otherCollids=Keys.checkTwoPlayers() ? [global.state.player2] : [],
       ~state=global.state,
       ~visibleCollids,
     )
     if Keys.checkTwoPlayers() {
       global.state.player2->updateObject(
-        ~idCounter=global.idCounter,
-        ~objects=global.state.objects,
         ~otherCollids=[global.state.player1],
         ~state=global.state,
         ~visibleCollids,
@@ -583,13 +555,7 @@ let rec updateLoop = () => {
     }
     Viewport.update(global.state.viewport, global.state.player1.px, global.state.player1.py)
     oldObjects->Js.Array2.forEach(obj =>
-      obj->updateObject(
-        ~idCounter=global.idCounter,
-        ~objects=global.state.objects,
-        ~otherCollids=[],
-        ~state=global.state,
-        ~visibleCollids,
-      )
+      obj->updateObject(~otherCollids=[], ~state=global.state, ~visibleCollids)
     )
 
     global.state->Draw.drawState(~fps)
