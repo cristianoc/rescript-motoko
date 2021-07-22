@@ -277,8 +277,10 @@ let generateHelper = (~idCounter, ~level) => {
   objects
 }
 
-let newPlayer = (playerNum: Types.playerNum) =>
+let newPlayer = (playerNum: Types.playerNum, ~idCounter, ~level) =>
   Object.make(
+    ~idCounter,
+    ~level,
     ~objTyp=switch playerNum {
     | One => Player1(SmallM)
     | Two => Player2(SmallM)

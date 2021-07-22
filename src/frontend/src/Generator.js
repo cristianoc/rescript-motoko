@@ -319,21 +319,14 @@ function generateHelper(idCounter, level) {
   return objects;
 }
 
-function newPlayer(playerNum) {
-  var arg = playerNum ? ({
-        TAG: /* Player2 */1,
-        _0: /* SmallM */1
-      }) : ({
-        TAG: /* Player1 */0,
-        _0: /* SmallM */1
-      });
-  var arg$1 = Sprite.playerParams(/* SmallM */1, /* Standing */0, /* Left */0, playerNum);
-  return function (param) {
-    var func = Curry._4($$Object.make, undefined, undefined, undefined, param);
-    return function (param) {
-      return Curry._5(func, param, arg, arg$1, 100, 224);
-    };
-  };
+function newPlayer(playerNum, idCounter, level) {
+  return $$Object.make(undefined, undefined, undefined, idCounter, level, playerNum ? ({
+                  TAG: /* Player2 */1,
+                  _0: /* SmallM */1
+                }) : ({
+                  TAG: /* Player1 */0,
+                  _0: /* SmallM */1
+                }), Sprite.playerParams(/* SmallM */1, /* Standing */0, /* Left */0, playerNum), 100, 224);
 }
 
 function generate(idCounter, level) {
