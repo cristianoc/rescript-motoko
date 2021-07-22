@@ -8,8 +8,6 @@ type aabb = {
   half: Types.xy,
 }
 
-let idCounter = ref(0)
-
 /* Sets an object's x velocity to the speed specified in its params based on
  * its direction */
 let setVelToSpeed = (obj: Types.obj) => {
@@ -244,7 +242,15 @@ let reverseLeftRight = (obj: Types.obj) => {
 // Actually creates a new enemy and deletes the previous. The positions must be
 // normalized. This method is typically called when enemies are killed and a
 // new sprite must be used (i.e., koopa to koopa shell).
-let evolveEnemy = (. player_dir, typ, spr: Types.sprite, obj: Types.obj, level, objects) =>
+let evolveEnemy = (.
+  player_dir,
+  typ,
+  spr: Types.sprite,
+  obj: Types.obj,
+  idCounter,
+  level,
+  objects,
+) =>
   switch typ {
   | Types.GKoopa =>
     let newObj = make(
@@ -319,7 +325,7 @@ let evolveBlock = (. obj, idCounter, level, objects) => {
 }
 
 // Used for spawning items above question mark blocks
-let spawnAbove = (. player_dir, obj: Types.obj, itemTyp, level, objects) => {
+let spawnAbove = (. player_dir, obj: Types.obj, itemTyp, idCounter, level, objects) => {
   let item = make(
     ~dir=Left,
     ~hasGravity=itemTyp != Types.Coin,
