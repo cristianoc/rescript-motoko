@@ -1,11 +1,14 @@
 open Belt
 
+// Make a copy of the mutable fields
+let copy = (obj: Types.obj) => {...obj, id: obj.id}
+
 type aabb = {
   center: Types.xy,
   half: Types.xy,
 }
 
-let idCounter = ref(min_int)
+let idCounter = ref(0)
 
 /* Sets an object's x velocity to the speed specified in its params based on
  * its direction */
@@ -18,7 +21,7 @@ let setVelToSpeed = (obj: Types.obj) => {
 }
 
 /* Used in object creation and to compare two objects. */
-let newId = () => {
+let newId = (~idCounter) => {
   idCounter := idCounter.contents + 1
   idCounter.contents
 }
@@ -27,6 +30,7 @@ let make = (
   ~hasGravity=true,
   ~speed=1.0,
   ~dir=Types.Left,
+  ~idCounter,
   ~level,
   ~objTyp: Types.objTyp,
   ~spriteParams,
@@ -42,7 +46,7 @@ let make = (
     py: py,
     vx: 0.0,
     vy: 0.0,
-    id: newId(),
+    id: newId(~idCounter),
     jumping: false,
     grounded: false,
     dir: dir,
@@ -244,10 +248,11 @@ let evolveEnemy = (. player_dir, typ, spr: Types.sprite, obj: Types.obj, level, 
   switch typ {
   | Types.GKoopa =>
     let newObj = make(
-      ~speed=3.,
-      ~level,
       ~dir=obj.dir,
+      ~idCounter,
+      ~level,
       ~objTyp=Enemy(GKoopaShell),
+      ~speed=3.,
       ~spriteParams=Sprite.enemyParams(GKoopaShell, obj.dir),
       obj.px,
       obj.py,
@@ -256,10 +261,11 @@ let evolveEnemy = (. player_dir, typ, spr: Types.sprite, obj: Types.obj, level, 
     objects->Js.Array2.push(newObj)->ignore
   | RKoopa =>
     let newObj = make(
-      ~level,
-      ~speed=3.,
       ~dir=obj.dir,
+      ~idCounter,
+      ~level,
       ~objTyp=Enemy(RKoopaShell),
+      ~speed=3.,
       ~spriteParams=Sprite.enemyParams(RKoopaShell, obj.dir),
       obj.px,
       obj.py,
@@ -297,12 +303,13 @@ let decHealth = (obj: Types.obj) => {
 }
 
 // Used for deleting a block and replacing it with a used block
-let evolveBlock = (. obj, level, objects) => {
+let evolveBlock = (. obj, idCounter, level, objects) => {
   decHealth(obj)
   let newObj = make(
-    ~level,
-    ~hasGravity=false,
     ~dir=obj.dir,
+    ~hasGravity=false,
+    ~idCounter,
+    ~level,
     ~objTyp=Block(QBlockUsed),
     ~spriteParams=Sprite.blockParams(QBlockUsed),
     obj.px,
@@ -314,9 +321,10 @@ let evolveBlock = (. obj, level, objects) => {
 // Used for spawning items above question mark blocks
 let spawnAbove = (. player_dir, obj: Types.obj, itemTyp, level, objects) => {
   let item = make(
-    ~level,
-    ~hasGravity=itemTyp != Types.Coin,
     ~dir=Left,
+    ~hasGravity=itemTyp != Types.Coin,
+    ~idCounter,
+    ~level,
     ~objTyp=Item(itemTyp),
     ~spriteParams=Sprite.makeParams(itemTyp),
     obj.px,

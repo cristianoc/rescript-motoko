@@ -8,6 +8,8 @@ import * as Config from "./Config.js";
 import * as $$Object from "./Object.js";
 import * as Sprite from "./Sprite.js";
 import * as Backend from "./Backend.js";
+import * as Hashtbl from "rescript/lib/es6/hashtbl.js";
+import * as Caml_obj from "rescript/lib/es6/caml_obj.js";
 import * as Particle from "./Particle.js";
 import * as Viewport from "./Viewport.js";
 import * as AuthClient from "./AuthClient.js";
@@ -107,50 +109,176 @@ function collEnemyEnemy(enemy1, s1, o1, enemy2, s2, o2, dir2) {
   }
 }
 
-var $$global = {
-  state: State.$$new(1, 0),
-  status: /* Playing */2
-};
+function createInitialObjects(objects) {
+  var initialObjects = Hashtbl.create(undefined, objects.length);
+  Belt_Array.forEach(objects, (function (obj) {
+          return Hashtbl.replace(initialObjects, obj.id, {
+                      obj: $$Object.copy(obj),
+                      missing: true
+                    });
+        }));
+  return initialObjects;
+}
 
-function reset(level, score) {
-  $$global.state = State.$$new(level, score);
+function $$global(param) {
+  var idCounter = {
+    contents: 0
+  };
+  var state = State.$$new(idCounter, 1, 0);
+  return {
+          idCounter: idCounter,
+          state: state,
+          status: /* Playing */2,
+          initialObjects: createInitialObjects(state.objects)
+        };
+}
+
+function reset($$global, level, score) {
+  $$global.idCounter.contents = 0;
+  $$global.state = State.$$new($$global.idCounter, level, score);
   $$global.status = /* Playing */2;
+  $$global.initialObjects = createInitialObjects($$global.state.objects);
   
 }
 
 var Global = {
+  createInitialObjects: createInitialObjects,
   $$global: $$global,
   reset: reset
 };
 
+function apply(delta, $$global) {
+  if (delta.state.level !== $$global.state.level) {
+    reset($$global, delta.state.level, delta.state.score);
+  }
+  var modifiedOrAdded = delta.state.objects;
+  var objects = [];
+  var addObject = function (obj) {
+    objects.push($$Object.copy(obj));
+    
+  };
+  Hashtbl.iter((function (_id, initialObj) {
+          initialObj.missing = false;
+          
+        }), $$global.initialObjects);
+  delta.missing.forEach(function (id) {
+        var initialObj = Hashtbl.find_opt($$global.initialObjects, id);
+        if (initialObj !== undefined) {
+          initialObj.missing = true;
+          return ;
+        }
+        
+      });
+  modifiedOrAdded.forEach(function (obj) {
+        var initialObj = Hashtbl.find_opt($$global.initialObjects, obj.id);
+        if (initialObj !== undefined) {
+          initialObj.missing = true;
+        }
+        return addObject(obj);
+      });
+  Hashtbl.iter((function (_id, initialObj) {
+          if (initialObj.missing === false) {
+            initialObj.missing = true;
+            return addObject(initialObj.obj);
+          }
+          
+        }), $$global.initialObjects);
+  var init = delta.state;
+  var state = {
+    bgd: init.bgd,
+    coins: init.coins,
+    level: init.level,
+    multiplier: init.multiplier,
+    objects: objects,
+    particles: init.particles,
+    player1: init.player1,
+    player2: init.player2,
+    score: init.score,
+    viewport: init.viewport
+  };
+  $$global.state = state;
+  
+}
+
+function findObjectsDifference($$global) {
+  var missing = [];
+  var modifiedOrAdded = [];
+  Belt_Array.forEach($$global.state.objects, (function (obj) {
+          var initialObj = Hashtbl.find_opt($$global.initialObjects, obj.id);
+          if (initialObj !== undefined) {
+            initialObj.missing = false;
+            var isSame = Caml_obj.caml_equal(initialObj.obj, obj);
+            if (!isSame) {
+              modifiedOrAdded.push(obj);
+              return ;
+            } else {
+              return ;
+            }
+          }
+          modifiedOrAdded.push(obj);
+          
+        }));
+  Hashtbl.iter((function (id, initialObj) {
+          if (initialObj.missing) {
+            missing.push(id);
+          } else {
+            initialObj.missing = true;
+          }
+          
+        }), $$global.initialObjects);
+  var init = $$global.state;
+  return {
+          missing: missing,
+          state: {
+            bgd: init.bgd,
+            coins: init.coins,
+            level: init.level,
+            multiplier: init.multiplier,
+            objects: modifiedOrAdded,
+            particles: init.particles,
+            player1: init.player1,
+            player2: init.player2,
+            score: init.score,
+            viewport: init.viewport
+          }
+        };
+}
+
+var Delta = {
+  apply: apply,
+  findObjectsDifference: findObjectsDifference
+};
+
+var $$global$1 = $$global(undefined);
+
 function loadState(principal) {
   return Backend.actor.loadGameState(principal).then(function (json) {
               if (json !== "") {
-                $$global.state = JSON.parse(json);
+                $$global$1.state = JSON.parse(json);
               }
               return Promise.resolve(undefined);
             });
 }
 
 function saveState(principal) {
-  return Backend.actor.saveGameState(principal, JSON.stringify($$global.state));
+  return Backend.actor.saveGameState(principal, JSON.stringify($$global$1.state));
 }
 
 function loadStateBinary(principal) {
   return Backend.actor.loadGameStateNative(principal).then(function (arr) {
               if (arr.length === 1) {
-                var state = arr[0];
-                $$global.state = state;
+                var delta = arr[0];
+                apply(delta, $$global$1);
               }
               return Promise.resolve(undefined);
             });
 }
 
-function saveStateBinary(principal) {
-  return Backend.actor.saveGameStateNative(principal, $$global.state);
+function saveStateBinary(principal, delta) {
+  return Backend.actor.saveGameStateNative(principal, delta);
 }
 
-function processCollision(dir2, obj, collid, state, objects) {
+function processCollision(dir2, obj, collid, idCounter, state, objects) {
   var exit = 0;
   var typ;
   var s2;
@@ -204,12 +332,12 @@ function processCollision(dir2, obj, collid, state, objects) {
                   if (t2$2 !== 0) {
                     return $$Object.revDir(obj, t1$1, s1);
                   } else {
-                    $$Object.evolveBlock(collid, state.level, objects);
+                    $$Object.evolveBlock(collid, idCounter, state.level, objects);
                     $$Object.spawnAbove(obj.dir, collid, /* Mushroom */0, state.level, objects);
                     return $$Object.revDir(obj, t1$1, s1);
                   }
                 } else {
-                  $$Object.evolveBlock(collid, state.level, objects);
+                  $$Object.evolveBlock(collid, idCounter, state.level, objects);
                   $$Object.spawnAbove(obj.dir, collid, /* Coin */1, state.level, objects);
                   return $$Object.revDir(obj, t1$1, s1);
                 }
@@ -295,7 +423,7 @@ function processCollision(dir2, obj, collid, state, objects) {
                       return $$Object.collideBlock(dir2, obj);
                     }
                   } else {
-                    $$global.status = {
+                    $$global$1.status = {
                       TAG: /* Finished */1,
                       levelResult: /* Won */0,
                       restartTime: Config.delayWhenFinished + performance.now()
@@ -310,11 +438,11 @@ function processCollision(dir2, obj, collid, state, objects) {
             } else {
               switch (t._0) {
                 case /* QBlockMushroom */0 :
-                    $$Object.evolveBlock(collid, state.level, objects);
+                    $$Object.evolveBlock(collid, idCounter, state.level, objects);
                     $$Object.spawnAbove(obj.dir, collid, /* Mushroom */0, state.level, objects);
                     return $$Object.collideBlock(dir2, obj);
                 case /* QBlockCoin */1 :
-                    $$Object.evolveBlock(collid, state.level, objects);
+                    $$Object.evolveBlock(collid, idCounter, state.level, objects);
                     $$Object.spawnAbove(obj.dir, collid, /* Coin */1, state.level, objects);
                     return $$Object.collideBlock(dir2, obj);
                 case /* Brick */3 :
@@ -325,7 +453,7 @@ function processCollision(dir2, obj, collid, state, objects) {
                       return $$Object.collideBlock(dir2, obj);
                     }
                 case /* Panel */6 :
-                    $$global.status = {
+                    $$global$1.status = {
                       TAG: /* Finished */1,
                       levelResult: /* Won */0,
                       restartTime: Config.delayWhenFinished + performance.now()
@@ -392,30 +520,30 @@ function broadPhase(objects, viewport) {
               }));
 }
 
-function narrowPhase(obj, objects, state, collids) {
+function narrowPhase(obj, idCounter, objects, state, collids) {
   collids.forEach(function (collid) {
         if ($$Object.sameId(obj, collid)) {
           return ;
         }
         var dir = $$Object.checkCollision(obj, collid);
         if (dir !== undefined) {
-          return processCollision(dir, obj, collid, state, objects);
+          return processCollision(dir, obj, collid, idCounter, state, objects);
         }
         
       });
   
 }
 
-function checkCollisions(obj, objects, otherCollids, state, visibleCollids) {
+function checkCollisions(obj, idCounter, objects, otherCollids, state, visibleCollids) {
   var match = obj.objTyp;
   if (match.TAG === /* Block */4) {
     return ;
   }
-  narrowPhase(obj, objects, state, visibleCollids);
-  return narrowPhase(obj, objects, state, otherCollids);
+  narrowPhase(obj, idCounter, objects, state, visibleCollids);
+  return narrowPhase(obj, idCounter, objects, state, otherCollids);
 }
 
-function findObjectsColliding(obj, objects, otherCollids, state, visibleCollids) {
+function findObjectsColliding(obj, idCounter, objects, otherCollids, state, visibleCollids) {
   var sprite = obj.sprite;
   obj.invuln = obj.invuln > 0 ? obj.invuln - 1 | 0 : 0;
   if (!((!obj.kill || $$Object.isPlayer(obj)) && inViewport(obj, state.viewport))) {
@@ -423,23 +551,23 @@ function findObjectsColliding(obj, objects, otherCollids, state, visibleCollids)
   }
   obj.grounded = false;
   $$Object.processObj(obj, state.level);
-  var objectsColliding = checkCollisions(obj, objects, otherCollids, state, visibleCollids);
+  var objectsColliding = checkCollisions(obj, idCounter, objects, otherCollids, state, visibleCollids);
   if (obj.vx !== 0 || !$$Object.isEnemy(obj)) {
     Sprite.updateAnimation(sprite);
   }
   return objectsColliding;
 }
 
-function updateObject(obj, objects, otherCollids, state, visibleCollids) {
+function updateObject(obj, idCounter, objects, otherCollids, state, visibleCollids) {
   var match = obj.objTyp;
   switch (match.TAG | 0) {
     case /* Player1 */0 :
     case /* Player2 */1 :
         break;
     default:
-      findObjectsColliding(obj, objects, otherCollids, state, visibleCollids);
+      findObjectsColliding(obj, idCounter, objects, otherCollids, state, visibleCollids);
       if (!obj.kill) {
-        $$global.state.objects.push(obj);
+        $$global$1.state.objects.push(obj);
       }
       if (obj.kill) {
         return $$Object.kill(obj, state);
@@ -453,7 +581,7 @@ function updateObject(obj, objects, otherCollids, state, visibleCollids) {
   var keys = Keys.translateKeys(playerNum);
   obj.crouch = false;
   $$Object.updatePlayer(obj, playerNum, keys);
-  return findObjectsColliding(obj, objects, otherCollids, state, visibleCollids);
+  return findObjectsColliding(obj, idCounter, objects, otherCollids, state, visibleCollids);
 }
 
 function updateParticle(part) {
@@ -468,7 +596,7 @@ var auth = {
 function updateLoop(_param) {
   while(true) {
     var startLogin = function (onLogged, loadOrSave) {
-      $$global.status = {
+      $$global$1.status = {
         TAG: /* LoggingIn */0,
         _0: loadOrSave
       };
@@ -479,7 +607,7 @@ function updateLoop(_param) {
               return Curry._1(onLogged, principal);
             }), (function (error) {
               console.log("error", AuthClient.$$Error.toString(error));
-              $$global.status = /* Playing */2;
+              $$global$1.status = /* Playing */2;
               
             }), 30);
       
@@ -488,29 +616,34 @@ function updateLoop(_param) {
     if (match !== undefined) {
       Keys.pressedKeys.pendingStateOperations = undefined;
       if (match) {
-        var doSave = function (principal) {
+        var doSave = function (principal, delta) {
           console.log("saving...");
-          $$global.status = /* Saving */3;
-          saveStateBinary(principal).then(function (param) {
+          $$global$1.status = /* Saving */3;
+          saveStateBinary(principal, delta).then(function (param) {
                 console.log("saved");
-                $$global.status = /* Playing */2;
+                $$global$1.status = /* Playing */2;
                 
               });
           
         };
+        var delta = findObjectsDifference($$global$1);
         var principal = auth.contents;
         if (principal) {
-          doSave(principal._0);
+          doSave(principal._0, delta);
         } else {
-          startLogin(doSave, /* Save */1);
+          startLogin((function(delta){
+              return function (principal) {
+                return doSave(principal, delta);
+              }
+              }(delta)), /* Save */1);
         }
       } else {
         var doLoad = function (principal) {
           console.log("loading...");
-          $$global.status = /* Loading */0;
+          $$global$1.status = /* Loading */0;
           loadStateBinary(principal).then(function (param) {
                 console.log("loaded");
-                $$global.status = /* Playing */2;
+                $$global$1.status = /* Playing */2;
                 
               });
           
@@ -523,22 +656,22 @@ function updateLoop(_param) {
         }
       }
     } else if (Keys.pressedKeys.paused) {
-      $$global.status = /* Paused */1;
-    } else if ($$global.status === /* Paused */1) {
-      $$global.status = /* Playing */2;
+      $$global$1.status = /* Paused */1;
+    } else if ($$global$1.status === /* Paused */1) {
+      $$global$1.status = /* Playing */2;
     }
-    var loadOrSave = $$global.status;
+    var loadOrSave = $$global$1.status;
     if (typeof loadOrSave === "number") {
       switch (loadOrSave) {
         case /* Loading */0 :
-            Draw.drawState($$global.state, 0);
+            Draw.drawState($$global$1.state, 0);
             Draw.loading(undefined);
             requestAnimationFrame(function (param) {
                   return updateLoop(undefined);
                 });
             return ;
         case /* Paused */1 :
-            Draw.drawState($$global.state, 0);
+            Draw.drawState($$global$1.state, 0);
             Draw.paused(undefined);
             requestAnimationFrame(function (param) {
                   return updateLoop(undefined);
@@ -546,34 +679,34 @@ function updateLoop(_param) {
             return ;
         case /* Playing */2 :
             var fps = calcFps(undefined);
-            var oldObjects = $$global.state.objects;
-            var visibleCollids = broadPhase(oldObjects, $$global.state.viewport);
-            $$global.state.objects = [];
-            $$global.state.particles = Belt_Array.keep($$global.state.particles, updateParticle);
-            updateObject($$global.state.player1, $$global.state.objects, Keys.checkTwoPlayers(undefined) ? [$$global.state.player2] : [], $$global.state, visibleCollids);
+            var oldObjects = $$global$1.state.objects;
+            var visibleCollids = broadPhase(oldObjects, $$global$1.state.viewport);
+            $$global$1.state.objects = [];
+            $$global$1.state.particles = Belt_Array.keep($$global$1.state.particles, updateParticle);
+            updateObject($$global$1.state.player1, $$global$1.idCounter, $$global$1.state.objects, Keys.checkTwoPlayers(undefined) ? [$$global$1.state.player2] : [], $$global$1.state, visibleCollids);
             if (Keys.checkTwoPlayers(undefined)) {
-              updateObject($$global.state.player2, $$global.state.objects, [$$global.state.player1], $$global.state, visibleCollids);
+              updateObject($$global$1.state.player2, $$global$1.idCounter, $$global$1.state.objects, [$$global$1.state.player1], $$global$1.state, visibleCollids);
             }
-            if ($$global.state.player1.kill) {
-              $$global.status = {
+            if ($$global$1.state.player1.kill) {
+              $$global$1.status = {
                 TAG: /* Finished */1,
                 levelResult: /* Lost */1,
                 restartTime: Config.delayWhenFinished + performance.now()
               };
             }
-            Viewport.update($$global.state.viewport, $$global.state.player1.px, $$global.state.player1.py);
+            Viewport.update($$global$1.state.viewport, $$global$1.state.player1.px, $$global$1.state.player1.py);
             oldObjects.forEach((function(visibleCollids){
                 return function (obj) {
-                  return updateObject(obj, $$global.state.objects, [], $$global.state, visibleCollids);
+                  return updateObject(obj, $$global$1.idCounter, $$global$1.state.objects, [], $$global$1.state, visibleCollids);
                 }
                 }(visibleCollids)));
-            Draw.drawState($$global.state, fps);
+            Draw.drawState($$global$1.state, fps);
             requestAnimationFrame(function (param) {
                   return updateLoop(undefined);
                 });
             return ;
         case /* Saving */3 :
-            Draw.drawState($$global.state, 0);
+            Draw.drawState($$global$1.state, 0);
             Draw.saving(undefined);
             requestAnimationFrame(function (param) {
                   return updateLoop(undefined);
@@ -583,7 +716,7 @@ function updateLoop(_param) {
       }
     } else {
       if (loadOrSave.TAG === /* LoggingIn */0) {
-        Draw.drawState($$global.state, 0);
+        Draw.drawState($$global$1.state, 0);
         Draw.loggingIn(loadOrSave._0);
         requestAnimationFrame(function (param) {
               return updateLoop(undefined);
@@ -593,15 +726,15 @@ function updateLoop(_param) {
       var levelResult = loadOrSave.levelResult;
       var timeToStart = (loadOrSave.restartTime - performance.now()) / 1000;
       if (timeToStart > 0.9) {
-        Draw.levelFinished(levelResult, String($$global.state.level), String(timeToStart | 0));
+        Draw.levelFinished(levelResult, String($$global$1.state.level), String(timeToStart | 0));
         requestAnimationFrame(function (param) {
               return updateLoop(undefined);
             });
         return ;
       }
-      var level = levelResult === /* Won */0 ? $$global.state.level + 1 | 0 : $$global.state.level;
-      var score = levelResult === /* Won */0 ? $$global.state.score : 0;
-      reset(level, score);
+      var level = levelResult === /* Won */0 ? $$global$1.state.level + 1 | 0 : $$global$1.state.level;
+      var score = levelResult === /* Won */0 ? $$global$1.state.score : 0;
+      reset($$global$1, level, score);
       _param = undefined;
       continue ;
     }
@@ -614,7 +747,8 @@ export {
   enemyAttackPlayer ,
   collEnemyEnemy ,
   Global ,
-  $$global ,
+  Delta ,
+  $$global$1 as $$global,
   loadState ,
   saveState ,
   loadStateBinary ,
