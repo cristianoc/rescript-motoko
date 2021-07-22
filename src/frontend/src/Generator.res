@@ -14,31 +14,30 @@ let trimEdge = (x, y, ~level) => {
   !(x < 128. || (pixx -. x < 528. || (y == 0. || pixy -. y < 48.)))
 }
 
-let convertCoinToObj = ((_, x, y), ~level) => {
+let convertCoinToObj = ((_, x, y), ~state) => {
   let obj = Object.make(
-    ~level,
     ~hasGravity=false,
     ~objTyp=Item(Coin),
     ~spriteParams=Sprite.makeParams(Coin),
+    ~state,
     x,
     y,
   )
   obj
 }
 
-let addCoins = (objects, x, y0, ~idCounter, ~level) => {
+let addCoins = (state: Types.state, x, y0) => {
   let y = y0 -. 16.
-  if Random.bool() && (trimEdge(x, y, ~level) && !(objects->memPos(x, y))) {
-    objects->Js.Array2.push((Types.QBlockCoin, x, y)->convertCoinToObj(~idCounter, ~level))->ignore
+  if Random.bool() && (trimEdge(x, y, ~level=state.level) && !(state.objects->memPos(x, y))) {
+    state.objects->Js.Array2.push((Types.QBlockCoin, x, y)->convertCoinToObj(~state))->ignore
   }
 }
 
-let convertEnemyToObj = ((enemyTyp, x, y), ~idCounter, ~level) => {
+let convertEnemyToObj = ((enemyTyp, x, y), ~state) => {
   let obj = Object.make(
-    ~idCounter,
-    ~level,
     ~objTyp=Enemy(enemyTyp),
     ~spriteParams=Sprite.enemyParams(enemyTyp, Left),
+    ~state,
     x,
     y,
   )
@@ -53,77 +52,76 @@ let randomEnemyTyp = () =>
   | _ => Goomba
   }
 
-let addEnemyOnBlock = (objects, x, y, ~idCounter, ~level) => {
-  let placeEnemy = Random.int(Config.enemyDensity(~level))
-  if placeEnemy == 0 && !(objects->memPos(x, y -. 16.)) {
-    objects
-    ->Js.Array2.push((randomEnemyTyp(), x, y -. 16.)->convertEnemyToObj(~idCounter, ~level))
+let addEnemyOnBlock = (state: Types.state, x, y) => {
+  let placeEnemy = Random.int(Config.enemyDensity(~level=state.level))
+  if placeEnemy == 0 && !(state.objects->memPos(x, y -. 16.)) {
+    state.objects
+    ->Js.Array2.push((randomEnemyTyp(), x, y -. 16.)->convertEnemyToObj(~state))
     ->ignore
   }
 }
 
-let addBlock = (objects, blockTyp, xBlock, yBlock, ~idCounter, ~level) => {
+let addBlock = (state: Types.state, blockTyp, xBlock, yBlock) => {
   let x = xBlock *. 16.
   let y = yBlock *. 16.
-  if !(objects->memPos(x, y)) && trimEdge(x, y, ~level) {
+  if !(state.objects->memPos(x, y)) && trimEdge(x, y, ~level=state.level) {
     let obj = Object.make(
-      ~idCounter,
-      ~level,
       ~objTyp=Block(blockTyp),
       ~spriteParams=Sprite.blockParams(blockTyp),
+      ~state,
       x,
       y,
     )
-    objects->Js.Array2.push(obj)->ignore
-    objects->addCoins(x, y, ~idCounter, ~level)
-    objects->addEnemyOnBlock(x, y, ~idCounter, ~level)
+    state.objects->Js.Array2.push(obj)->ignore
+    state->addCoins(x, y)
+    state->addEnemyOnBlock(x, y)
   }
 }
 
 // Generate a stair formation with block typ being dependent on typ. This type
 // of stair formation requires that the first step be on the ground.
-let generateGroundStairs = (cbx, cby, typ, blocks, ~idCounter, ~level) => {
-  blocks->addBlock(typ, cbx, cby, ~idCounter, ~level)
-  blocks->addBlock(typ, cbx +. 1., cby, ~idCounter, ~level)
-  blocks->addBlock(typ, cbx +. 2., cby, ~idCounter, ~level)
-  blocks->addBlock(typ, cbx +. 3., cby, ~idCounter, ~level)
-  blocks->addBlock(typ, cbx +. 1., cby -. 1., ~idCounter, ~level)
-  blocks->addBlock(typ, cbx +. 2., cby -. 1., ~idCounter, ~level)
-  blocks->addBlock(typ, cbx +. 3., cby -. 1., ~idCounter, ~level)
-  blocks->addBlock(typ, cbx +. 2., cby -. 2., ~idCounter, ~level)
-  blocks->addBlock(typ, cbx +. 3., cby -. 2., ~idCounter, ~level)
-  blocks->addBlock(typ, cbx +. 3., cby -. 3., ~idCounter, ~level)
+let generateGroundStairs = (cbx, cby, typ, ~state) => {
+  state->addBlock(typ, cbx, cby)
+  state->addBlock(typ, cbx +. 1., cby)
+  state->addBlock(typ, cbx +. 2., cby)
+  state->addBlock(typ, cbx +. 3., cby)
+  state->addBlock(typ, cbx +. 1., cby -. 1.)
+  state->addBlock(typ, cbx +. 2., cby -. 1.)
+  state->addBlock(typ, cbx +. 3., cby -. 1.)
+  state->addBlock(typ, cbx +. 2., cby -. 2.)
+  state->addBlock(typ, cbx +. 3., cby -. 2.)
+  state->addBlock(typ, cbx +. 3., cby -. 3.)
 }
 
 // Generate a stair formation going upwards.
-let generateAirupStairs = (cbx, cby, typ, blocks, ~idCounter, ~level) => {
-  blocks->addBlock(typ, cbx, cby, ~idCounter, ~level)
-  blocks->addBlock(typ, cbx +. 1., cby, ~idCounter, ~level)
-  blocks->addBlock(typ, cbx +. 3., cby -. 1., ~idCounter, ~level)
-  blocks->addBlock(typ, cbx +. 4., cby -. 1., ~idCounter, ~level)
-  blocks->addBlock(typ, cbx +. 4., cby -. 2., ~idCounter, ~level)
-  blocks->addBlock(typ, cbx +. 5., cby -. 2., ~idCounter, ~level)
-  blocks->addBlock(typ, cbx +. 6., cby -. 2., ~idCounter, ~level)
+let generateAirupStairs = (cbx, cby, typ, ~state) => {
+  state->addBlock(typ, cbx, cby)
+  state->addBlock(typ, cbx +. 1., cby)
+  state->addBlock(typ, cbx +. 3., cby -. 1.)
+  state->addBlock(typ, cbx +. 4., cby -. 1.)
+  state->addBlock(typ, cbx +. 4., cby -. 2.)
+  state->addBlock(typ, cbx +. 5., cby -. 2.)
+  state->addBlock(typ, cbx +. 6., cby -. 2.)
 }
 
 // Generate a stair formation going downwards
-let generateAirdownStairs = (cbx, cby, typ, blocks, ~idCounter, ~level) => {
-  blocks->addBlock(typ, cbx, cby, ~idCounter, ~level)
-  blocks->addBlock(typ, cbx +. 1., cby, ~idCounter, ~level)
-  blocks->addBlock(typ, cbx +. 2., cby, ~idCounter, ~level)
-  blocks->addBlock(typ, cbx +. 2., cby +. 1., ~idCounter, ~level)
-  blocks->addBlock(typ, cbx +. 3., cby +. 1., ~idCounter, ~level)
-  blocks->addBlock(typ, cbx +. 5., cby +. 2., ~idCounter, ~level)
-  blocks->addBlock(typ, cbx +. 6., cby +. 2., ~idCounter, ~level)
+let generateAirdownStairs = (cbx, cby, typ, ~state) => {
+  state->addBlock(typ, cbx, cby)
+  state->addBlock(typ, cbx +. 1., cby)
+  state->addBlock(typ, cbx +. 2., cby)
+  state->addBlock(typ, cbx +. 2., cby +. 1.)
+  state->addBlock(typ, cbx +. 3., cby +. 1.)
+  state->addBlock(typ, cbx +. 5., cby +. 2.)
+  state->addBlock(typ, cbx +. 6., cby +. 2.)
 }
 
 // Generate a cloud block platform with some length num.
-let rec generateClouds = (cbx, cby, typ, num, blocks, ~idCounter, ~level) =>
+let rec generateClouds = (cbx, cby, typ, num, ~state) =>
   if num == 0 {
     ()
   } else {
-    blocks->addBlock(typ, cbx, cby, ~idCounter, ~level)
-    generateClouds(cbx +. 1., cby, typ, num - 1, blocks, ~idCounter, ~level)
+    state->addBlock(typ, cbx, cby)
+    generateClouds(cbx +. 1., cby, typ, num - 1, ~state)
   }
 
 let randomStairTyp = () => Random.bool() ? Types.UnBBlock : Brick
@@ -136,8 +134,8 @@ let randomStairTyp = () => Random.bool() ? Types.UnBBlock : Brick
 // of the level map, prevent any objects from being initialized.
 // 3. Else call helper methods to created block formations and return objCoord
 // slist.
-let chooseBlockPattern = (cbx: float, cby: float, objects: array<Types.obj>, ~idCounter, ~level) =>
-  if cbx > Config.blockw(~level) || cby > Config.blockh(~level) {
+let chooseBlockPattern = (cbx: float, cby: float, ~state: Types.state) =>
+  if cbx > Config.blockw(~level=state.level) || cby > Config.blockh(~level=state.level) {
     ()
   } else {
     let stairTyp = randomStairTyp()
@@ -149,86 +147,83 @@ let chooseBlockPattern = (cbx: float, cby: float, objects: array<Types.obj>, ~id
     }
     switch Random.int(5) {
     | 0 =>
-      objects->addBlock(stairTyp, cbx, cby, ~idCounter, ~level)
-      objects->addBlock(middleBlock, cbx +. 1., cby, ~idCounter, ~level)
-      objects->addBlock(stairTyp, cbx +. 2., cby, ~idCounter, ~level)
+      state->addBlock(stairTyp, cbx, cby)
+      state->addBlock(middleBlock, cbx +. 1., cby)
+      state->addBlock(stairTyp, cbx +. 2., cby)
     | 1 =>
       let numClouds = Random.int(5) + 5
       if cby < 5. {
-        generateClouds(cbx, cby, Cloud, numClouds, objects, ~idCounter, ~level)
+        generateClouds(cbx, cby, Cloud, numClouds, ~state)
       } else {
         ()
       }
     | 2 =>
-      if Config.blockh(~level) -. cby == 1. {
-        generateGroundStairs(cbx, cby, stairTyp, objects, ~idCounter, ~level)
+      if Config.blockh(~level=state.level) -. cby == 1. {
+        generateGroundStairs(cbx, cby, stairTyp, ~state)
       } else {
         ()
       }
     | 3 =>
-      if stairTyp == Brick && Config.blockh(~level) -. cby > 3. {
-        generateAirdownStairs(cbx, cby, stairTyp, objects, ~idCounter, ~level)
-      } else if Config.blockh(~level) -. cby > 2. {
-        generateAirupStairs(cbx, cby, stairTyp, objects, ~idCounter, ~level)
+      if stairTyp == Brick && Config.blockh(~level=state.level) -. cby > 3. {
+        generateAirdownStairs(cbx, cby, stairTyp, ~state)
+      } else if Config.blockh(~level=state.level) -. cby > 2. {
+        generateAirupStairs(cbx, cby, stairTyp, ~state)
       } else {
-        objects->addBlock(stairTyp, cbx, cby, ~idCounter, ~level)
+        state->addBlock(stairTyp, cbx, cby)
       }
     | _ =>
-      if cby +. 3. -. Config.blockh(~level) == 2. {
-        objects->addBlock(stairTyp, cbx, cby, ~idCounter, ~level)
-      } else if cby +. 3. -. Config.blockh(~level) == 1. {
-        objects->addBlock(stairTyp, cbx, cby, ~idCounter, ~level)
-        objects->addBlock(stairTyp, cbx, cby +. 1., ~idCounter, ~level)
+      if cby +. 3. -. Config.blockh(~level=state.level) == 2. {
+        state->addBlock(stairTyp, cbx, cby)
+      } else if cby +. 3. -. Config.blockh(~level=state.level) == 1. {
+        state->addBlock(stairTyp, cbx, cby)
+        state->addBlock(stairTyp, cbx, cby +. 1.)
       } else {
-        objects->addBlock(stairTyp, cbx, cby, ~idCounter, ~level)
-        objects->addBlock(stairTyp, cbx, cby +. 1., ~idCounter, ~level)
-        objects->addBlock(stairTyp, cbx, cby +. 2., ~idCounter, ~level)
+        state->addBlock(stairTyp, cbx, cby)
+        state->addBlock(stairTyp, cbx, cby +. 1.)
+        state->addBlock(stairTyp, cbx, cby +. 2.)
       }
     }
   }
 
 // Generates a list of enemies to be placed on the ground.
-let rec generateEnemiesOnGround = (objects, cbx: float, cby: float, ~idCounter, ~level) =>
-  if cbx > Config.blockw(~level) -. 32. {
+let rec generateEnemiesOnGround = (cbx: float, cby: float, ~state: Types.state) =>
+  if cbx > Config.blockw(~level=state.level) -. 32. {
     ()
-  } else if cby > Config.blockh(~level) -. 1. || cbx < 15. {
-    generateEnemiesOnGround(objects, cbx +. 1., 0., ~idCounter, ~level)
-  } else if cby == 0. || (Config.blockh(~level) -. 1. != cby || Random.int(10) != 0) {
-    generateEnemiesOnGround(objects, cbx, cby +. 1., ~idCounter, ~level)
+  } else if cby > Config.blockh(~level=state.level) -. 1. || cbx < 15. {
+    generateEnemiesOnGround(cbx +. 1., 0., ~state)
+  } else if cby == 0. || (Config.blockh(~level=state.level) -. 1. != cby || Random.int(10) != 0) {
+    generateEnemiesOnGround(cbx, cby +. 1., ~state)
   } else {
-    objects
-    ->Js.Array2.push(
-      (randomEnemyTyp(), cbx *. 16., cby *. 16.)->convertEnemyToObj(~idCounter, ~level),
-    )
+    state.objects
+    ->Js.Array2.push((randomEnemyTyp(), cbx *. 16., cby *. 16.)->convertEnemyToObj(~state))
     ->ignore
-    generateEnemiesOnGround(objects, cbx, cby +. 1., ~idCounter, ~level)
+    generateEnemiesOnGround(cbx, cby +. 1., ~state)
   }
 
 // Generate an objCoord list (typ, coordinates) of blocks to be placed.
-let rec generateBlocks = (objects, cbx: float, cby: float, ~idCounter, ~level) =>
-  if Config.blockw(~level) -. cbx < 33. {
+let rec generateBlocks = (cbx: float, cby: float, ~state: Types.state) =>
+  if Config.blockw(~level=state.level) -. cbx < 33. {
     ()
-  } else if cby > Config.blockh(~level) -. 1. {
-    generateBlocks(objects, cbx +. 1., 0., ~idCounter, ~level)
-  } else if objects->memPos(cbx, cby) || cby == 0. {
-    generateBlocks(objects, cbx, cby +. 1., ~idCounter, ~level)
+  } else if cby > Config.blockh(~level=state.level) -. 1. {
+    generateBlocks(cbx +. 1., 0., ~state)
+  } else if state.objects->memPos(cbx, cby) || cby == 0. {
+    generateBlocks(cbx, cby +. 1., ~state)
   } else if Random.int(20) == 0 {
-    chooseBlockPattern(cbx, cby, objects, ~idCounter, ~level)
-    generateBlocks(objects, cbx, cby +. 1., ~idCounter, ~level)
+    chooseBlockPattern(cbx, cby, ~state)
+    generateBlocks(cbx, cby +. 1., ~state)
   } else {
-    generateBlocks(objects, cbx, cby +. 1., ~idCounter, ~level)
+    generateBlocks(cbx, cby +. 1., ~state)
   }
 
 // Generate the ending item panel at the end of the level. Games ends upon
 // collision with player.
-let generatePanel = (~idCounter, ~level): Types.obj => {
+let generatePanel = (~state): Types.obj => {
   let obj = Object.make(
-    ~idCounter,
-    ~level,
     ~objTyp=Block(Panel),
     ~spriteParams=Sprite.blockParams(Panel),
-    Config.blockw(~level) *. 16. -. 256.,
-    Config.blockh(~level) *. 16. *. 2. /. 3.,
+    ~state,
+    Config.blockw(~level=state.level) *. 16. -. 256.,
+    Config.blockh(~level=state.level) *. 16. *. 2. /. 3.,
   )
   obj
 }
@@ -240,47 +235,44 @@ let convertBlockToObj = ((blockTyp, x, y)) => {
 
 // Generate the list of brick locations needed to display the ground.
 // 1/10 chance that a ground block is skipped each call to create holes.
-let rec generateGround = (objects, inc: float, ~idCounter, ~level) =>
-  if inc > Config.blockw(~level) {
+let rec generateGround = (inc: float, ~state: Types.state) =>
+  if inc > Config.blockw(~level=state.level) {
     ()
   } else if inc > 10. {
     let skip = Random.int(10)
-    if skip == 7 && Config.blockw(~level) -. inc > 32. {
-      generateGround(objects, inc +. 1., ~idCounter, ~level)
+    if skip == 7 && Config.blockw(~level=state.level) -. inc > 32. {
+      generateGround(inc +. 1., ~state)
     } else {
-      objects
+      state.objects
       ->Js.Array2.push(
-        (Ground, inc *. 16., Config.blockh(~level) *. 16.)->convertBlockToObj(~idCounter, ~level),
+        (Ground, inc *. 16., Config.blockh(~level=state.level) *. 16.)->convertBlockToObj(~state),
       )
       ->ignore
-      generateGround(objects, inc +. 1., ~idCounter, ~level)
+      generateGround(inc +. 1., ~state)
     }
   } else {
-    objects
+    state.objects
     ->Js.Array2.push(
-      (Ground, inc *. 16., Config.blockh(~level) *. 16.)->convertBlockToObj(~idCounter, ~level),
+      (Ground, inc *. 16., Config.blockh(~level=state.level) *. 16.)->convertBlockToObj(~state),
     )
     ->ignore
-    generateGround(objects, inc +. 1., ~idCounter, ~level)
+    generateGround(inc +. 1., ~state)
   }
 
 // Procedurally generate a list of objects given canvas width, height and
 // context. Arguments block width (blockw) and block height (blockh) are in
 // block form, not pixels.
-let generateHelper = (~idCounter, ~level) => {
-  let objects = []
-  objects->generateBlocks(0., 0., ~idCounter, ~level)
-  objects->generateGround(0., ~idCounter, ~level)
-  objects->generateEnemiesOnGround(0., 0., ~idCounter, ~level)
-  let panel = generatePanel(~idCounter, ~level)
-  objects->Js.Array2.push(panel)->ignore
-  objects
+let generateHelper = (~state) => {
+  generateBlocks(0., 0., ~state)
+  generateGround(0., ~state)
+  generateEnemiesOnGround(0., 0., ~state)
+  let panel = generatePanel(~state)
+  state.objects->Js.Array2.push(panel)->ignore
 }
 
-let newPlayer = (playerNum: Types.playerNum, ~idCounter, ~level) =>
+let newPlayer = (playerNum: Types.playerNum, ~state) =>
   Object.make(
-    ~idCounter,
-    ~level,
+    ~state,
     ~objTyp=switch playerNum {
     | One => Player1(SmallM)
     | Two => Player2(SmallM)
@@ -293,15 +285,14 @@ let newPlayer = (playerNum: Types.playerNum, ~idCounter, ~level) =>
 // Main function called to procedurally generate the level map. w and h args
 // are in pixel form. Converts to block form to call generateHelper. Spawns
 // the list of objects received from generateHelper to display on canvas.
-let generate = (~idCounter, ~level): array<Types.obj> => {
-  Random.init(Config.randomSeed(~level))
+let generate = (~state: Types.state) => {
+  Random.init(Config.randomSeed(~level=state.level))
   let initial = Html.performance.now(.)
-  let objects = generateHelper(~idCounter, ~level)
+  generateHelper(~state)
   let elapsed = Html.performance.now(.) -. initial
   Js.log3(
     "generated",
-    objects |> Js.Array2.length,
+    state.objects |> Js.Array2.length,
     "objects in " ++ (Js.Float.toString(elapsed) ++ " milliseconds"),
   )
-  objects
 }

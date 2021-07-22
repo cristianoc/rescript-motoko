@@ -39,12 +39,12 @@ function setVelToSpeed(obj) {
   
 }
 
-function newId(idCounter) {
-  idCounter.contents = idCounter.contents + 1 | 0;
-  return idCounter.contents;
+function newId(state) {
+  state.idCounter = state.idCounter + 1 | 0;
+  return state.idCounter;
 }
 
-function make(hasGravityOpt, speedOpt, dirOpt, idCounter, level, objTyp, spriteParams, px, py) {
+function make(hasGravityOpt, speedOpt, dirOpt, objTyp, state, spriteParams, px, py) {
   var hasGravity = hasGravityOpt !== undefined ? hasGravityOpt : true;
   var speed = speedOpt !== undefined ? speedOpt : 1.0;
   var dir = dirOpt !== undefined ? dirOpt : /* Left */0;
@@ -53,7 +53,7 @@ function make(hasGravityOpt, speedOpt, dirOpt, idCounter, level, objTyp, spriteP
     sprite: Sprite.makeFromParams(spriteParams),
     hasGravity: hasGravity,
     speed: speed,
-    id: newId(idCounter),
+    id: newId(state),
     px: px,
     py: py,
     vx: 0.0,
@@ -76,7 +76,7 @@ function make(hasGravityOpt, speedOpt, dirOpt, idCounter, level, objTyp, spriteP
         if (objTyp._0 >= 3) {
           newObj.speed = 3;
         } else {
-          newObj.speed = Config.levelSpeed(level);
+          newObj.speed = Config.levelSpeed(state.level);
         }
         break;
     case /* Item */3 :
@@ -270,25 +270,25 @@ function reverseLeftRight(obj) {
   
 }
 
-function evolveEnemy(player_dir, typ, spr, obj, idCounter, level, objects) {
+function evolveEnemy(player_dir, typ, spr, obj, state) {
   switch (typ) {
     case /* Goomba */0 :
         obj.kill = true;
         return ;
     case /* GKoopa */1 :
-        var newObj = make(undefined, 3, obj.dir, idCounter, level, {
+        var newObj = make(undefined, 3, obj.dir, {
               TAG: /* Enemy */2,
               _0: /* GKoopaShell */3
-            }, Sprite.enemyParams(/* GKoopaShell */3, obj.dir), obj.px, obj.py);
+            }, state, Sprite.enemyParams(/* GKoopaShell */3, obj.dir), obj.px, obj.py);
         normalizePos(newObj, spr.params, newObj.sprite.params);
-        objects.push(newObj);
+        state.objects.push(newObj);
         return ;
     case /* RKoopa */2 :
-        var newObj$1 = make(undefined, 3, obj.dir, idCounter, level, {
+        var newObj$1 = make(undefined, 3, obj.dir, {
               TAG: /* Enemy */2,
               _0: /* RKoopaShell */4
-            }, Sprite.enemyParams(/* RKoopaShell */4, obj.dir), obj.px, obj.py);
-        objects.push(newObj$1);
+            }, state, Sprite.enemyParams(/* RKoopaShell */4, obj.dir), obj.px, obj.py);
+        state.objects.push(newObj$1);
         return ;
     case /* GKoopaShell */3 :
     case /* RKoopaShell */4 :
@@ -324,25 +324,25 @@ function decHealth(obj) {
   
 }
 
-function evolveBlock(obj, idCounter, level, objects) {
+function evolveBlock(obj, state) {
   decHealth(obj);
-  var newObj = make(false, undefined, obj.dir, idCounter, level, {
+  var newObj = make(false, undefined, obj.dir, {
         TAG: /* Block */4,
         _0: /* QBlockUsed */2
-      }, Sprite.blockParams(/* QBlockUsed */2), obj.px, obj.py);
-  objects.push(newObj);
+      }, state, Sprite.blockParams(/* QBlockUsed */2), obj.px, obj.py);
+  state.objects.push(newObj);
   
 }
 
-function spawnAbove(player_dir, obj, itemTyp, idCounter, level, objects) {
-  var item = make(itemTyp !== /* Coin */1, undefined, /* Left */0, idCounter, level, {
+function spawnAbove(player_dir, obj, itemTyp, state) {
+  var item = make(itemTyp !== /* Coin */1, undefined, /* Left */0, {
         TAG: /* Item */3,
         _0: itemTyp
-      }, Sprite.makeParams(itemTyp), obj.px, obj.py);
+      }, state, Sprite.makeParams(itemTyp), obj.px, obj.py);
   item.py = item.py - item.sprite.params.frameSize[1];
   item.dir = player_dir ? /* Left */0 : /* Right */1;
   setVelToSpeed(item);
-  objects.push(item);
+  state.objects.push(item);
   
 }
 

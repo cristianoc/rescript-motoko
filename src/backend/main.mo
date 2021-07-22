@@ -85,6 +85,7 @@ actor Main {
   type state = {
     bgd: sprite;
     coins: int_;
+    idCounter:int_;
     level: int_;
     multiplier: int_;
     objects: [obj];

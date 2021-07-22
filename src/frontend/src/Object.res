@@ -19,18 +19,17 @@ let setVelToSpeed = (obj: Types.obj) => {
 }
 
 /* Used in object creation and to compare two objects. */
-let newId = (~idCounter) => {
-  idCounter := idCounter.contents + 1
-  idCounter.contents
+let newId = (~state: Types.state) => {
+  state.idCounter = state.idCounter + 1
+  state.idCounter
 }
 
 let make = (
   ~hasGravity=true,
   ~speed=1.0,
   ~dir=Types.Left,
-  ~idCounter,
-  ~level,
   ~objTyp: Types.objTyp,
+  ~state,
   ~spriteParams,
   px,
   py,
@@ -44,7 +43,7 @@ let make = (
     py: py,
     vx: 0.0,
     vy: 0.0,
-    id: newId(~idCounter),
+    id: newId(~state),
     jumping: false,
     grounded: false,
     dir: dir,
@@ -66,7 +65,7 @@ let make = (
     | Types.Goomba
     | GKoopa
     | RKoopa =>
-      newObj.speed = Config.levelSpeed(~level)
+      newObj.speed = Config.levelSpeed(~level=state.level)
     | GKoopaShell => newObj.speed = 3.
     | RKoopaShell => newObj.speed = 3.
     }
@@ -242,21 +241,12 @@ let reverseLeftRight = (obj: Types.obj) => {
 // Actually creates a new enemy and deletes the previous. The positions must be
 // normalized. This method is typically called when enemies are killed and a
 // new sprite must be used (i.e., koopa to koopa shell).
-let evolveEnemy = (.
-  player_dir,
-  typ,
-  spr: Types.sprite,
-  obj: Types.obj,
-  idCounter,
-  level,
-  objects,
-) =>
+let evolveEnemy = (. player_dir, typ, spr: Types.sprite, obj: Types.obj, state) =>
   switch typ {
   | Types.GKoopa =>
     let newObj = make(
       ~dir=obj.dir,
-      ~idCounter,
-      ~level,
+      ~state,
       ~objTyp=Enemy(GKoopaShell),
       ~speed=3.,
       ~spriteParams=Sprite.enemyParams(GKoopaShell, obj.dir),
@@ -264,19 +254,18 @@ let evolveEnemy = (.
       obj.py,
     )
     normalizePos(newObj, spr.params, newObj.sprite.params)
-    objects->Js.Array2.push(newObj)->ignore
+    state.objects->Js.Array2.push(newObj)->ignore
   | RKoopa =>
     let newObj = make(
       ~dir=obj.dir,
-      ~idCounter,
-      ~level,
       ~objTyp=Enemy(RKoopaShell),
       ~speed=3.,
       ~spriteParams=Sprite.enemyParams(RKoopaShell, obj.dir),
+      ~state,
       obj.px,
       obj.py,
     )
-    objects->Js.Array2.push(newObj)->ignore
+    state.objects->Js.Array2.push(newObj)->ignore
   | GKoopaShell | RKoopaShell =>
     obj.dir = player_dir
     if obj.vx != 0. {
@@ -309,37 +298,35 @@ let decHealth = (obj: Types.obj) => {
 }
 
 // Used for deleting a block and replacing it with a used block
-let evolveBlock = (. obj, idCounter, level, objects) => {
+let evolveBlock = (. obj, state) => {
   decHealth(obj)
   let newObj = make(
     ~dir=obj.dir,
     ~hasGravity=false,
-    ~idCounter,
-    ~level,
     ~objTyp=Block(QBlockUsed),
     ~spriteParams=Sprite.blockParams(QBlockUsed),
+    ~state,
     obj.px,
     obj.py,
   )
-  objects->Js.Array2.push(newObj)->ignore
+  state.objects->Js.Array2.push(newObj)->ignore
 }
 
 // Used for spawning items above question mark blocks
-let spawnAbove = (. player_dir, obj: Types.obj, itemTyp, idCounter, level, objects) => {
+let spawnAbove = (. player_dir, obj: Types.obj, itemTyp, state) => {
   let item = make(
     ~dir=Left,
     ~hasGravity=itemTyp != Types.Coin,
-    ~idCounter,
-    ~level,
     ~objTyp=Item(itemTyp),
     ~spriteParams=Sprite.makeParams(itemTyp),
+    ~state,
     obj.px,
     obj.py,
   )
   item.py = item.py -. snd(item.sprite.params.frameSize)
   item.dir = oppositeDir(player_dir)
   setVelToSpeed(item)
-  objects->Js.Array2.push(item)->ignore
+  state.objects->Js.Array2.push(item)->ignore
 }
 
 // Used to get the bounding box
