@@ -3,22 +3,6 @@ import Text "mo:base/Text";
 import Trie "mo:base/Trie";
 
 actor Main {
-  stable var map : Trie.Trie<Principal, Text> = Trie.empty();
-
-  public query func loadGameState(p:Principal) : async Text {
-    switch (Trie.find(map, key(p), Principal.equal)   ) {
-      case (?state) { state };
-      case null { "" };
-    }
-  };
-
-  private func key(p : Principal) : Trie.Key<Principal> {
-    return { hash = Principal.hash(p); key = p };
-  };
-
-  public func saveGameState(p:Principal, s:Text) : async () {
-    map := Trie.put(map, key(p), Principal.equal, s).0;
-  };
 
   type float = Float;
   type int_ = Int32;
@@ -116,14 +100,18 @@ actor Main {
     state: state;
   };
 
-  stable var mapNative : Trie.Trie<Principal, delta> = Trie.empty();
+  stable var map : Trie.Trie<Principal, delta> = Trie.empty();
 
-  public query func loadGameStateNative(p:Principal) : async (?delta) {
-    Trie.find(mapNative, key(p), Principal.equal)
+  private func key(p : Principal) : Trie.Key<Principal> {
+    return { hash = Principal.hash(p); key = p };
   };
 
-  public func saveGameStateNative(p:Principal, delta:delta) : async () {
-    mapNative := Trie.put(mapNative, key(p), Principal.equal, delta).0;
+  public query func loadDelta(p:Principal) : async (?delta) {
+    Trie.find(map, key(p), Principal.equal)
+  };
+
+  public func saveDelta(p:Principal, delta:delta) : async () {
+    map := Trie.put(map, key(p), Principal.equal, delta).0;
   };
 
 };

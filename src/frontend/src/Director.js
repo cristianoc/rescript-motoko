@@ -251,21 +251,8 @@ var Delta = {
 
 var $$global$1 = $$global(undefined);
 
-function loadState(principal) {
-  return Backend.actor.loadGameState(principal).then(function (json) {
-              if (json !== "") {
-                $$global$1.state = JSON.parse(json);
-              }
-              return Promise.resolve(undefined);
-            });
-}
-
-function saveState(principal) {
-  return Backend.actor.saveGameState(principal, JSON.stringify($$global$1.state));
-}
-
-function loadStateBinary(principal) {
-  return Backend.actor.loadGameStateNative(principal).then(function (arr) {
+function loadDelta(principal) {
+  return Backend.actor.loadDelta(principal).then(function (arr) {
               if (arr.length === 1) {
                 var delta = arr[0];
                 apply(delta, $$global$1);
@@ -274,8 +261,8 @@ function loadStateBinary(principal) {
             });
 }
 
-function saveStateBinary(principal, delta) {
-  return Backend.actor.saveGameStateNative(principal, delta);
+function saveDelta(principal, delta) {
+  return Backend.actor.saveDelta(principal, delta);
 }
 
 function processCollision(dir2, obj, collid, idCounter, state, objects) {
@@ -619,7 +606,7 @@ function updateLoop(_param) {
         var doSave = function (principal, delta) {
           console.log("saving...");
           $$global$1.status = /* Saving */3;
-          saveStateBinary(principal, delta).then(function (param) {
+          saveDelta(principal, delta).then(function (param) {
                 console.log("saved");
                 $$global$1.status = /* Playing */2;
                 
@@ -641,7 +628,7 @@ function updateLoop(_param) {
         var doLoad = function (principal) {
           console.log("loading...");
           $$global$1.status = /* Loading */0;
-          loadStateBinary(principal).then(function (param) {
+          loadDelta(principal).then(function (param) {
                 console.log("loaded");
                 $$global$1.status = /* Playing */2;
                 
@@ -749,10 +736,8 @@ export {
   Global ,
   Delta ,
   $$global$1 as $$global,
-  loadState ,
-  saveState ,
-  loadStateBinary ,
-  saveStateBinary ,
+  loadDelta ,
+  saveDelta ,
   processCollision ,
   inViewport ,
   broadPhase ,
