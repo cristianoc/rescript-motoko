@@ -27,6 +27,7 @@ let playerAttackEnemy = (.
   enemyTyp: Types.enemyTyp,
   s2,
   o2,
+  idCounter,
   state: Types.state,
   objects,
 ) => {
@@ -35,7 +36,7 @@ let playerAttackEnemy = (.
   o1.grounded = true
   switch enemyTyp {
   | GKoopaShell | RKoopaShell =>
-    Object.evolveEnemy(. o1.dir, enemyTyp, s2, o2, state.level, objects)
+    Object.evolveEnemy(. o1.dir, enemyTyp, s2, o2, idCounter, state.level, objects)
     o1.vy = -.Config.dampenJump
     o1.py = o1.py -. 5.
   | _ =>
@@ -44,24 +45,24 @@ let playerAttackEnemy = (.
     if state.multiplier == 8 {
       state->State.updateScore(800)
       o2.score = 800
-      Object.evolveEnemy(. o1.dir, enemyTyp, s2, o2, state.level, objects)
+      Object.evolveEnemy(. o1.dir, enemyTyp, s2, o2, idCounter, state.level, objects)
     } else {
       let score = 100 * state.multiplier
       state->State.updateScore(score)
       o2.score = score
       state.multiplier = state.multiplier * 2
-      Object.evolveEnemy(. o1.dir, enemyTyp, s2, o2, state.level, objects)
+      Object.evolveEnemy(. o1.dir, enemyTyp, s2, o2, idCounter, state.level, objects)
     }
   }
 }
 
 // enemyAttackPlayer is used when an enemy kills a player.
-let enemyAttackPlayer = (. enemy: Types.obj, player: Types.obj, level, objects) => {
+let enemyAttackPlayer = (. enemy: Types.obj, player: Types.obj, idCounter, level, objects) => {
   switch enemy.objTyp {
   | Enemy((GKoopaShell | RKoopaShell) as enemyTyp) if enemy.vx == 0. =>
     // This only works if the player does not go faster than the shell
     // Otherwise it can try to overtake and touch it when it has non-zero velocity
-    Object.evolveEnemy(. player.dir, enemyTyp, enemy.sprite, enemy, level, objects)
+    Object.evolveEnemy(. player.dir, enemyTyp, enemy.sprite, enemy, idCounter, level, objects)
   | _ =>
     Object.decHealth(player)
     player.invuln = Config.invuln
@@ -253,11 +254,11 @@ let processCollision = (.
     collid.vx = collid.vx +. obj.vx
   | ({objTyp: Player1(_) | Player2(_)}, {objTyp: Enemy(typ), sprite: s2}, South)
   | ({objTyp: Enemy(typ), sprite: s2}, {objTyp: Player1(_) | Player2(_)}, North) =>
-    playerAttackEnemy(. obj, typ, s2, collid, state, objects)
+    playerAttackEnemy(. obj, typ, s2, collid, idCounter, state, objects)
   | ({objTyp: Player1(_) | Player2(_)}, {objTyp: Enemy(_)}, _) =>
-    enemyAttackPlayer(. collid, obj, state.level, objects)
+    enemyAttackPlayer(. collid, obj, idCounter, state.level, objects)
   | ({objTyp: Enemy(_)}, {objTyp: Player1(_) | Player2(_)}, _) =>
-    enemyAttackPlayer(. obj, collid, state.level, objects)
+    enemyAttackPlayer(. obj, collid, idCounter, state.level, objects)
   | ({objTyp: Player1(_) | Player2(_)}, {objTyp: Item(t2)}, _)
   | ({objTyp: Item(t2)}, {objTyp: Player1(_) | Player2(_)}, _) =>
     switch t2 {
@@ -287,11 +288,11 @@ let processCollision = (.
       Object.reverseLeftRight(obj)
     | (RKoopaShell | GKoopaShell, QBlockMushroom) =>
       Object.evolveBlock(. collid, idCounter, state.level, objects)
-      Object.spawnAbove(. obj.dir, collid, Mushroom, state.level, objects)
+      Object.spawnAbove(. obj.dir, collid, Mushroom, idCounter, state.level, objects)
       Object.revDir(obj, t1, s1)
     | (RKoopaShell | GKoopaShell, QBlockCoin) =>
       Object.evolveBlock(. collid, idCounter, state.level, objects)
-      Object.spawnAbove(. obj.dir, collid, Coin, state.level, objects)
+      Object.spawnAbove(. obj.dir, collid, Coin, idCounter, state.level, objects)
       Object.revDir(obj, t1, s1)
     | (_, _) => Object.revDir(obj, t1, s1)
     }
@@ -303,11 +304,11 @@ let processCollision = (.
     switch t {
     | QBlockMushroom =>
       Object.evolveBlock(. collid, idCounter, state.level, objects)
-      Object.spawnAbove(. obj.dir, collid, Mushroom, state.level, objects)
+      Object.spawnAbove(. obj.dir, collid, Mushroom, idCounter, state.level, objects)
       Object.collideBlock(dir2, obj)
     | QBlockCoin =>
       Object.evolveBlock(. collid, idCounter, state.level, objects)
-      Object.spawnAbove(. obj.dir, collid, Coin, state.level, objects)
+      Object.spawnAbove(. obj.dir, collid, Coin, idCounter, state.level, objects)
       Object.collideBlock(dir2, obj)
     | Brick =>
       if t1 == BigM {

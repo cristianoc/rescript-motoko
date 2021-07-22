@@ -28,10 +28,6 @@ function copy(obj) {
         };
 }
 
-var idCounter = {
-  contents: 0
-};
-
 function setVelToSpeed(obj) {
   var speed = obj.speed;
   var match = obj.dir;
@@ -274,7 +270,7 @@ function reverseLeftRight(obj) {
   
 }
 
-function evolveEnemy(player_dir, typ, spr, obj, level, objects) {
+function evolveEnemy(player_dir, typ, spr, obj, idCounter, level, objects) {
   switch (typ) {
     case /* Goomba */0 :
         obj.kill = true;
@@ -338,7 +334,7 @@ function evolveBlock(obj, idCounter, level, objects) {
   
 }
 
-function spawnAbove(player_dir, obj, itemTyp, level, objects) {
+function spawnAbove(player_dir, obj, itemTyp, idCounter, level, objects) {
   var item = make(itemTyp !== /* Coin */1, undefined, /* Left */0, idCounter, level, {
         TAG: /* Item */3,
         _0: itemTyp
@@ -503,7 +499,6 @@ function kill(obj, state) {
 
 export {
   copy ,
-  idCounter ,
   setVelToSpeed ,
   newId ,
   make ,

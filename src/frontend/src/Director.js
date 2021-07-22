@@ -39,12 +39,12 @@ function calcFps(param) {
   }
 }
 
-function playerAttackEnemy(o1, enemyTyp, s2, o2, state, objects) {
+function playerAttackEnemy(o1, enemyTyp, s2, o2, idCounter, state, objects) {
   o1.invuln = 10;
   o1.jumping = false;
   o1.grounded = true;
   if (enemyTyp >= 3) {
-    $$Object.evolveEnemy(o1.dir, enemyTyp, s2, o2, state.level, objects);
+    $$Object.evolveEnemy(o1.dir, enemyTyp, s2, o2, idCounter, state.level, objects);
     o1.vy = -Config.dampenJump;
     o1.py = o1.py - 5;
     return ;
@@ -54,21 +54,21 @@ function playerAttackEnemy(o1, enemyTyp, s2, o2, state, objects) {
   if (state.multiplier === 8) {
     State.updateScore(state, 800);
     o2.score = 800;
-    return $$Object.evolveEnemy(o1.dir, enemyTyp, s2, o2, state.level, objects);
+    return $$Object.evolveEnemy(o1.dir, enemyTyp, s2, o2, idCounter, state.level, objects);
   }
   var score = Math.imul(100, state.multiplier);
   State.updateScore(state, score);
   o2.score = score;
   state.multiplier = (state.multiplier << 1);
-  return $$Object.evolveEnemy(o1.dir, enemyTyp, s2, o2, state.level, objects);
+  return $$Object.evolveEnemy(o1.dir, enemyTyp, s2, o2, idCounter, state.level, objects);
 }
 
-function enemyAttackPlayer(enemy, player, level, objects) {
+function enemyAttackPlayer(enemy, player, idCounter, level, objects) {
   var enemyTyp = enemy.objTyp;
   if (enemyTyp.TAG === /* Enemy */2) {
     var enemyTyp$1 = enemyTyp._0;
     if (enemyTyp$1 >= 3 && enemy.vx === 0) {
-      return $$Object.evolveEnemy(player.dir, enemyTyp$1, enemy.sprite, enemy, level, objects);
+      return $$Object.evolveEnemy(player.dir, enemyTyp$1, enemy.sprite, enemy, idCounter, level, objects);
     }
     
   }
@@ -320,12 +320,12 @@ function processCollision(dir2, obj, collid, idCounter, state, objects) {
                     return $$Object.revDir(obj, t1$1, s1);
                   } else {
                     $$Object.evolveBlock(collid, idCounter, state.level, objects);
-                    $$Object.spawnAbove(obj.dir, collid, /* Mushroom */0, state.level, objects);
+                    $$Object.spawnAbove(obj.dir, collid, /* Mushroom */0, idCounter, state.level, objects);
                     return $$Object.revDir(obj, t1$1, s1);
                   }
                 } else {
                   $$Object.evolveBlock(collid, idCounter, state.level, objects);
-                  $$Object.spawnAbove(obj.dir, collid, /* Coin */1, state.level, objects);
+                  $$Object.spawnAbove(obj.dir, collid, /* Coin */1, idCounter, state.level, objects);
                   return $$Object.revDir(obj, t1$1, s1);
                 }
               }
@@ -334,7 +334,7 @@ function processCollision(dir2, obj, collid, idCounter, state, objects) {
         }
         if (exit$2 === 4) {
           if (dir2 !== 0) {
-            return enemyAttackPlayer(obj, collid, state.level, objects);
+            return enemyAttackPlayer(obj, collid, idCounter, state.level, objects);
           }
           typ = t1$1;
           s2 = s1;
@@ -376,7 +376,7 @@ function processCollision(dir2, obj, collid, idCounter, state, objects) {
       case /* Enemy */2 :
           var s2$2 = collid.sprite;
           if (dir2 !== 1) {
-            return enemyAttackPlayer(collid, obj, state.level, objects);
+            return enemyAttackPlayer(collid, obj, idCounter, state.level, objects);
           }
           typ = typ$1._0;
           s2 = s2$2;
@@ -426,11 +426,11 @@ function processCollision(dir2, obj, collid, idCounter, state, objects) {
               switch (t._0) {
                 case /* QBlockMushroom */0 :
                     $$Object.evolveBlock(collid, idCounter, state.level, objects);
-                    $$Object.spawnAbove(obj.dir, collid, /* Mushroom */0, state.level, objects);
+                    $$Object.spawnAbove(obj.dir, collid, /* Mushroom */0, idCounter, state.level, objects);
                     return $$Object.collideBlock(dir2, obj);
                 case /* QBlockCoin */1 :
                     $$Object.evolveBlock(collid, idCounter, state.level, objects);
-                    $$Object.spawnAbove(obj.dir, collid, /* Coin */1, state.level, objects);
+                    $$Object.spawnAbove(obj.dir, collid, /* Coin */1, idCounter, state.level, objects);
                     return $$Object.collideBlock(dir2, obj);
                 case /* Brick */3 :
                     if (t1$2 === /* BigM */0) {
@@ -470,7 +470,7 @@ function processCollision(dir2, obj, collid, idCounter, state, objects) {
   }
   switch (exit) {
     case 1 :
-        return playerAttackEnemy(obj, typ, s2, collid, state, objects);
+        return playerAttackEnemy(obj, typ, s2, collid, idCounter, state, objects);
     case 2 :
         if (t2) {
           state.coins = state.coins + 1 | 0;
