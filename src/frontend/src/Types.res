@@ -132,7 +132,6 @@ type obj = {
   mutable score: int,
 }
 
-@genType
 type particle = {
   sprite: sprite,
   mutable lifetime: int,
@@ -151,7 +150,6 @@ type viewport = {
 }
 
 // State of the game
-@genType
 type state = {
   bgd: sprite,
   mutable coins: int,
