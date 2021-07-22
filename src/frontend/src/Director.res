@@ -222,20 +222,8 @@ module Delta = {
 
 let global = Global.global()
 
-let loadState = (~principal) => {
-  Backend.actor.loadGameState(. principal)->Promise.then(json => {
-    if json != "" {
-      global.state = json->Js.Json.parseExn->Obj.magic
-    }
-    Promise.resolve()
-  })
-}
-
-let saveState = (~principal) =>
-  Backend.actor.saveGameState(. principal, global.state->Obj.magic->Js.Json.stringify)
-
-let loadStateBinary = (~principal) => {
-  Backend.actor.loadGameStateNative(. principal)->Promise.then(arr => {
+let loadDelta = (~principal) => {
+  Backend.actor.loadDelta(. principal)->Promise.then(arr => {
     switch arr {
     | [delta] => delta->Delta.apply(~global)
     | _ => ()
@@ -244,7 +232,7 @@ let loadStateBinary = (~principal) => {
   })
 }
 
-let saveStateBinary = (~principal, ~delta) => Backend.actor.saveGameStateNative(. principal, delta)
+let saveDelta = (~principal, ~delta) => Backend.actor.saveDelta(. principal, delta)
 
 // Process collision is called to match each of the possible collisions that
 // may occur. Returns a pair of options, representing objects that
@@ -488,7 +476,7 @@ let rec updateLoop = () => {
     let doLoad = (~principal) => {
       Js.log("loading...")
       global.status = Loading
-      loadStateBinary(~principal)
+      loadDelta(~principal)
       ->Promise.thenResolve(() => {
         Js.log("loaded")
         global.status = Playing
@@ -504,7 +492,7 @@ let rec updateLoop = () => {
     let doSave = (~principal, ~delta: Types.delta) => {
       Js.log("saving...")
       global.status = Saving
-      saveStateBinary(~principal, ~delta)
+      saveDelta(~principal, ~delta)
       ->Promise.thenResolve(() => {
         Js.log("saved")
         global.status = Playing

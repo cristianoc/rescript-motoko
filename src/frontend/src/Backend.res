@@ -3,10 +3,8 @@ module Candid = {
 
   module Actor = {
     type t = {
-      loadGameState: (. principal) => Js.Promise.t<string>,
-      saveGameState: (. principal, string) => Js.Promise.t<unit>,
-      loadGameStateNative: (. principal) => Js.Promise.t<array<Types.delta>>,
-      saveGameStateNative: (. principal, Types.delta) => Js.Promise.t<unit>,
+      loadDelta: (. principal) => Js.Promise.t<array<Types.delta>>,
+      saveDelta: (. principal, Types.delta) => Js.Promise.t<unit>,
     }
   }
 }
