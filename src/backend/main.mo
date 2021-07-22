@@ -111,14 +111,19 @@ actor Main {
     viewport: viewport;
   };
 
-  stable var mapNative : Trie.Trie<Principal, state> = Trie.empty();
+  type delta = {
+    missing: [int_];
+    state: state;
+  };
 
-  public query func loadGameStateNative(p:Principal) : async (?state) {
+  stable var mapNative : Trie.Trie<Principal, delta> = Trie.empty();
+
+  public query func loadGameStateNative(p:Principal) : async (?delta) {
     Trie.find(mapNative, key(p), Principal.equal)
   };
 
-  public func saveGameStateNative(p:Principal, state:state) : async () {
-    mapNative := Trie.put(mapNative, key(p), Principal.equal, state).0;
+  public func saveGameStateNative(p:Principal, delta:delta) : async () {
+    mapNative := Trie.put(mapNative, key(p), Principal.equal, delta).0;
   };
 
 };

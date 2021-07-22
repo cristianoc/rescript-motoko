@@ -115,14 +115,112 @@ module Global = {
     | Playing
     | Finished({levelResult: Types.levelResult, restartTime: float})
     | Saving
-  type global = {mutable state: Types.state, mutable status: status}
-  let global = {state: State.new(~level=1, ~score=0), status: Playing}
-  let reset = (~level, ~score) => {
-    global.state = State.new(~level, ~score)
+  type initialObj = {obj: Types.obj, mutable missing: bool}
+  type global = {
+    idCounter: ref<int>,
+    mutable state: Types.state,
+    mutable status: status,
+    mutable initialObjects: Hashtbl.t<int, initialObj>,
+  }
+
+  let createInitialObjects = objects => {
+    let initialObjects = Hashtbl.create(objects->Array.length)
+    objects->Array.forEach((obj: Types.obj) =>
+      initialObjects->Hashtbl.replace(obj.id, {obj: obj->Object.copy, missing: true})
+    )
+    initialObjects
+  }
+  let global = () => {
+    let idCounter = ref(0)
+    let state = State.new(~idCounter, ~level=1, ~score=0)
+    {
+      idCounter: idCounter,
+      state: state,
+      status: Playing,
+      initialObjects: state.objects->createInitialObjects,
+    }
+  }
+  let reset = (global, ~level, ~score) => {
+    global.idCounter := 0
+    global.state = State.new(~idCounter=global.idCounter, ~level, ~score)
     global.status = Playing
+    global.initialObjects = global.state.objects->createInitialObjects
   }
 }
-let global = Global.global
+
+module Delta = {
+  let apply = (delta: Types.delta, ~global: Global.global) => {
+    if delta.state.level != global.state.level {
+      global->Global.reset(~level=delta.state.level, ~score=delta.state.score)
+    }
+    let modifiedOrAdded = delta.state.objects
+    let objects = []
+    let addObject = obj => objects->Js.Array2.push(obj->Object.copy)->ignore
+
+    global.initialObjects |> Hashtbl.iter((_id, initialObj: Global.initialObj) =>
+      initialObj.missing = false
+    )
+    delta.missing->Js.Array2.forEach(id =>
+      switch global.initialObjects->Hashtbl.find_opt(id) {
+      | Some(initialObj) => initialObj.missing = true
+      | None => ()
+      }
+    )
+
+    modifiedOrAdded->Js.Array2.forEach(obj => {
+      switch global.initialObjects->Hashtbl.find_opt(obj.id) {
+      | Some(initialObj) =>
+        // Prevent later adding an object with the same id from the initial objects
+        initialObj.missing = true
+      | None => ()
+      }
+      obj->addObject
+    })
+
+    global.initialObjects |> Hashtbl.iter((_id, initialObj: Global.initialObj) =>
+      if initialObj.missing == false {
+        initialObj.missing = true
+        initialObj.obj->addObject
+      }
+    )
+
+    let state = {...delta.state, objects: objects}
+    global.state = state
+  }
+
+  let findObjectsDifference = (global: Global.global) => {
+    let missing = []
+    let modifiedOrAdded = []
+    global.state.objects->Array.forEach(obj => {
+      switch global.initialObjects->Hashtbl.find_opt(obj.id) {
+      | Some(initialObj) =>
+        initialObj.missing = false
+        let isSame = initialObj.obj == obj
+        if !isSame {
+          // modified
+          modifiedOrAdded->Js.Array2.push(obj)->ignore
+        }
+      | None =>
+        // added
+        modifiedOrAdded->Js.Array2.push(obj)->ignore
+      }
+    })
+    global.initialObjects |> Hashtbl.iter((id, initialObj: Global.initialObj) => {
+      if initialObj.missing {
+        missing->Js.Array2.push(id)->ignore
+      } else {
+        initialObj.missing = true
+      }
+    })
+    let delta: Types.delta = {
+      missing: missing,
+      state: {...global.state, objects: modifiedOrAdded},
+    }
+    delta
+  }
+}
+
+let global = Global.global()
 
 let loadState = (~principal) => {
   Backend.actor.loadGameState(. principal)->Promise.then(json => {
@@ -139,14 +237,14 @@ let saveState = (~principal) =>
 let loadStateBinary = (~principal) => {
   Backend.actor.loadGameStateNative(. principal)->Promise.then(arr => {
     switch arr {
-    | [state] => global.state = state
+    | [delta] => delta->Delta.apply(~global)
     | _ => ()
     }
     Promise.resolve()
   })
 }
 
-let saveStateBinary = (~principal) => Backend.actor.saveGameStateNative(. principal, global.state)
+let saveStateBinary = (~principal, ~delta) => Backend.actor.saveGameStateNative(. principal, delta)
 
 // Process collision is called to match each of the possible collisions that
 // may occur. Returns a pair of options, representing objects that
@@ -158,8 +256,9 @@ let processCollision = (.
   dir2: Types.dir2,
   obj: Types.obj,
   collid: Types.obj,
+  idCounter,
   state: Types.state,
-  objects,
+  objects: Js.Array2.t<Types.obj>,
 ) =>
   switch (obj, collid, dir2) {
   | ({objTyp: Player1(_) | Player2(_)}, {objTyp: Player1(_) | Player2(_)}, East | West) =>
@@ -199,11 +298,11 @@ let processCollision = (.
       Object.decHealth(collid)
       Object.reverseLeftRight(obj)
     | (RKoopaShell | GKoopaShell, QBlockMushroom) =>
-      Object.evolveBlock(. collid, state.level, objects)
+      Object.evolveBlock(. collid, idCounter, state.level, objects)
       Object.spawnAbove(. obj.dir, collid, Mushroom, state.level, objects)
       Object.revDir(obj, t1, s1)
     | (RKoopaShell | GKoopaShell, QBlockCoin) =>
-      Object.evolveBlock(. collid, state.level, objects)
+      Object.evolveBlock(. collid, idCounter, state.level, objects)
       Object.spawnAbove(. obj.dir, collid, Coin, state.level, objects)
       Object.revDir(obj, t1, s1)
     | (_, _) => Object.revDir(obj, t1, s1)
@@ -215,11 +314,11 @@ let processCollision = (.
   | ({objTyp: Player1(t1) | Player2(t1)}, {objTyp: Block(t)}, North) =>
     switch t {
     | QBlockMushroom =>
-      Object.evolveBlock(. collid, state.level, objects)
+      Object.evolveBlock(. collid, idCounter, state.level, objects)
       Object.spawnAbove(. obj.dir, collid, Mushroom, state.level, objects)
       Object.collideBlock(dir2, obj)
     | QBlockCoin =>
-      Object.evolveBlock(. collid, state.level, objects)
+      Object.evolveBlock(. collid, idCounter, state.level, objects)
       Object.spawnAbove(. obj.dir, collid, Coin, state.level, objects)
       Object.collideBlock(dir2, obj)
     | Brick =>
@@ -265,12 +364,12 @@ let broadPhase = (~objects, viewport) => objects->Array.keep(o => o->inViewport(
 // narrowPhase of collision is used in order to continuously loop through
 // each of the collidable objects to constantly check if collisions are
 // occurring.
-let narrowPhase = (obj, ~objects, ~state, ~collids) => {
+let narrowPhase = (obj, ~idCounter, ~objects, ~state, ~collids) => {
   collids->Js.Array2.forEach(collid =>
     if !Object.sameId(obj, collid) {
       switch Object.checkCollision(obj, collid) {
       | None => ()
-      | Some(dir) => processCollision(. dir, obj, collid, state, objects)
+      | Some(dir) => processCollision(. dir, obj, collid, idCounter, state, objects)
       }
     }
   )
@@ -288,6 +387,7 @@ let narrowPhase = (obj, ~objects, ~state, ~collids) => {
 // added to the list of objects for the next iteration.
 let checkCollisions = (
   obj: Types.obj,
+  ~idCounter,
   ~objects,
   ~otherCollids,
   ~state: Types.state,
@@ -296,14 +396,15 @@ let checkCollisions = (
   switch obj.objTyp {
   | Block(_) => ()
   | _ =>
-    obj->narrowPhase(~objects, ~state, ~collids=visibleCollids)
-    obj->narrowPhase(~objects, ~state, ~collids=otherCollids)
+    obj->narrowPhase(~idCounter, ~objects, ~state, ~collids=visibleCollids)
+    obj->narrowPhase(~idCounter, ~objects, ~state, ~collids=otherCollids)
   }
 
 // primary update method for objects,
 // checking the collision, updating the object, and drawing to the canvas
 let findObjectsColliding = (
   obj: Types.obj,
+  ~idCounter,
   ~objects,
   ~otherCollids,
   ~state: Types.state,
@@ -320,7 +421,8 @@ let findObjectsColliding = (
     obj.grounded = false
     obj->Object.processObj(~level=state.level)
     // Run collision detection if moving object
-    let objectsColliding = obj->checkCollisions(~objects, ~otherCollids, ~state, ~visibleCollids)
+    let objectsColliding =
+      obj->checkCollisions(~idCounter, ~objects, ~otherCollids, ~state, ~visibleCollids)
     if obj.vx != 0. || !Object.isEnemy(obj) {
       Sprite.updateAnimation(sprite)
     }
@@ -332,7 +434,7 @@ let findObjectsColliding = (
 // as a wrapper method. This method is necessary to differentiate between
 // the player collidable and the remaining collidables, as special operations
 // such as viewport centering only occur with the player
-let updateObject = (obj: Types.obj, ~objects, ~otherCollids, ~state, ~visibleCollids) =>
+let updateObject = (obj: Types.obj, ~idCounter, ~objects, ~otherCollids, ~state, ~visibleCollids) =>
   switch obj.objTyp {
   | Player1(_) | Player2(_) =>
     let playerNum: Types.playerNum = switch obj.objTyp {
@@ -342,9 +444,9 @@ let updateObject = (obj: Types.obj, ~objects, ~otherCollids, ~state, ~visibleCol
     let keys = Keys.translateKeys(playerNum)
     obj.crouch = false
     obj->Object.updatePlayer(playerNum, keys)
-    obj->findObjectsColliding(~objects, ~otherCollids, ~state, ~visibleCollids)
+    obj->findObjectsColliding(~idCounter, ~objects, ~otherCollids, ~state, ~visibleCollids)
   | _ =>
-    obj->findObjectsColliding(~objects, ~otherCollids, ~state, ~visibleCollids)
+    obj->findObjectsColliding(~idCounter, ~objects, ~otherCollids, ~state, ~visibleCollids)
     if !obj.kill {
       global.state.objects->Js.Array2.push(obj)->ignore
     }
@@ -399,19 +501,23 @@ let rec updateLoop = () => {
     }
   | Some(Save) =>
     Keys.pressedKeys.pendingStateOperations = None
-    let doSave = (~principal) => {
+    let doSave = (~principal, ~delta: Types.delta) => {
       Js.log("saving...")
       global.status = Saving
-      saveStateBinary(~principal)
+      saveStateBinary(~principal, ~delta)
       ->Promise.thenResolve(() => {
         Js.log("saved")
         global.status = Playing
       })
       ->ignore
     }
+
+    let delta = global->Delta.findObjectsDifference
+
     switch auth.contents {
-    | LoggedOut => startLogin(~onLogged=doSave, ~loadOrSave=Save)
-    | LoggedIn(principal) => doSave(~principal)
+    | LoggedOut =>
+      startLogin(~onLogged=(~principal) => doSave(~principal, ~delta), ~loadOrSave=Save)
+    | LoggedIn(principal) => doSave(~principal, ~delta)
     }
   | None =>
     if Keys.pressedKeys.paused {
@@ -454,7 +560,7 @@ let rec updateLoop = () => {
     } else {
       let level = levelResult == Won ? global.state.level + 1 : global.state.level
       let score = levelResult == Won ? global.state.score : 0
-      Global.reset(~level, ~score)
+      global->Global.reset(~level, ~score)
       updateLoop()
     }
 
@@ -465,6 +571,7 @@ let rec updateLoop = () => {
     global.state.objects = []
     global.state.particles = global.state.particles->Belt.Array.keep(updateParticle)
     global.state.player1->updateObject(
+      ~idCounter=global.idCounter,
       ~objects=global.state.objects,
       ~otherCollids=Keys.checkTwoPlayers() ? [global.state.player2] : [],
       ~state=global.state,
@@ -472,6 +579,7 @@ let rec updateLoop = () => {
     )
     if Keys.checkTwoPlayers() {
       global.state.player2->updateObject(
+        ~idCounter=global.idCounter,
         ~objects=global.state.objects,
         ~otherCollids=[global.state.player1],
         ~state=global.state,
@@ -487,6 +595,7 @@ let rec updateLoop = () => {
     Viewport.update(global.state.viewport, global.state.player1.px, global.state.player1.py)
     oldObjects->Js.Array2.forEach(obj =>
       obj->updateObject(
+        ~idCounter=global.idCounter,
         ~objects=global.state.objects,
         ~otherCollids=[],
         ~state=global.state,

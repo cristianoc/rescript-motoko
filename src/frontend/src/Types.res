@@ -164,3 +164,8 @@ type state = {
   mutable score: int,
   viewport: viewport,
 }
+
+type delta = {
+  missing: array<int>, // Ids of elements missing w.r.t. initial state
+  state: state, // Only the elements added or modified w.r.t. initial state
+}

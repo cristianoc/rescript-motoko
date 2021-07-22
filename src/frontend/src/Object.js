@@ -5,10 +5,31 @@ import * as Config from "./Config.js";
 import * as Sprite from "./Sprite.js";
 import * as Particle from "./Particle.js";
 import * as Belt_List from "rescript/lib/es6/belt_List.js";
-import * as Pervasives from "rescript/lib/es6/pervasives.js";
+
+function copy(obj) {
+  return {
+          objTyp: obj.objTyp,
+          sprite: obj.sprite,
+          hasGravity: obj.hasGravity,
+          speed: obj.speed,
+          id: obj.id,
+          px: obj.px,
+          py: obj.py,
+          vx: obj.vx,
+          vy: obj.vy,
+          jumping: obj.jumping,
+          grounded: obj.grounded,
+          dir: obj.dir,
+          invuln: obj.invuln,
+          kill: obj.kill,
+          health: obj.health,
+          crouch: obj.crouch,
+          score: obj.score
+        };
+}
 
 var idCounter = {
-  contents: Pervasives.min_int
+  contents: 0
 };
 
 function setVelToSpeed(obj) {
@@ -22,12 +43,12 @@ function setVelToSpeed(obj) {
   
 }
 
-function newId(param) {
+function newId(idCounter) {
   idCounter.contents = idCounter.contents + 1 | 0;
   return idCounter.contents;
 }
 
-function make(hasGravityOpt, speedOpt, dirOpt, level, objTyp, spriteParams, px, py) {
+function make(hasGravityOpt, speedOpt, dirOpt, idCounter, level, objTyp, spriteParams, px, py) {
   var hasGravity = hasGravityOpt !== undefined ? hasGravityOpt : true;
   var speed = speedOpt !== undefined ? speedOpt : 1.0;
   var dir = dirOpt !== undefined ? dirOpt : /* Left */0;
@@ -36,7 +57,7 @@ function make(hasGravityOpt, speedOpt, dirOpt, level, objTyp, spriteParams, px, 
     sprite: Sprite.makeFromParams(spriteParams),
     hasGravity: hasGravity,
     speed: speed,
-    id: newId(undefined),
+    id: newId(idCounter),
     px: px,
     py: py,
     vx: 0.0,
@@ -259,7 +280,7 @@ function evolveEnemy(player_dir, typ, spr, obj, level, objects) {
         obj.kill = true;
         return ;
     case /* GKoopa */1 :
-        var newObj = make(undefined, 3, obj.dir, level, {
+        var newObj = make(undefined, 3, obj.dir, idCounter, level, {
               TAG: /* Enemy */2,
               _0: /* GKoopaShell */3
             }, Sprite.enemyParams(/* GKoopaShell */3, obj.dir), obj.px, obj.py);
@@ -267,7 +288,7 @@ function evolveEnemy(player_dir, typ, spr, obj, level, objects) {
         objects.push(newObj);
         return ;
     case /* RKoopa */2 :
-        var newObj$1 = make(undefined, 3, obj.dir, level, {
+        var newObj$1 = make(undefined, 3, obj.dir, idCounter, level, {
               TAG: /* Enemy */2,
               _0: /* RKoopaShell */4
             }, Sprite.enemyParams(/* RKoopaShell */4, obj.dir), obj.px, obj.py);
@@ -307,9 +328,9 @@ function decHealth(obj) {
   
 }
 
-function evolveBlock(obj, level, objects) {
+function evolveBlock(obj, idCounter, level, objects) {
   decHealth(obj);
-  var newObj = make(false, undefined, obj.dir, level, {
+  var newObj = make(false, undefined, obj.dir, idCounter, level, {
         TAG: /* Block */4,
         _0: /* QBlockUsed */2
       }, Sprite.blockParams(/* QBlockUsed */2), obj.px, obj.py);
@@ -318,7 +339,7 @@ function evolveBlock(obj, level, objects) {
 }
 
 function spawnAbove(player_dir, obj, itemTyp, level, objects) {
-  var item = make(itemTyp !== /* Coin */1, undefined, /* Left */0, level, {
+  var item = make(itemTyp !== /* Coin */1, undefined, /* Left */0, idCounter, level, {
         TAG: /* Item */3,
         _0: itemTyp
       }, Sprite.makeParams(itemTyp), obj.px, obj.py);
@@ -481,6 +502,7 @@ function kill(obj, state) {
 }
 
 export {
+  copy ,
   idCounter ,
   setVelToSpeed ,
   newId ,
