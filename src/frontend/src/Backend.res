@@ -10,9 +10,6 @@ module Candid = {
 }
 
 @module("dfx-generated/backend")
-external canisterId: Agent.canisterId = "canisterId"
+external backend: Candid.Actor.t = "backend"
 
-@module("dfx-generated/backend")
-external idlFactory: Agent.idlFactory<Candid.Actor.t> = "idlFactory"
-
-let actor = Agent.createActor(~idlFactory, ~canisterId)
+let actor = backend
