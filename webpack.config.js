@@ -20,11 +20,39 @@ const aliases = Object.entries(dfxJson.canisters).reduce(
 
     return {
       ...acc,
-      ["dfx-generated/" + name]: path.join(outputRoot, name + ".js"),
+      ["dfx-generated/" + name]: path.join(outputRoot, "index.js"),
     };
   },
   {}
 );
+
+let localCanisters, prodCanisters, canisters;
+
+function initCanisterIds() {
+  try {
+    localCanisters = require(path.resolve(".dfx", "local", "canister_ids.json"));
+  } catch (error) {
+    console.log("No local canister_ids.json found. Continuing production");
+  }
+  try {
+    prodCanisters = require(path.resolve("canister_ids.json"));
+  } catch (error) {
+    console.log("No production canister_ids.json found. Continuing with local");
+  }
+
+  const network =
+    process.env.DFX_NETWORK ||
+    (process.env.NODE_ENV === "production" ? "ic" : "local");
+
+  canisters = network === "local" ? localCanisters : prodCanisters;
+
+  for (const canister in canisters) {
+    process.env[canister.toUpperCase() + "_CANISTER_ID"] =
+      canisters[canister][network];
+  }
+}
+initCanisterIds();
+
 
 /**
  * Generate a webpack configuration for a canister.
@@ -46,13 +74,13 @@ function generateWebpackConfigForCanister(name, info) {
       alias: aliases,
       extensions: [".js", ".ts", ".jsx", ".tsx"],
       fallback: {
-        "assert": require.resolve("assert/"),
-        "buffer": require.resolve("buffer/"),
-        "events": require.resolve("events/"),
-        "stream": require.resolve("stream-browserify/"),
-        "util": require.resolve("util/"),
+        assert: require.resolve("assert/"),
+        buffer: require.resolve("buffer/"),
+        events: require.resolve("events/"),
+        stream: require.resolve("stream-browserify/"),
+        util: require.resolve("util/"),
       },
-    },
+    },  
     output: {
       filename: "[name].js",
       path: path.join(__dirname, "dist", name),
@@ -74,6 +102,10 @@ function generateWebpackConfigForCanister(name, info) {
         filename: 'index.html',
         chunks: ['index'],
       }),
+      new webpack.EnvironmentPlugin({
+        NODE_ENV: 'development',
+        BACKEND_CANISTER_ID: canisters["backend"]
+      }),  
       new webpack.ProvidePlugin({
         Buffer: [require.resolve('buffer/'), 'Buffer'],
         process: require.resolve('process/browser'),
