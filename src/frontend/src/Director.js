@@ -120,17 +120,18 @@ function createInitialObjects(objects) {
   return initialObjects;
 }
 
-function $$global(param) {
-  var state = State.$$new(1, 0);
+function initGlobal(param) {
+  var state = State.$$new(Date.now(), 1, 0);
   return {
+          highScores: [],
+          initialObjects: createInitialObjects(state.objects),
           state: state,
-          status: /* Playing */2,
-          initialObjects: createInitialObjects(state.objects)
+          status: /* Playing */2
         };
 }
 
-function reset($$global, level, score) {
-  $$global.state = State.$$new(level, score);
+function reset($$global, date, level, score) {
+  $$global.state = State.$$new(date, level, score);
   $$global.status = /* Playing */2;
   $$global.initialObjects = createInitialObjects($$global.state.objects);
   
@@ -138,13 +139,13 @@ function reset($$global, level, score) {
 
 var Global = {
   createInitialObjects: createInitialObjects,
-  $$global: $$global,
+  initGlobal: initGlobal,
   reset: reset
 };
 
 function apply(delta, $$global) {
   if (delta.state.level !== $$global.state.level) {
-    reset($$global, delta.state.level, delta.state.score);
+    reset($$global, delta.state.date, delta.state.level, delta.state.score);
   }
   var modifiedOrAdded = delta.state.objects;
   var objects = [];
@@ -182,6 +183,7 @@ function apply(delta, $$global) {
   var state = {
     bgd: init.bgd,
     coins: init.coins,
+    date: init.date,
     idCounter: init.idCounter,
     level: init.level,
     multiplier: init.multiplier,
@@ -228,6 +230,7 @@ function findObjectsDifference($$global) {
           state: {
             bgd: init.bgd,
             coins: init.coins,
+            date: init.date,
             idCounter: init.idCounter,
             level: init.level,
             multiplier: init.multiplier,
@@ -246,13 +249,13 @@ var Delta = {
   findObjectsDifference: findObjectsDifference
 };
 
-var $$global$1 = $$global(undefined);
+var $$global = initGlobal(undefined);
 
 function loadDelta(principal) {
   return Backend.actor.loadDelta(principal).then(function (arr) {
               if (arr.length === 1) {
                 var delta = arr[0];
-                apply(delta, $$global$1);
+                apply(delta, $$global);
               }
               return Promise.resolve(undefined);
             });
@@ -407,7 +410,7 @@ function processCollision(dir2, obj, collid, state) {
                       return $$Object.collideBlock(dir2, obj);
                     }
                   } else {
-                    $$global$1.status = {
+                    $$global.status = {
                       TAG: /* Finished */1,
                       levelResult: /* Won */0,
                       restartTime: Config.delayWhenFinished + performance.now()
@@ -437,7 +440,7 @@ function processCollision(dir2, obj, collid, state) {
                       return $$Object.collideBlock(dir2, obj);
                     }
                 case /* Panel */6 :
-                    $$global$1.status = {
+                    $$global.status = {
                       TAG: /* Finished */1,
                       levelResult: /* Won */0,
                       restartTime: Config.delayWhenFinished + performance.now()
@@ -551,7 +554,7 @@ function updateObject(obj, otherCollids, state, visibleCollids) {
     default:
       findObjectsColliding(obj, otherCollids, state, visibleCollids);
       if (!obj.kill) {
-        $$global$1.state.objects.push(obj);
+        $$global.state.objects.push(obj);
       }
       if (obj.kill) {
         return $$Object.kill(obj, state);
@@ -580,7 +583,7 @@ var auth = {
 function updateLoop(_param) {
   while(true) {
     var startLogin = function (onLogged, loadOrSave) {
-      $$global$1.status = {
+      $$global.status = {
         TAG: /* LoggingIn */0,
         _0: loadOrSave
       };
@@ -591,7 +594,7 @@ function updateLoop(_param) {
               return Curry._1(onLogged, principal);
             }), (function (error) {
               console.log("error", AuthClient.$$Error.toString(error));
-              $$global$1.status = /* Playing */2;
+              $$global.status = /* Playing */2;
               
             }), 30);
       
@@ -602,15 +605,15 @@ function updateLoop(_param) {
       if (match) {
         var doSave = function (principal, delta) {
           console.log("saving...");
-          $$global$1.status = /* Saving */3;
+          $$global.status = /* Saving */3;
           saveDelta(principal, delta).then(function (param) {
                 console.log("saved");
-                $$global$1.status = /* Playing */2;
+                $$global.status = /* Playing */2;
                 
               });
           
         };
-        var delta = findObjectsDifference($$global$1);
+        var delta = findObjectsDifference($$global);
         var principal = auth.contents;
         if (principal) {
           doSave(principal._0, delta);
@@ -624,10 +627,10 @@ function updateLoop(_param) {
       } else {
         var doLoad = function (principal) {
           console.log("loading...");
-          $$global$1.status = /* Loading */0;
+          $$global.status = /* Loading */0;
           loadDelta(principal).then(function (param) {
                 console.log("loaded");
-                $$global$1.status = /* Playing */2;
+                $$global.status = /* Playing */2;
                 
               });
           
@@ -640,57 +643,64 @@ function updateLoop(_param) {
         }
       }
     } else if (Keys.pressedKeys.paused) {
-      $$global$1.status = /* Paused */1;
-    } else if ($$global$1.status === /* Paused */1) {
-      $$global$1.status = /* Playing */2;
+      if ($$global.status !== /* Paused */1) {
+        Backend.actor.highScores().then(function (highScores) {
+              $$global.highScores = highScores;
+              
+            });
+      }
+      $$global.status = /* Paused */1;
+    } else if ($$global.status === /* Paused */1) {
+      $$global.status = /* Playing */2;
     }
-    var loadOrSave = $$global$1.status;
+    var loadOrSave = $$global.status;
     if (typeof loadOrSave === "number") {
       switch (loadOrSave) {
         case /* Loading */0 :
-            Draw.drawState($$global$1.state, 0);
+            Draw.drawState($$global.state, 0);
             Draw.loading(undefined);
             requestAnimationFrame(function (param) {
                   return updateLoop(undefined);
                 });
             return ;
         case /* Paused */1 :
-            Draw.drawState($$global$1.state, 0);
-            Draw.paused(undefined);
+            Draw.drawState($$global.state, 0);
+            Draw.drawPaused(undefined);
+            Draw.drawHishScores($$global.highScores);
             requestAnimationFrame(function (param) {
                   return updateLoop(undefined);
                 });
             return ;
         case /* Playing */2 :
             var fps = calcFps(undefined);
-            var oldObjects = $$global$1.state.objects;
-            var visibleCollids = broadPhase(oldObjects, $$global$1.state.viewport);
-            $$global$1.state.objects = [];
-            $$global$1.state.particles = Belt_Array.keep($$global$1.state.particles, updateParticle);
-            updateObject($$global$1.state.player1, Keys.checkTwoPlayers(undefined) ? [$$global$1.state.player2] : [], $$global$1.state, visibleCollids);
+            var oldObjects = $$global.state.objects;
+            var visibleCollids = broadPhase(oldObjects, $$global.state.viewport);
+            $$global.state.objects = [];
+            $$global.state.particles = Belt_Array.keep($$global.state.particles, updateParticle);
+            updateObject($$global.state.player1, Keys.checkTwoPlayers(undefined) ? [$$global.state.player2] : [], $$global.state, visibleCollids);
             if (Keys.checkTwoPlayers(undefined)) {
-              updateObject($$global$1.state.player2, [$$global$1.state.player1], $$global$1.state, visibleCollids);
+              updateObject($$global.state.player2, [$$global.state.player1], $$global.state, visibleCollids);
             }
-            if ($$global$1.state.player1.kill) {
-              $$global$1.status = {
+            if ($$global.state.player1.kill) {
+              $$global.status = {
                 TAG: /* Finished */1,
                 levelResult: /* Lost */1,
                 restartTime: Config.delayWhenFinished + performance.now()
               };
             }
-            Viewport.update($$global$1.state.viewport, $$global$1.state.player1.px, $$global$1.state.player1.py);
+            Viewport.update($$global.state.viewport, $$global.state.player1.px, $$global.state.player1.py);
             oldObjects.forEach((function(visibleCollids){
                 return function (obj) {
-                  return updateObject(obj, [], $$global$1.state, visibleCollids);
+                  return updateObject(obj, [], $$global.state, visibleCollids);
                 }
                 }(visibleCollids)));
-            Draw.drawState($$global$1.state, fps);
+            Draw.drawState($$global.state, fps);
             requestAnimationFrame(function (param) {
                   return updateLoop(undefined);
                 });
             return ;
         case /* Saving */3 :
-            Draw.drawState($$global$1.state, 0);
+            Draw.drawState($$global.state, 0);
             Draw.saving(undefined);
             requestAnimationFrame(function (param) {
                   return updateLoop(undefined);
@@ -700,7 +710,7 @@ function updateLoop(_param) {
       }
     } else {
       if (loadOrSave.TAG === /* LoggingIn */0) {
-        Draw.drawState($$global$1.state, 0);
+        Draw.drawState($$global.state, 0);
         Draw.loggingIn(loadOrSave._0);
         requestAnimationFrame(function (param) {
               return updateLoop(undefined);
@@ -710,15 +720,16 @@ function updateLoop(_param) {
       var levelResult = loadOrSave.levelResult;
       var timeToStart = (loadOrSave.restartTime - performance.now()) / 1000;
       if (timeToStart > 0.9) {
-        Draw.levelFinished(levelResult, String($$global$1.state.level), String(timeToStart | 0));
+        Draw.levelFinished(levelResult, String($$global.state.level), String(timeToStart | 0));
         requestAnimationFrame(function (param) {
               return updateLoop(undefined);
             });
         return ;
       }
-      var level = levelResult === /* Won */0 ? $$global$1.state.level + 1 | 0 : $$global$1.state.level;
-      var score = levelResult === /* Won */0 ? $$global$1.state.score : 0;
-      reset($$global$1, level, score);
+      var level = levelResult === /* Won */0 ? $$global.state.level + 1 | 0 : $$global.state.level;
+      var score = levelResult === /* Won */0 ? $$global.state.score : 0;
+      var date = levelResult === /* Won */0 ? $$global.state.date : Date.now();
+      reset($$global, date, level, score);
       _param = undefined;
       continue ;
     }
@@ -732,7 +743,7 @@ export {
   collEnemyEnemy ,
   Global ,
   Delta ,
-  $$global$1 as $$global,
+  $$global ,
   loadDelta ,
   saveDelta ,
   processCollision ,

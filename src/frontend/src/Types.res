@@ -153,6 +153,7 @@ type viewport = {
 type state = {
   bgd: sprite,
   mutable coins: int,
+  date: float,
   mutable idCounter: int,
   level: int,
   mutable multiplier: int,

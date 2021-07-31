@@ -4,6 +4,7 @@ import * as Png from "./Png.js";
 import * as Keys from "./Keys.js";
 import * as Load from "./Load.js";
 import * as Config from "./Config.js";
+import * as $$String from "rescript/lib/es6/string.js";
 import * as Viewport from "./Viewport.js";
 import * as Belt_List from "rescript/lib/es6/belt_List.js";
 import * as Belt_Array from "rescript/lib/es6/belt_Array.js";
@@ -44,12 +45,16 @@ function clearCanvas(param) {
 
 var fontPx = String(Config.fontSize | 0) + "px";
 
-function centerXText(txt, y) {
+function drawText(txt, x, y) {
   var ctx = Load.getContext(undefined);
-  var match = Load.getCanvasData(undefined);
   ctx.font = fontPx + "'Press Start 2P'";
+  return ctx.fillText(txt, x, y);
+}
+
+function centerXText(txt, y) {
+  var match = Load.getCanvasData(undefined);
   var xCentered = (match.sizeScaled.widthScaled - Config.fontSize * txt.length) / 2;
-  return ctx.fillText(txt, xCentered, y);
+  return drawText(txt, xCentered, y);
 }
 
 function centerXYText(txt) {
@@ -87,8 +92,16 @@ function saving(param) {
   return centerXYText("Saving...");
 }
 
-function paused(param) {
+function drawPaused(param) {
   return centerXYText("Paused");
+}
+
+function drawHishScores(highScores) {
+  return Belt_Array.forEachWithIndex(highScores, (function (i, score) {
+                var name = $$String.sub(score.name, 0, 5);
+                var str = name + " " + String(score.score) + "                    ";
+                return drawText(str, Config.fontSize * 2, Config.fontSize * ((i << 1) + 5 | 0));
+              }));
 }
 
 function blackScreen(texts) {
@@ -179,6 +192,7 @@ export {
   drawBgd ,
   clearCanvas ,
   fontPx ,
+  drawText ,
   centerXText ,
   centerXYText ,
   scoreAndCoins ,
@@ -186,7 +200,8 @@ export {
   loggingIn ,
   loading ,
   saving ,
-  paused ,
+  drawPaused ,
+  drawHishScores ,
   blackScreen ,
   levelFinished ,
   drawParticles ,

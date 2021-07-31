@@ -110,9 +110,10 @@ module Global = {
     | Saving
   type initialObj = {obj: Types.obj, mutable missing: bool}
   type global = {
+    mutable highScores: Backend.Candid.highScores,
+    mutable initialObjects: Hashtbl.t<int, initialObj>,
     mutable state: Types.state,
     mutable status: status,
-    mutable initialObjects: Hashtbl.t<int, initialObj>,
   }
 
   let createInitialObjects = objects => {
@@ -122,16 +123,17 @@ module Global = {
     )
     initialObjects
   }
-  let global = () => {
-    let state = State.new(~level=1, ~score=0)
+  let initGlobal = () => {
+    let state = State.new(~date=Js.Date.now(), ~level=1, ~score=0)
     {
+      highScores: [],
+      initialObjects: state.objects->createInitialObjects,
       state: state,
       status: Playing,
-      initialObjects: state.objects->createInitialObjects,
     }
   }
-  let reset = (global, ~level, ~score) => {
-    global.state = State.new(~level, ~score)
+  let reset = (global, ~date, ~level, ~score) => {
+    global.state = State.new(~date, ~level, ~score)
     global.status = Playing
     global.initialObjects = global.state.objects->createInitialObjects
   }
@@ -140,7 +142,11 @@ module Global = {
 module Delta = {
   let apply = (delta: Types.delta, ~global: Global.global) => {
     if delta.state.level != global.state.level {
-      global->Global.reset(~level=delta.state.level, ~score=delta.state.score)
+      global->Global.reset(
+        ~date=delta.state.date,
+        ~level=delta.state.level,
+        ~score=delta.state.score,
+      )
     }
     let modifiedOrAdded = delta.state.objects
     let objects = []
@@ -209,7 +215,7 @@ module Delta = {
   }
 }
 
-let global = Global.global()
+let global = Global.initGlobal()
 
 let loadDelta = (~principal) => {
   Backend.actor.loadDelta(. principal)->Promise.then(arr => {
@@ -486,6 +492,11 @@ let rec updateLoop = () => {
     }
   | None =>
     if Keys.pressedKeys.paused {
+      if global.status != Paused {
+        Backend.actor.highScores(.)
+        ->Promise.thenResolve(highScores => global.highScores = highScores)
+        ->ignore
+      }
       global.status = Paused
     } else if global.status == Paused {
       global.status = Playing
@@ -510,7 +521,8 @@ let rec updateLoop = () => {
 
   | Paused =>
     global.state->Draw.drawState(~fps=0.)
-    Draw.paused()
+    Draw.drawPaused()
+    Draw.drawHishScores(global.highScores)
     Html.requestAnimationFrame(_ => updateLoop())
 
   | Finished({levelResult, restartTime}) =>
@@ -525,7 +537,8 @@ let rec updateLoop = () => {
     } else {
       let level = levelResult == Won ? global.state.level + 1 : global.state.level
       let score = levelResult == Won ? global.state.score : 0
-      global->Global.reset(~level, ~score)
+      let date = levelResult == Won ? global.state.date : Js.Date.now()
+      global->Global.reset(~date, ~level, ~score)
       updateLoop()
     }
 

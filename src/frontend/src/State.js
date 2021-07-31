@@ -4,11 +4,12 @@ import * as Sprite from "./Sprite.js";
 import * as Viewport from "./Viewport.js";
 import * as Generator from "./Generator.js";
 
-function $$new(level, score) {
+function $$new(date, level, score) {
   var viewport = Viewport.make(level);
   var incompleteState = {
     bgd: Sprite.makeBgd(undefined),
     coins: 0,
+    date: date,
     idCounter: 0,
     level: level,
     multiplier: 1,
@@ -26,6 +27,7 @@ function $$new(level, score) {
   return {
           bgd: incompleteState.bgd,
           coins: incompleteState.coins,
+          date: incompleteState.date,
           idCounter: incompleteState.idCounter,
           level: incompleteState.level,
           multiplier: incompleteState.multiplier,
