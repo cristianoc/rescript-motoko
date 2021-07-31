@@ -1,8 +1,9 @@
-let new = (~level, ~score) => {
+let new = (~date, ~level, ~score) => {
   let viewport = Viewport.make(~level)
   let incompleteState = {
     Types.bgd: Sprite.makeBgd(),
     coins: 0,
+    date: date,
     idCounter: 0,
     level: level,
     multiplier: 1,

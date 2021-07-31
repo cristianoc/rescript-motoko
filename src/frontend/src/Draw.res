@@ -43,12 +43,16 @@ let clearCanvas = () => {
 
 let fontPx = Config.fontSize->int_of_float->string_of_int ++ "px"
 
-let centerXText = (txt, ~y) => {
+let drawText = (txt, ~x, ~y) => {
   let ctx = Load.getContext()
-  let {sizeScaled: {widthScaled}} = Load.getCanvasData()
   ctx.font = fontPx ++ "'Press Start 2P'"
+  ctx.fillText(. txt, x, y)
+}
+
+let centerXText = (txt, ~y) => {
+  let {sizeScaled: {widthScaled}} = Load.getCanvasData()
   let xCentered = (widthScaled -. Config.fontSize *. float_of_int(String.length(txt))) /. 2.
-  ctx.fillText(. txt, xCentered, y)
+  txt->drawText(~x=xCentered, ~y)
 }
 
 let centerXYText = txt => {
@@ -94,8 +98,16 @@ let saving = () => {
   "Saving..."->centerXYText
 }
 
-let paused = () => {
+let drawPaused = () => {
   "Paused"->centerXYText
+}
+
+let drawHishScores = (highScores) => {
+  highScores->Array.forEachWithIndex((i, score) => {
+    let name = score["name"]->String.sub(0, 5)
+    let str = name ++ " " ++ string_of_int(score["score"]) ++ "                    "
+    str->drawText(~x=Config.fontSize *. 2., ~y=Config.fontSize *. float_of_int(2 * i + 5))
+  })
 }
 
 let blackScreen = texts => {
