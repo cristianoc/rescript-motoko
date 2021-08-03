@@ -110,6 +110,9 @@ actor Main {
   type highScore = {date:Float; principal:Principal; score:int_};
   stable var scores : [var ?highScore] = Array.init(6, null);
 
+  stable var stats : {var missing: Nat; var objects:Nat; var saves:Nat} =
+    {var missing=0; var objects=0; var saves=0};
+
   private func shiftRightScore(pos:Nat) {
     if (pos < 0 or pos >= scores.size()) return;
     for (i in Iter.revRange(scores.size()-2, pos)) {
@@ -174,7 +177,14 @@ actor Main {
     Trie.find(map, pKey(p), Principal.equal)
   };
 
+  public query func getStats() : async {missing:Nat; objects:Nat; saves:Nat} {
+    {missing=stats.missing; objects=stats.objects; saves=stats.saves}
+  };
+
   public func saveDelta(principal:Principal, delta:delta) : async () {
+    stats.saves := stats.saves + 1;
+    stats.missing := stats.missing + delta.missing.size();
+    stats.objects := stats.objects + delta.state.objects.size();
     map := Trie.put(map, pKey(principal), Principal.equal, delta).0;
     updateScore(principal, delta.state.date, delta.state.score);
   };
