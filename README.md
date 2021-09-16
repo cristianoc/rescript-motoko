@@ -28,7 +28,7 @@ To iterate on the frontend code in `src/frontend` either use an editor extension
 To iterate on the backend code, edit `.mo` files in `src/backend`.
 The interface between frontend and backend is in [src/frontend/src/Backend.res](src/frontend/src/Backend.res).
 
-## Deploy both backend and frontend caisters
+## Deploy both backend and frontend canisters
 
 ```bash
 dfx deploy
